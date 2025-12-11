@@ -1,0 +1,1110 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Playwrite+IT+Moderna:wght@400&display=swap');
+
+/* Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Outfit', sans-serif;
+}
+
+/* ===========================================
+   DESKTOP NAVBAR
+   =========================================== */
+
+.navbar {
+  background-color: transparent;
+  padding: 10px 0;
+  position: fixed;
+  width: 595px;
+  top: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  animation: navbarSlideDown 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+@keyframes navbarSlideDown {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.navbar ul.nav-links {
+  list-style: none;
+  width: 595px;
+  height: 65px;
+  margin: 0 auto;
+  padding: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: transparent;
+  border: none;
+  border-radius: 50px;
+  gap: 30px;
+  position: relative;
+}
+
+.navbar ul.nav-links li {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ===========================================
+   NAV ITEMS - แสงขอบอยู่ภายในปุ่ม
+   =========================================== */
+
+.navbar a.nav-item {
+  text-decoration: none;
+  color: rgba(255, 255, 255, 0.98); /* เพิ่มความเข้มของสีข้อความ */
+  padding: 12px 28px;
+  border-radius: 25px;
+  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  display: block;
+  white-space: nowrap;
+  background: linear-gradient(
+    135deg,
+    rgba(5, 5, 5, 0.95), /* เพิ่มความเข้มของพื้นหลัง */
+    rgba(20, 20, 20, 0.9)  /* เพิ่มความเข้มของพื้นหลัง */
+  );
+  border: 0.5px solid rgba(255, 255, 255, 0.15); /* เพิ่มความเข้มของเส้นขอบ */
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  transform-origin: center center;
+  /* เพิ่ม blur และความเข้มของสี พร้อม multiply effect */
+  backdrop-filter: blur(50px) saturate(2.5) contrast(1.6) brightness(0.7);
+  -webkit-backdrop-filter: blur(50px) saturate(2.5) contrast(1.6) brightness(0.7);
+  mix-blend-mode: multiply;
+  
+  box-shadow: 
+    0 4px 16px rgba(0, 0, 0, 0.5),
+    0 2px 4px rgba(0, 0, 0, 0.6),
+    inset 0 1.5px 0 0 rgba(255, 255, 255, 0.15), /* เพิ่มความเข้ม */
+    inset 0 -1.5px 0 0 rgba(0, 0, 0, 0.6),
+    inset 1.5px 0 0 0 rgba(255, 255, 255, 0.12), /* เพิ่มความเข้ม */
+    inset -1px 0 0 0 rgba(0, 0, 0, 0.4);
+  
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8), 0 0 8px rgba(255, 255, 255, 0.1); /* เพิ่ม text shadow */
+}
+
+.navbar a.nav-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 5%;
+  right: 5%;
+  height: 1.5px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.18) 20%,
+    rgba(255, 255, 255, 0.28) 50%,
+    rgba(255, 255, 255, 0.18) 80%,
+    transparent 100%
+  );
+  opacity: 0.85;
+  border-radius: 25px 25px 0 0;
+  filter: blur(0.3px);
+  pointer-events: none;
+}
+
+.navbar a.nav-item::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 8%;
+  right: 8%;
+  height: 1.2px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.08) 20%,
+    rgba(255, 255, 255, 0.15) 50%,
+    rgba(255, 255, 255, 0.08) 80%,
+    transparent 100%
+  );
+  opacity: 0.75;
+  border-radius: 0 0 25px 25px;
+  filter: blur(0.3px);
+  pointer-events: none;
+}
+
+.navbar a.nav-item:hover {
+  background: linear-gradient(
+    135deg,
+    rgba(25, 25, 25, 0.95), /* เพิ่มความเข้ม */
+    rgba(45, 45, 45, 0.9)  /* เพิ่มความเข้ม */
+  );
+  color: #fff;
+  transform: scale(1.08);
+  border-radius: 30px;
+  
+  box-shadow: 
+    0 12px 32px rgba(0, 0, 0, 0.4),
+    0 6px 12px rgba(0, 0, 0, 0.5),
+    inset 0 2px 0 0 rgba(255, 255, 255, 0.2), /* เพิ่มความเข้ม */
+    inset 0 -2px 0 0 rgba(0, 0, 0, 0.6),
+    inset 2px 0 0 0 rgba(255, 255, 255, 0.15), /* เพิ่มความเข้ม */
+    inset -1px 0 0 0 rgba(0, 0, 0, 0.4),
+    0 0 30px rgba(255, 255, 255, 0.08),
+    0 0 50px rgba(255, 255, 255, 0.03); /* bubble glow effect */
+  
+  /* เพิ่ม blur และความเข้มของสีเมื่อ hover */
+  backdrop-filter: blur(55px) saturate(2.8) contrast(1.7) brightness(0.75);
+  -webkit-backdrop-filter: blur(55px) saturate(2.8) contrast(1.7) brightness(0.75);
+  mix-blend-mode: multiply;
+}
+
+.navbar a.nav-item:hover::before {
+  left: 3%;
+  right: 3%;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.25) 20%,
+    rgba(255, 255, 255, 0.4) 50%,
+    rgba(255, 255, 255, 0.25) 80%,
+    transparent 100%
+  );
+  opacity: 1;
+  filter: blur(0.2px);
+}
+
+.navbar a.nav-item:hover::after {
+  left: 5%;
+  right: 5%;
+  height: 1.5px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.12) 20%,
+    rgba(255, 255, 255, 0.22) 50%,
+    rgba(255, 255, 255, 0.12) 80%,
+    transparent 100%
+  );
+  opacity: 0.9;
+  filter: blur(0.2px);
+}
+
+.navbar a.nav-item:active {
+  transform: translateY(0) scale(0.98);
+  transition: all 0.1s ease;
+  box-shadow: 
+    0 2px 8px rgba(0, 0, 0, 0.4),
+    0 1px 2px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.05),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.navbar a.nav-item.active {
+  color: #fff;
+  font-weight: 700;
+  background: linear-gradient(
+    135deg,
+    rgba(10, 10, 10, 0.95), /* เพิ่มความเข้ม */
+    rgba(30, 30, 30, 0.9)  /* เพิ่มความเข้ม */
+  );
+  
+  /* เพิ่ม blur และความเข้มของสีเมื่อ active */
+  backdrop-filter: blur(52px) saturate(2.6) contrast(1.65) brightness(0.72);
+  -webkit-backdrop-filter: blur(52px) saturate(2.6) contrast(1.65) brightness(0.72);
+  mix-blend-mode: multiply;
+  
+  box-shadow: 
+    0 4px 20px rgba(0, 0, 0, 0.6),
+    0 2px 6px rgba(0, 0, 0, 0.7),
+    inset 0 1.8px 0 0 rgba(255, 255, 255, 0.18), /* เพิ่มความเข้ม */
+    inset 0 -1.8px 0 0 rgba(0, 0, 0, 0.7),
+    inset 1.5px 0 0 0 rgba(255, 255, 255, 0.12), /* เพิ่มความเข้ม */
+    inset -1px 0 0 0 rgba(0, 0, 0, 0.5),
+    0 0 30px rgba(255, 255, 255, 0.03);
+}
+
+.navbar a.nav-item.active::before {
+  /* ปรับตำแหน่งให้แคบลงเพื่อเน้นตรงกลาง */
+  left: 3%;
+  right: 3%;
+  
+  /* ปรับ gradient ให้เน้นตรงกลางมากขึ้น */
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.1) 25%,
+    rgba(255, 255, 255, 0.5) 50%,  /* เน้นตรงกลาง */
+    rgba(255, 255, 255, 0.1) 75%,
+    transparent 100%
+  );
+  
+  /* ความสูงที่เหมาะสม */
+  height: 2px;
+  
+  /* opacity และ effect */
+  opacity: 1;
+  filter: blur(0.3px);
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.35);
+}
+
+.navbar a.nav-item.active::after {
+  left: 6%;
+  right: 6%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.1) 20%,
+    rgba(255, 255, 255, 0.18) 50%,
+    rgba(255, 255, 255, 0.1) 80%,
+    transparent 100%
+  );
+  height: 1.5px;
+  opacity: 0.85;
+}
+
+.nav-indicator {
+  position: absolute;
+  top: 0px;
+  bottom: 8px;
+  height: 6px;
+  width: 65px;
+  background: linear-gradient(90deg, 
+    rgba(255, 255, 255, 0.8) 0%, 
+    rgba(255, 255, 255, 1) 50%, 
+    rgba(255, 255, 255, 0.8) 100%
+  );
+  border-radius: 50px;
+  z-index: 1;
+  box-shadow:
+    0 -8px 16px rgba(255, 255, 255, 0.6),
+    0 0 24px rgba(255, 255, 255, 0.5),
+    0 4px 12px rgba(255, 255, 255, 0.3);
+  filter: drop-shadow(0 -4px 8px rgba(255, 255, 255, 0.6));
+}
+
+.nav-indicator.initialized {
+  transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ===========================================
+   MOBILE NAVBAR - GLASSSURFACE HAMBURGER
+   =========================================== */
+
+.mobile-navbar-fullscreen {
+  display: none;
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 2000;
+}
+
+/* Wrapper สำหรับ GlassSurface hamburger button */
+.mobile-navbar-toggle-wrapper {
+  position: fixed;
+  top: 30px;
+  right: 25px;
+  z-index: 2100;
+  width: 64px;
+  height: 64px;
+}
+
+/* Glass Surface container */
+.mobile-toggle-glass {
+  width: 64px !important;
+  height: 64px !important;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.mobile-toggle-glass:hover {
+  transform: scale(1.05);
+}
+
+.mobile-toggle-glass:active {
+  transform: scale(0.95);
+}
+
+/* Inner button (transparent background) */
+.mobile-navbar-toggle-inner {
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  position: relative;
+  z-index: 1;
+  transition: transform 0.3s ease;
+}
+
+/* เมื่อ menu เปิด - หมุน icon */
+.mobile-navbar-toggle-inner.open {
+  transform: rotate(180deg);
+}
+
+.hamburger-icon {
+  width: 28px;
+  height: 22px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.hamburger-icon .line {
+  width: 100%;
+  height: 2.5px;
+  background: linear-gradient(90deg, 
+    rgba(255, 255, 255, 0.9),
+    rgba(255, 255, 255, 1),
+    rgba(255, 255, 255, 0.9)
+  );
+  border-radius: 3px;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: center;
+  box-shadow: 
+    0 1px 3px rgba(0, 0, 0, 0.3),
+    0 0 8px rgba(255, 255, 255, 0.15);
+}
+
+.hamburger-icon .line-1 {
+  transform: translateY(0) rotate(0);
+}
+
+.hamburger-icon .line-2 {
+  opacity: 1;
+  transform: scaleX(1);
+}
+
+.hamburger-icon .line-3 {
+  transform: translateY(0) rotate(0);
+}
+
+.hamburger-icon.open .line-1 {
+  transform: translateY(9.75px) rotate(45deg);
+  background: linear-gradient(90deg, 
+    rgba(255, 255, 255, 0.95),
+    rgba(255, 255, 255, 1),
+    rgba(255, 255, 255, 0.95)
+  );
+  box-shadow: 
+    0 1px 3px rgba(0, 0, 0, 0.4),
+    0 0 12px rgba(255, 255, 255, 0.2);
+}
+
+.hamburger-icon.open .line-2 {
+  opacity: 0;
+  transform: scaleX(0);
+}
+
+.hamburger-icon.open .line-3 {
+  transform: translateY(-9.75px) rotate(-45deg);
+  background: linear-gradient(90deg, 
+    rgba(255, 255, 255, 0.95),
+    rgba(255, 255, 255, 1),
+    rgba(255, 255, 255, 0.95)
+  );
+  box-shadow: 
+    0 1px 3px rgba(0, 0, 0, 0.4),
+    0 0 12px rgba(255, 255, 255, 0.2);
+}
+
+.mobile-menu-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(10, 10, 15, 0.6);
+  backdrop-filter: blur(40px) saturate(1.5) contrast(1.15) brightness(0.95);
+  -webkit-backdrop-filter: blur(40px) saturate(1.5) contrast(1.15) brightness(0.95);
+  opacity: 0;
+  visibility: hidden;
+  z-index: 2000;
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.mobile-menu-overlay.open {
+  opacity: 1;
+  visibility: visible;
+}
+
+.mobile-menu-content {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 50px 40px 80px;
+  z-index: 1;
+}
+
+.mobile-menu-header {
+  display: flex;
+  justify-content: flex-start;
+  align-items: baseline;
+  margin-bottom: 80px;
+  opacity: 0;
+  transform: translateY(-30px);
+  animation: slideInDown 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.1s forwards;
+}
+
+.brand-text {
+  font-family: 'Playwrite IT Moderna', cursive;
+  font-weight: 400;
+  font-size: 38px;
+  color: #fff;
+  letter-spacing: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.6);
+  line-height: 1;
+}
+
+.brand-number {
+  font-family: 'Playwrite IT Moderna', cursive;
+  font-weight: 400;
+  font-size: 38px;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.9),
+    rgba(255, 255, 255, 1)
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.2));
+  line-height: 1;
+  position: relative;
+}
+
+.brand-number::after {
+  content: '7';
+  position: absolute;
+  top: 0;
+  left: 0;
+  font-family: 'Playwrite IT Moderna', cursive;
+  font-weight: 400;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.9),
+    rgba(255, 255, 255, 1)
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: blur(8px);
+  opacity: 0.4;
+  z-index: -1;
+}
+
+.brand-name {
+  font-family: 'Playwrite IT Moderna', cursive;
+  font-weight: 400;
+  font-size: 38px;
+  color: #fff;
+  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.6);
+  text-transform: lowercase;
+  letter-spacing: 0;
+  line-height: 1;
+}
+
+.mobile-menu-nav {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.mobile-menu-list {
+  list-style: none;
+  width: 100%;
+  max-width: 500px;
+}
+
+.mobile-menu-item {
+  margin-bottom: 18px;
+  opacity: 0;
+  transform: translateX(-40px);
+  animation: slideInLeft 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  animation-delay: calc(0.2s + (var(--item-index) * 0.08s));
+}
+
+.mobile-menu-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 26px 36px;
+  text-decoration: none;
+  color: rgba(255, 255, 255, 0.95);
+  background: linear-gradient(
+    135deg,
+    rgba(10, 10, 10, 0.7),
+    rgba(30, 30, 30, 0.6)
+  );
+  backdrop-filter: blur(20px) saturate(1.8) contrast(1.2) brightness(0.9);
+  -webkit-backdrop-filter: blur(20px) saturate(1.8) contrast(1.2) brightness(0.9);
+  border: 0.5px solid transparent;
+  border-radius: 50px;
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: 1.8px;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 
+    0 4px 16px rgba(0, 0, 0, 0.3),
+    0 2px 4px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.1),
+    inset 0 -1px 0 0 rgba(0, 0, 0, 0.3),
+    inset 1px 0 0 0 rgba(255, 255, 255, 0.06),
+    inset -1px 0 0 0 rgba(255, 255, 255, 0.06);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.mobile-menu-link::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 8%;
+  right: 8%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.25) 20%,
+    rgba(255, 255, 255, 0.35) 50%,
+    rgba(255, 255, 255, 0.25) 80%,
+    transparent
+  );
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.mobile-menu-link::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 12%;
+  right: 12%;
+  height: 0.5px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.08),
+    transparent
+  );
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.mobile-menu-link:hover {
+  color: #fff;
+  background: linear-gradient(
+    135deg,
+    rgba(35, 35, 35, 0.75),
+    rgba(55, 55, 55, 0.65)
+  );
+  transform: translateX(10px) scale(1.02);
+  box-shadow: 
+    0 8px 24px rgba(0, 0, 0, 0.35),
+    0 4px 8px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.15),
+    inset 0 -1px 0 0 rgba(0, 0, 0, 0.4),
+    inset 1px 0 0 0 rgba(255, 255, 255, 0.08),
+    inset -1px 0 0 0 rgba(255, 255, 255, 0.08),
+    0 0 30px rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(25px) saturate(2) contrast(1.3) brightness(0.95);
+  -webkit-backdrop-filter: blur(25px) saturate(2) contrast(1.3) brightness(0.95);
+}
+
+.mobile-menu-link:hover::before {
+  opacity: 0.9;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3) 20%,
+    rgba(255, 255, 255, 0.45) 50%,
+    rgba(255, 255, 255, 0.3) 80%,
+    transparent
+  );
+}
+
+.mobile-menu-link.active {
+  color: #fff;
+  background: linear-gradient(
+    135deg,
+    rgba(25, 25, 25, 0.8),
+    rgba(45, 45, 45, 0.7)
+  );
+  box-shadow: 
+    0 4px 20px rgba(0, 0, 0, 0.4),
+    0 2px 6px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.12),
+    inset 0 -1px 0 0 rgba(0, 0, 0, 0.5),
+    inset 1px 0 0 0 rgba(255, 255, 255, 0.1),
+    inset -1px 0 0 0 rgba(255, 255, 255, 0.1),
+    0 0 40px rgba(255, 255, 255, 0.02);
+}
+
+.mobile-menu-link.active::before {
+  opacity: 0.85;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.28) 20%,
+    rgba(255, 255, 255, 0.4) 50%,
+    rgba(255, 255, 255, 0.28) 80%,
+    transparent
+  );
+}
+
+.mobile-menu-link:active {
+  transform: translateX(5px) scale(0.98);
+  transition: all 0.15s ease;
+  box-shadow: 
+    0 2px 8px rgba(0, 0, 0, 0.4),
+    0 1px 2px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.05),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.menu-link-text {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  text-align: left;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+
+.menu-link-indicator {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: linear-gradient(
+    135deg,
+    rgba(20, 20, 20, 0.6),
+    rgba(40, 40, 40, 0.5)
+  );
+  backdrop-filter: blur(15px) saturate(1.5) contrast(1.1);
+  -webkit-backdrop-filter: blur(15px) saturate(1.5) contrast(1.1);
+  border: 0.5px solid transparent;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 
+    0 2px 8px rgba(0, 0, 0, 0.3),
+    0 1px 2px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.12),
+    inset 0 -1px 0 0 rgba(0, 0, 0, 0.3),
+    inset 1px 0 0 0 rgba(255, 255, 255, 0.08),
+    inset -1px 0 0 0 rgba(255, 255, 255, 0.08);
+}
+
+.menu-link-indicator::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 15%;
+  right: 15%;
+  height: 1px;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(255, 255, 255, 0.25) 0%,
+    transparent 70%
+  );
+  opacity: 0.7;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.indicator-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: transparent;
+  transition: all 0.4s ease;
+}
+
+.mobile-menu-link:hover .menu-link-indicator {
+  background: linear-gradient(
+    135deg,
+    rgba(45, 45, 45, 0.7),
+    rgba(65, 65, 65, 0.6)
+  );
+  transform: scale(1.08) rotate(180deg);
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.35),
+    0 2px 4px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.15),
+    inset 0 -1px 0 0 rgba(0, 0, 0, 0.4),
+    inset 1px 0 0 0 rgba(255, 255, 255, 0.1),
+    inset -1px 0 0 0 rgba(255, 255, 255, 0.1);
+}
+
+.mobile-menu-link:hover .menu-link-indicator::before {
+  opacity: 0.9;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(255, 255, 255, 0.35) 0%,
+    transparent 70%
+  );
+}
+
+.mobile-menu-link.active .menu-link-indicator {
+  background: linear-gradient(
+    135deg,
+    rgba(35, 35, 35, 0.8),
+    rgba(55, 55, 55, 0.7)
+  );
+  box-shadow: 
+    0 4px 16px rgba(0, 0, 0, 0.4),
+    0 2px 6px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.15),
+    inset 0 -1px 0 0 rgba(0, 0, 0, 0.5),
+    inset 1px 0 0 0 rgba(255, 255, 255, 0.1),
+    inset -1px 0 0 0 rgba(255, 255, 255, 0.1);
+  animation: pulseGlow 2.5s ease-in-out infinite;
+}
+
+.mobile-menu-link.active .indicator-dot {
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 
+    0 0 12px rgba(255, 255, 255, 0.6),
+    0 0 20px rgba(255, 255, 255, 0.3);
+  animation: dotPulse 2s ease-in-out infinite;
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+@keyframes dotPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInDown {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInLeft {
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* ===========================================
+   RESPONSIVE DESIGN
+   =========================================== */
+
+/* iPad Detection - แสดง Mobile Navbar สำหรับ iPad */
+.mobile-navbar-fullscreen.show-for-ipad {
+  display: block !important;
+}
+
+/* ซ่อน Desktop Navbar บน Tablet/Mobile */
+@media (max-width: 1024px) {
+  .navbar { 
+    display: none; 
+  }
+  
+  .mobile-navbar-fullscreen { 
+    display: block; 
+  }
+}
+
+/* แสดง Desktop Navbar บน Desktop เท่านั้น */
+@media (min-width: 1025px) {
+  .mobile-navbar-fullscreen:not(.show-for-ipad) { 
+    display: none; 
+  }
+}
+
+/* iPad Specific - ปรับขนาดให้เหมาะสม */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .mobile-menu-content {
+    padding: 60px 50px 90px;
+  }
+  
+  .mobile-navbar-toggle-wrapper {
+    width: 70px;
+    height: 70px;
+    top: 35px;
+    right: 30px;
+  }
+  
+  .mobile-toggle-glass {
+    width: 70px !important;
+    height: 70px !important;
+  }
+  
+  .mobile-menu-header {
+    margin-bottom: 90px;
+  }
+  
+  .mobile-menu-link {
+    font-size: 24px;
+    padding: 28px 40px;
+    letter-spacing: 2px;
+    border-radius: 50px;
+  }
+  
+  .brand-text {
+    font-size: 42px;
+  }
+  
+  .brand-number {
+    font-size: 42px;
+  }
+
+  .brand-name {
+    font-size: 42px;
+  }
+
+  .menu-link-indicator {
+    width: 46px;
+    height: 46px;
+  }
+
+  .indicator-dot {
+    width: 11px;
+    height: 11px;
+  }
+
+  .hamburger-icon {
+    width: 30px;
+    height: 24px;
+  }
+  
+  .hamburger-icon .line {
+    height: 3px;
+  }
+  
+  .hamburger-icon.open .line-1 {
+    transform: translateY(10.5px) rotate(45deg);
+  }
+
+  .hamburger-icon.open .line-3 {
+    transform: translateY(-10.5px) rotate(-45deg);
+  }
+}
+
+/* Mobile Portrait (320px to 480px) */
+@media (max-width: 480px) {
+  .mobile-menu-content {
+    padding: 45px 30px 70px;
+  }
+  
+  .mobile-navbar-toggle-wrapper {
+    width: 60px;
+    height: 60px;
+    top: 25px;
+    right: 22px;
+  }
+  
+  .mobile-toggle-glass {
+    width: 60px !important;
+    height: 60px !important;
+  }
+  
+  .mobile-menu-header {
+    margin-bottom: 70px;
+  }
+  
+  .mobile-menu-link {
+    font-size: 19px;
+    padding: 24px 32px;
+    letter-spacing: 1.5px;
+    border-radius: 45px;
+  }
+  
+  .brand-text {
+    font-size: 34px;
+  }
+  
+  .brand-number {
+    font-size: 34px;
+  }
+
+  .brand-name {
+    font-size: 34px;
+  }
+
+  .menu-link-indicator {
+    width: 38px;
+    height: 38px;
+  }
+
+  .indicator-dot {
+    width: 9px;
+    height: 9px;
+  }
+
+  .hamburger-icon {
+    width: 26px;
+    height: 20px;
+  }
+  
+  .hamburger-icon .line {
+    height: 2.5px;
+  }
+  
+  .hamburger-icon.open .line-1 {
+    transform: translateY(8.75px) rotate(45deg);
+  }
+
+  .hamburger-icon.open .line-3 {
+    transform: translateY(-8.75px) rotate(-45deg);
+  }
+}
+
+/* Mobile Small (320px to 360px) */
+@media (max-width: 360px) {
+  .mobile-menu-content {
+    padding: 40px 25px 60px;
+  }
+
+  .mobile-navbar-toggle-wrapper {
+    width: 56px;
+    height: 56px;
+    top: 22px;
+    right: 20px;
+  }
+  
+  .mobile-toggle-glass {
+    width: 56px !important;
+    height: 56px !important;
+  }
+
+  .mobile-menu-header {
+    margin-bottom: 60px;
+  }
+
+  .mobile-menu-link {
+    font-size: 18px;
+    padding: 22px 28px;
+    letter-spacing: 1.3px;
+    border-radius: 42px;
+  }
+  
+  .brand-text {
+    font-size: 30px;
+  }
+
+  .brand-number {
+    font-size: 30px;
+  }
+
+  .brand-name {
+    font-size: 30px;
+  }
+
+  .menu-link-indicator {
+    width: 36px;
+    height: 36px;
+  }
+
+  .indicator-dot {
+    width: 8px;
+    height: 8px;
+  }
+
+  .hamburger-icon {
+    width: 24px;
+    height: 18px;
+  }
+
+  .hamburger-icon .line {
+    height: 2px;
+  }
+
+  .hamburger-icon.open .line-1 {
+    transform: translateY(8px) rotate(45deg);
+  }
+
+  .hamburger-icon.open .line-3 {
+    transform: translateY(-8px) rotate(-45deg);
+  }
+}
+
+/* ===========================================
+   ACCESSIBILITY
+   =========================================== */
+
+/* Focus styles */
+.mobile-navbar-toggle-inner:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.3);
+  outline-offset: 2px;
+  border-radius: 50%;
+}
+
+.mobile-menu-link:focus-visible,
+.nav-item:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.3);
+  outline-offset: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  
+  .mobile-menu-item,
+  .mobile-menu-header {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+  
+  .nav-indicator.initialized {
+    transition: none;
+  }
+}
+
+@media (prefers-contrast: high) {
+  .navbar a.nav-item,
+  .mobile-menu-link {
+    border-width: 1px;
+  }
+  
+  .nav-indicator {
+    height: 8px;
+  }
+}

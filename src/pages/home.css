@@ -1,0 +1,183 @@
+/* ===========================================
+   HOME PAGE STYLES - LOCK SCROLL เฉพาะหน้า HOME
+   =========================================== */
+
+/* ล็อค scroll เฉพาะเมื่ออยู่ใน home page */
+body.home-page {
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    overflow: hidden !important;
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    width: 100vw !important;
+    overscroll-behavior: none;
+    touch-action: pan-x pan-y pinch-zoom;
+    -webkit-overflow-scrolling: touch;
+}
+
+body.home-page::-webkit-scrollbar {
+    display: none;
+}
+
+body.home-page {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* Home page background */
+.home-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: url('../assets/img/BG.png') no-repeat center center fixed;
+    background-size: cover;
+    background-color: rgb(0, 0, 0);
+    z-index: -3;
+}
+
+/* Group 23 Background Element */
+.group23-bg-home {
+    position: fixed;
+    top: clamp(180px, 25vh, 230px);
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: clamp(50vw, 60vw, 80vw);
+    max-width: 700px;
+    min-width: 250px;
+    max-height: 600px;
+    height: auto;
+    z-index: 0;
+    opacity: 1;
+    pointer-events: none;
+    background: none;
+}
+
+/* Home Container */
+.home {
+    width: 100vw;
+    height: 100vh;
+    min-width: 100vw;
+    min-height: 100vh;
+    overflow: hidden;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 0;
+    background-color: #000;
+    transition: opacity 0.8s ease-in-out;
+
+    /* iOS Safari performance optimizations */
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+}
+
+/* Home Blur Overlay */
+.home-blur {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 70vh;
+    pointer-events: none;
+    z-index: -1;
+    background: linear-gradient(to bottom,
+            rgba(0, 0, 0, 0.2) 0%,
+            rgba(0, 0, 0, 0.1) 50%,
+            rgba(0, 0, 0, 0) 100%);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    mask-image: linear-gradient(to bottom,
+            rgba(0, 0, 0, 1) 0%,
+            rgba(0, 0, 0, 1) 40%,
+            rgba(0, 0, 0, 0) 90%,
+            rgba(0, 0, 0, 0) 100%);
+    -webkit-mask-image: linear-gradient(to bottom,
+            rgba(0, 0, 0, 1) 0%,
+            rgba(0, 0, 0, 1) 40%,
+            rgba(0, 0, 0, 0) 90%,
+            rgba(0, 0, 0, 0) 100%);
+}
+
+/* ===========================================
+   RESPONSIVE ADJUSTMENTS
+   =========================================== */
+
+@media (min-width: 1920px) {
+    .group23-bg-home {
+        top: clamp(130px, 18vh, 180px);
+        width: clamp(40vw, 50vw, 60vw);
+        max-width: 900px;
+    }
+}
+
+@media (min-width: 1440px) {
+    .group23-bg-home {
+        top: clamp(150px, 20vh, 200px);
+        width: clamp(45vw, 55vw, 70vw);
+        max-width: 800px;
+    }
+}
+
+@media (min-width: 1024px) and (max-width: 1439px) {
+    .group23-bg-home {
+        top: clamp(160px, 22vh, 210px);
+        width: clamp(50vw, 60vw, 75vw);
+        max-width: 650px;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+    .group23-bg-home {
+        top: clamp(140px, 20vh, 180px);
+        width: clamp(60vw, 70vw, 85vw);
+        max-width: 550px;
+        min-width: 350px;
+    }
+}
+
+@media (min-width: 481px) and (max-width: 767px) {
+    .group23-bg-home {
+        top: clamp(120px, 18vh, 160px);
+        width: clamp(70vw, 80vw, 90vw);
+        max-width: 450px;
+        min-width: 300px;
+    }
+}
+
+@media (min-width: 376px) and (max-width: 480px) {
+    .group23-bg-home {
+        top: clamp(100px, 16vh, 140px);
+        width: clamp(80vw, 90vw, 95vw);
+        max-width: 350px;
+        min-width: 250px;
+    }
+}
+
+@media (max-width: 375px) {
+    .group23-bg-home {
+        top: clamp(80px, 14vh, 120px);
+        width: clamp(85vw, 95vw, 98vw);
+        max-width: 300px;
+        min-width: 200px;
+    }
+}
+
+@media (max-height: 600px) {
+    .group23-bg-home {
+        top: clamp(80px, 15vh, 120px);
+        width: clamp(60vw, 70vw, 85vw);
+        max-width: 400px;
+    }
+}
+
+@media (min-height: 1000px) {
+    .group23-bg-home {
+        top: clamp(200px, 25vh, 280px);
+    }
+}

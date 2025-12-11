@@ -1,0 +1,397 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&family=Playwrite+IT+Moderna:wght@100..400&display=swap');
+
+.hero-section {
+    position: absolute;
+    top: clamp(-200px, -20vh, -145px);
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    margin: 0;
+    text-align: center;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    padding: 0 clamp(10px, 5vw, 20px);
+}
+
+.hero-section > *:not(.group23-bg) {
+    position: relative;
+    z-index: 1;
+}
+
+.hero-section h1 {
+    color: #FFF;
+    text-align: center;
+    font-family: Outfit;
+    font-size: clamp(28px, 8vw, 60px);
+    font-style: normal;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: clamp(10px, 2vh, 20px);
+}
+
+.hero-section p {
+    text-align: center;
+    font-family: Outfit;
+    font-size: clamp(14px, 4vw, 24px);
+    font-style: normal;
+    font-weight: 400;
+    line-height: 1.6;
+    margin-top: clamp(5px, 1vh, 10px);
+    color: #b5b5b5a4;
+    background: linear-gradient(
+        120deg,
+        rgba(255, 255, 255, 0) 40%,
+        rgba(255, 255, 255, 100) 50%,
+        rgba(255, 255, 255, 0) 60%
+    );
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    display: inline-block;
+    animation: shine 5s linear infinite;
+    max-width: 90vw;
+}
+
+@keyframes shine {
+  0% {
+    background-position: 100%;
+  }
+  100% {
+    background-position: -100%;
+  }
+}
+
+.shiny-text.disabled {
+  animation: none;
+}
+
+.hero-section img {
+    width: clamp(200px, 40vw, 300px);
+    height: auto;
+    margin-top: clamp(20px, 5vh, 40px);
+    max-width: 90vw;
+}
+
+.hero-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 95vw;
+}
+
+/* Gradient Text (for Portfolio) and Star Icon */
+.gradient-text {
+    position: relative;
+    display: inline-block;
+    line-height: 1.4; /* เพิ่ม line-height ให้มีพื้นที่มากขึ้น */
+}
+
+.gradient-text-glow {
+    position: absolute;
+    top: clamp(2px, 1vh, 5px);
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    filter: blur(clamp(12px, 3vw, 20px)) brightness(1.3);
+    opacity: 1;
+    z-index: 0;
+    background: linear-gradient(to right, #8A38F5 0%, #FF7777 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    font-family: 'Playwrite IT Moderna', cursive;
+    font-weight: 400;
+    white-space: pre;
+    line-height: 1.4;
+}
+
+.gradient-text-content {
+    position: relative;
+    z-index: 1;
+    display: inline-block;
+    background: linear-gradient(to right, #8A38F5 0%, #FF7777 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    font-family: 'Playwrite IT Moderna', cursive;
+    font-weight: 400;
+    -webkit-text-stroke: 1.2px transparent;
+    paint-order: stroke fill;
+    white-space: pre;
+    line-height: 1.4;
+
+    /* ขยายพื้นที่มากขึ้น โดยเฉพาะด้านล่าง */
+    padding: 0.15em 0.10em 0.35em 0.10em;
+    margin: -0.15em -0.10em -0.35em -0.10em;
+    overflow: visible;
+}
+
+.gradient-text-content::before {
+    content: attr(data-text);
+    position: absolute;
+    left: 0.10em;
+    top: 0.15em;
+    z-index: -1;
+    background: linear-gradient(to right, #8A38F5 0%, #FF7777 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    -webkit-text-stroke: 1.2px;
+    -webkit-text-stroke-image: linear-gradient(to right, #8A38F5 0%, #FF7777 100%);
+    paint-order: stroke fill;
+    line-height: 1.4;
+}
+
+.gradient-text::after {
+    content: '';
+    background-image: url('../../assets/img/Group 6.svg');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    position: absolute;
+    width: clamp(25px, 6vw, 40px);
+    height: clamp(23px, 5.5vw, 35px);
+    right: clamp(-25px, -4.5vw, -17px);
+    top: clamp(2px, 1vw, 6px);
+    z-index: -1;
+    filter: drop-shadow(0 0 8px rgba(138, 56, 245, 0.6)) 
+            drop-shadow(0 0 15px rgba(255, 119, 119, 0.5));
+}
+
+/* Footer Section */
+.footer {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 50vh;
+    z-index: -1;
+}
+
+/* ===========================================
+   TABLET LANDSCAPE / iPAD AIR LANDSCAPE FIX
+   =========================================== */
+
+/* iPad Air และ Tablet แนวนอน (Landscape) - 768px ถึง 1024px */
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
+    .hero-section {
+        top: -40px !important;  /* ขยับขึ้น จาก 0 เป็น -40px */
+        height: calc(100vh - 40px);  /* ปรับ height ให้สอดคล้อง */
+        padding-top: 40px;  /* ลด padding-top */
+        justify-content: flex-start;
+        gap: clamp(15px, 3vh, 30px);
+    }
+
+    .hero-section h1 {
+        font-size: clamp(32px, 5vw, 42px);
+        margin-bottom: 8px;
+        margin-top: 10px;
+    }
+
+    .hero-section p {
+        font-size: clamp(14px, 2.5vw, 18px);
+        line-height: 1.4;
+        margin-top: 5px;
+    }
+
+    .hero-section img {
+        width: clamp(180px, 30vw, 240px);
+        margin-top: 15px;
+    }
+
+    .hero-content {
+        margin-top: 0;
+    }
+
+    .gradient-text::after {
+        width: 33px;
+        height: 30px;
+        right: -22px;
+        top: 0px;
+    }
+}
+
+/* iPad Pro 11" และ 12.9" Landscape */
+@media (min-width: 1024px) and (max-width: 1366px) and (orientation: landscape) and (max-height: 1024px) {
+    .hero-section {
+        top: clamp(-120px, -15vh, -80px);  /* ขยับขึ้น เพิ่มค่าติดลบ */
+        padding-top: 30px;  /* ลด padding-top */
+        gap: clamp(20px, 4vh, 35px);
+    }
+
+    .hero-section h1 {
+        font-size: clamp(38px, 5.5vw, 48px);
+        margin-bottom: 12px;
+    }
+
+    .hero-section p {
+        font-size: clamp(16px, 2.8vw, 20px);
+    }
+
+    .hero-section img {
+        width: clamp(220px, 32vw, 260px);
+        margin-top: 20px;
+    }
+
+    .gradient-text::after {
+        width: 37px;
+        height: 33px;
+        right: -21px;
+        top: 1px;
+    }
+}
+
+/* ทุกอุปกรณ์ที่ความสูงน้อยกว่า 600px (Landscape mode ทั่วไป) */
+@media (max-height: 600px) and (orientation: landscape) {
+    .hero-section {
+        top: -30px !important;  /* ขยับขึ้น จาก 0 เป็น -30px */
+        height: auto;
+        min-height: 100vh;
+        padding-top: clamp(40px, 8vh, 60px);  /* ลด padding-top */
+        padding-bottom: 30px;
+        gap: clamp(10px, 2vh, 20px);
+    }
+
+    .hero-section h1 {
+        font-size: clamp(24px, 4vw, 36px);
+        margin-bottom: 5px;
+        line-height: 1.1;
+    }
+
+    .hero-section p {
+        font-size: clamp(12px, 2vw, 16px);
+        line-height: 1.3;
+        margin-top: 3px;
+    }
+
+    .hero-section img {
+        width: clamp(120px, 20vw, 180px);
+        margin-top: 10px;
+    }
+
+    .gradient-text::after {
+        width: 26px;
+        height: 24px;
+        right: -18px;
+        top: -1px;
+    }
+}
+
+/* iPhone และ Smartphone Landscape (สูงน้อยกว่า 450px) */
+@media (max-height: 450px) and (orientation: landscape) {
+    .hero-section {
+        top: -20px !important;  /* ขยับขึ้นเล็กน้อย */
+        padding-top: 30px;  /* ลด padding-top */
+        gap: 8px;
+    }
+
+    .hero-section h1 {
+        font-size: 20px;
+        margin-bottom: 3px;
+    }
+
+    .hero-section p {
+        font-size: 11px;
+        margin-top: 2px;
+    }
+
+    .hero-section img {
+        width: 100px;
+        margin-top: 8px;
+    }
+
+    .gradient-text::after {
+        width: 22px;
+        height: 20px;
+        right: -16px;
+        top: -2px;
+    }
+}
+
+/* ===========================================
+   RESPONSIVE BREAKPOINTS (PORTRAIT)
+   =========================================== */
+
+/* Mobile Portrait (320px to 480px) */
+@media (max-width: 480px) {
+    .hero-section {
+        top: -120px;
+        padding: 0 15px;
+    }
+    
+    .hero-section h1 {
+        font-size: 24px;
+        line-height: 1.1;
+        margin-bottom: 8px;
+    }
+    
+    .hero-section p {
+        font-size: 12px;
+        line-height: 1.4;
+        margin-top: 5px;
+    }
+    
+    .hero-section img {
+        width: 150px;
+        margin-top: 15px;
+    }
+
+    .gradient-text::after {
+        width: 24px;
+        height: 22px;
+        right: -17px;
+        top: -1px;
+    }
+}
+
+/* Mobile Landscape (481px to 767px) */
+@media (min-width: 481px) and (max-width: 767px) {
+    .hero-section {
+        top: -140px;
+        padding: 0 20px;
+    }
+    
+    .hero-section h1 {
+        font-size: 32px;
+        margin-bottom: 12px;
+    }
+    
+    .hero-section p {
+        font-size: 16px;
+        line-height: 1.5;
+    }
+    
+    .hero-section img {
+        width: 200px;
+        margin-top: 25px;
+    }
+
+    .gradient-text::after {
+        width: 29px;
+        height: 26px;
+        right: -19px;
+        top: 0px;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    .shine {
+        animation: none;
+    }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+    .hero-section h1,
+    .hero-section p {
+        filter: contrast(1.2);
+    }
+}
