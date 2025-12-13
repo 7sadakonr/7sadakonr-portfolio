@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState, useRef } from 'react'
 import './project.css'
 import AnimatedContent from '../components/Animation/AnimatedContent.jsx'
 import todoListImage from '../assets/img/todo-list.png'
+import portfolioImage from '../assets/img/portfolio.png'
 
 const Project = () => {
   useEffect(() => {
@@ -37,11 +38,11 @@ const Project = () => {
       id: 2,
       title: "Portfolio Website",
       subtitle: "Personal Portfolio & Showcase",
-      description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.",
-      tech: ["React", "CSS", "Framer Motion", "Vite"],
-      image: null,
-      liveUrl: "#",
-      githubUrl: "#",
+      description: "A modern, responsive portfolio website showcasing my work and skills. Features include smooth animations, glass morphism UI design, universe-themed backgrounds with twinkling stars and shooting stars, interactive image magnifier, and mobile-optimized experience.",
+      tech: ["React", "Vite", "CSS", "Framer Motion"],
+      image: portfolioImage,
+      liveUrl: "https://7sadakonr-portfolio.vercel.app",
+      githubUrl: "https://github.com/7sadakonr/7sadakonr-portfolio",
       gradient: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)"
     }
   ]
