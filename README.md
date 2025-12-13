@@ -36,7 +36,6 @@ The application is a Single Page Application (SPA) built with **React 19** and *
 
 The project adheres to a component-based architecture for scalability and maintainability:
 
-```text
 src/
 ├── assets/           # Static assets (Images, Icons)
 ├── components/       # Reusable UI components
