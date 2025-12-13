@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef, lazy, Suspense } from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { Analytics } from "@vercel/analytics/react"
 import Navbar from './components/Navbar/Navbar'
 import Loading from './components/Loading/Loading.jsx'
 import SmoothFollower from './components/SmoothFollower/SmoothFollower.jsx'
@@ -62,6 +63,7 @@ function App() {
 
   return (
     <Router>
+      <Analytics />
       <SmoothFollower />
       {isLoading && <Loading fadeOut={fadeOut} />}
       <Navbar />
