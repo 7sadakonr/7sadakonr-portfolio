@@ -36,7 +36,7 @@ The application is a Single Page Application (SPA) built with **React 19** and *
 
 The project adheres to a component-based architecture for scalability and maintainability:
 
-```text
+
 src/
 ├── assets/           # Static assets (Images, Icons)
 ├── components/       # Reusable UI components
@@ -50,6 +50,7 @@ src/
 │   ├── Project.jsx   # Project portfolio grid
 │   └── Contact.jsx   # Communication channels
 └── App.jsx           # Main application entry point
+
 Getting Started
 Prerequisites
 Ensure you have the following installed:
