@@ -1,10 +1,24 @@
+import { useState, useEffect } from 'react';
 import './hero_section.css'
 import hero from '../../assets/img/hero.svg';
+import heroPng from '../../assets/img/logo-7m.png';
 import AnimatedContent from '../Animation/AnimatedContent.jsx';
 import { useNavigate } from 'react-router-dom';
 
 const HeroSection = () => {
   const navigate = useNavigate();
+
+  // Detect Apple devices for PNG fallback (SVG has issues on iOS)
+  const [isApple, setIsApple] = useState(false);
+
+  useEffect(() => {
+    const ua = navigator.userAgent;
+    const isIOS = /iPad|iPhone|iPod/.test(ua);
+    const isIPadOS = /Macintosh/.test(ua) && navigator.maxTouchPoints > 1;
+    setIsApple(isIOS || isIPadOS);
+  }, []);
+
+  const heroImg = isApple ? heroPng : hero;
 
   const handleExploreClick = () => {
     navigate('/about');
@@ -43,7 +57,7 @@ const HeroSection = () => {
         threshold={0.2}
         delay={0.3}
       >
-        <img src={hero} alt="Hero" />
+        <img src={heroImg} alt="Hero" />
       </AnimatedContent>
       <AnimatedContent
         distance={100}

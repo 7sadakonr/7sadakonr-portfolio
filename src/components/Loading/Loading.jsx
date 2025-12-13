@@ -1,8 +1,20 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import './Loading.css';
 import heroSvg from '../../assets/img/hero.svg';
+import heroPng from '../../assets/img/logo-7m.png';
 
 function Loading({ fadeOut }) {
+  // Detect Apple devices for PNG fallback (SVG has issues on iOS)
+  const [isApple, setIsApple] = useState(false);
+
+  useEffect(() => {
+    const ua = navigator.userAgent;
+    const isIOS = /iPad|iPhone|iPod/.test(ua);
+    const isIPadOS = /Macintosh/.test(ua) && navigator.maxTouchPoints > 1;
+    setIsApple(isIOS || isIPadOS);
+  }, []);
+
+  const heroImg = isApple ? heroPng : heroSvg;
   // Stars generation - Increased to 300
   const stars = useMemo(() => [...Array(300)].map((_, i) => ({
     id: i,
@@ -63,7 +75,7 @@ function Loading({ fadeOut }) {
 
       {/* Central Logo */}
       <div className="logo-container">
-        <img src={heroSvg} alt="Hero Logo" className="hero-logo" />
+        <img src={heroImg} alt="Hero Logo" className="hero-logo" />
       </div>
     </div>
   );
