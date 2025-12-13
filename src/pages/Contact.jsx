@@ -47,8 +47,8 @@ const Contact = () => {
 
     try {
       await emailjs.send(
-        'service_n38st5h',
-        'template_uqtykxr',
+        import.meta.env.VITE_EMAILJS_SERVICE_ID,
+        import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
         {
           name: formData.name,
           title: formData.subject,
@@ -56,7 +56,7 @@ const Contact = () => {
           email: formData.email,
           reply_to: formData.email,
         },
-        'PA9DKOlNZ3Nb29C-E'
+        import.meta.env.VITE_EMAILJS_PUBLIC_KEY
       )
 
       setIsSubmitting(false)
