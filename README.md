@@ -79,8 +79,6 @@ npm run build
 
 Visit the live site: [https://7sadakonr-portfolio.vercel.app](https://7sadakonr-portfolio.vercel.app)
 
-## 📸 Screenshots
-
 ### Home Page
 - Hero section with animated gradient text
 - Universe-themed background with twinkling stars
