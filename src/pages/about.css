@@ -1074,7 +1074,7 @@ body.about-page {
     width: 100%;
     max-width: 700px;
     text-align: center;
-    margin-bottom: clamp(40px, 8vh, 80px);
+    margin: 0 auto clamp(40px, 8vh, 80px) auto;
 }
 
 .contact-links {

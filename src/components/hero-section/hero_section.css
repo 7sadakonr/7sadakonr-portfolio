@@ -17,7 +17,7 @@
     padding: 0 clamp(10px, 5vw, 20px);
 }
 
-.hero-section > *:not(.group23-bg) {
+.hero-section>*:not(.group23-bg) {
     position: relative;
     z-index: 1;
 }
@@ -42,12 +42,10 @@
     line-height: 1.6;
     margin-top: clamp(5px, 1vh, 10px);
     color: #b5b5b5a4;
-    background: linear-gradient(
-        120deg,
-        rgba(255, 255, 255, 0) 40%,
-        rgba(255, 255, 255, 100) 50%,
-        rgba(255, 255, 255, 0) 60%
-    );
+    background: linear-gradient(120deg,
+            rgba(255, 255, 255, 0) 40%,
+            rgba(255, 255, 255, 100) 50%,
+            rgba(255, 255, 255, 0) 60%);
     background-size: 200% 100%;
     -webkit-background-clip: text;
     background-clip: text;
@@ -57,16 +55,17 @@
 }
 
 @keyframes shine {
-  0% {
-    background-position: 100%;
-  }
-  100% {
-    background-position: -100%;
-  }
+    0% {
+        background-position: 100%;
+    }
+
+    100% {
+        background-position: -100%;
+    }
 }
 
 .shiny-text.disabled {
-  animation: none;
+    animation: none;
 }
 
 .hero-section img {
@@ -87,7 +86,8 @@
 .gradient-text {
     position: relative;
     display: inline-block;
-    line-height: 1.4; /* เพิ่ม line-height ให้มีพื้นที่มากขึ้น */
+    line-height: 1.4;
+    /* เพิ่ม line-height ให้มีพื้นที่มากขึ้น */
 }
 
 .gradient-text-glow {
@@ -161,8 +161,227 @@
     right: clamp(-25px, -4.5vw, -17px);
     top: clamp(2px, 1vw, 6px);
     z-index: -1;
-    filter: drop-shadow(0 0 8px rgba(138, 56, 245, 0.6)) 
-            drop-shadow(0 0 15px rgba(255, 119, 119, 0.5));
+    filter: drop-shadow(0 0 8px rgba(138, 56, 245, 0.6)) drop-shadow(0 0 15px rgba(255, 119, 119, 0.5));
+}
+
+.explore-button {
+    margin-top: clamp(15px, 2vh, 25px);
+    padding: 4px 4px 4px 22px;
+    border-radius: 50px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    z-index: 10;
+    display: none;
+    /* Hidden by default on PC */
+    align-items: center;
+    gap: 14px;
+
+    /* Transparent Glass Effect with blur */
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(20px) saturate(1.5);
+    -webkit-backdrop-filter: blur(20px) saturate(1.5);
+
+    box-shadow:
+        0 4px 20px rgba(0, 0, 0, 0.15),
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
+
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Shimmer effect */
+.explore-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg,
+            transparent 0%,
+            rgba(255, 255, 255, 0.08) 50%,
+            transparent 100%);
+    animation: shimmer 3s ease-in-out infinite;
+    z-index: -1;
+}
+
+@keyframes shimmer {
+    0% {
+        left: -100%;
+    }
+
+    50% {
+        left: 100%;
+    }
+
+    100% {
+        left: 100%;
+    }
+}
+
+.explore-text {
+    font-family: 'Outfit', sans-serif;
+    font-size: clamp(14px, 1.3vw, 16px);
+    font-weight: 500;
+    letter-spacing: 0.8px;
+    color: rgba(255, 255, 255, 0.85);
+    transition: all 0.3s ease;
+}
+
+.explore-icon {
+    width: clamp(32px, 3.5vw, 38px);
+    height: clamp(32px, 3.5vw, 38px);
+    background: linear-gradient(135deg, #fff 0%, #e0e0e0 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #000;
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.explore-icon svg {
+    width: 16px;
+    height: 16px;
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+    z-index: 2;
+}
+
+/* Expanding white fill from circle icon - smooth blur effect */
+.explore-button::after {
+    content: '';
+    position: absolute;
+    right: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: clamp(32px, 3.5vw, 38px);
+    height: clamp(32px, 3.5vw, 38px);
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 50px;
+    transition: all 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+    z-index: 1;
+    filter: blur(0px);
+}
+
+.explore-button:hover::after {
+    width: 100%;
+    height: 100%;
+    right: 0;
+    filter: blur(0px);
+    background: #fff;
+}
+
+.explore-button:hover {
+    border-color: rgba(255, 255, 255, 0.4);
+    transform: translateY(-3px);
+    box-shadow:
+        0 10px 30px rgba(0, 0, 0, 0.25),
+        0 0 25px rgba(255, 255, 255, 0.1);
+}
+
+.explore-button:hover .explore-text {
+    color: #000;
+    letter-spacing: 1.2px;
+    position: relative;
+    z-index: 2;
+}
+
+.explore-button:hover .explore-icon {
+    background: transparent;
+    box-shadow: none;
+}
+
+.explore-button:hover .explore-icon svg {
+    color: #000;
+    transform: translateX(3px);
+}
+
+.explore-button:active {
+    transform: translateY(-1px) scale(0.98);
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Mobile - Show explore button with enhanced styling */
+@media (max-width: 767px) {
+    .explore-button {
+        display: flex;
+        /* Show on mobile */
+        padding: 6px 6px 6px 24px;
+        gap: 14px;
+
+        /* Enhanced glass effect for mobile */
+        background: linear-gradient(135deg,
+                rgba(255, 255, 255, 0.08) 0%,
+                rgba(255, 255, 255, 0.03) 100%);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(25px) saturate(1.8);
+        -webkit-backdrop-filter: blur(25px) saturate(1.8);
+
+        box-shadow:
+            0 8px 32px rgba(0, 0, 0, 0.25),
+            0 4px 12px rgba(0, 0, 0, 0.15),
+            inset 0 1px 0 0 rgba(255, 255, 255, 0.15);
+    }
+
+    .explore-text {
+        font-size: 15px;
+        font-weight: 600;
+        letter-spacing: 1px;
+        color: rgba(255, 255, 255, 0.95);
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    }
+
+    .explore-icon {
+        width: 36px;
+        height: 36px;
+        background: linear-gradient(135deg, #fff 0%, #f0f0f0 100%);
+        box-shadow:
+            0 4px 12px rgba(0, 0, 0, 0.2),
+            inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    }
+
+    .explore-icon svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    .explore-button::after {
+        width: 36px;
+        height: 36px;
+    }
+}
+
+/* Small mobile devices */
+@media (max-width: 480px) {
+    .explore-button {
+        display: flex;
+        padding: 5px 5px 5px 20px;
+        gap: 12px;
+        margin-top: 20px;
+    }
+
+    .explore-text {
+        font-size: 14px;
+        letter-spacing: 0.8px;
+    }
+
+    .explore-icon {
+        width: 32px;
+        height: 32px;
+    }
+
+    .explore-icon svg {
+        width: 14px;
+        height: 14px;
+    }
+
+    .explore-button::after {
+        width: 32px;
+        height: 32px;
+    }
 }
 
 /* Footer Section */
@@ -182,9 +401,12 @@
 /* iPad Air และ Tablet แนวนอน (Landscape) - 768px ถึง 1024px */
 @media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
     .hero-section {
-        top: -40px !important;  /* ขยับขึ้น จาก 0 เป็น -40px */
-        height: calc(100vh - 40px);  /* ปรับ height ให้สอดคล้อง */
-        padding-top: 40px;  /* ลด padding-top */
+        top: -40px !important;
+        /* ขยับขึ้น จาก 0 เป็น -40px */
+        height: calc(100vh - 40px);
+        /* ปรับ height ให้สอดคล้อง */
+        padding-top: 40px;
+        /* ลด padding-top */
         justify-content: flex-start;
         gap: clamp(15px, 3vh, 30px);
     }
@@ -221,8 +443,10 @@
 /* iPad Pro 11" และ 12.9" Landscape */
 @media (min-width: 1024px) and (max-width: 1366px) and (orientation: landscape) and (max-height: 1024px) {
     .hero-section {
-        top: clamp(-120px, -15vh, -80px);  /* ขยับขึ้น เพิ่มค่าติดลบ */
-        padding-top: 30px;  /* ลด padding-top */
+        top: clamp(-120px, -15vh, -80px);
+        /* ขยับขึ้น เพิ่มค่าติดลบ */
+        padding-top: 30px;
+        /* ลด padding-top */
         gap: clamp(20px, 4vh, 35px);
     }
 
@@ -251,10 +475,12 @@
 /* ทุกอุปกรณ์ที่ความสูงน้อยกว่า 600px (Landscape mode ทั่วไป) */
 @media (max-height: 600px) and (orientation: landscape) {
     .hero-section {
-        top: -30px !important;  /* ขยับขึ้น จาก 0 เป็น -30px */
+        top: -30px !important;
+        /* ขยับขึ้น จาก 0 เป็น -30px */
         height: auto;
         min-height: 100vh;
-        padding-top: clamp(40px, 8vh, 60px);  /* ลด padding-top */
+        padding-top: clamp(40px, 8vh, 60px);
+        /* ลด padding-top */
         padding-bottom: 30px;
         gap: clamp(10px, 2vh, 20px);
     }
@@ -287,8 +513,10 @@
 /* iPhone และ Smartphone Landscape (สูงน้อยกว่า 450px) */
 @media (max-height: 450px) and (orientation: landscape) {
     .hero-section {
-        top: -20px !important;  /* ขยับขึ้นเล็กน้อย */
-        padding-top: 30px;  /* ลด padding-top */
+        top: -20px !important;
+        /* ขยับขึ้นเล็กน้อย */
+        padding-top: 30px;
+        /* ลด padding-top */
         gap: 8px;
     }
 
@@ -325,19 +553,19 @@
         top: -120px;
         padding: 0 15px;
     }
-    
+
     .hero-section h1 {
         font-size: 24px;
         line-height: 1.1;
         margin-bottom: 8px;
     }
-    
+
     .hero-section p {
         font-size: 12px;
         line-height: 1.4;
         margin-top: 5px;
     }
-    
+
     .hero-section img {
         width: 150px;
         margin-top: 15px;
@@ -357,17 +585,17 @@
         top: -140px;
         padding: 0 20px;
     }
-    
+
     .hero-section h1 {
         font-size: 32px;
         margin-bottom: 12px;
     }
-    
+
     .hero-section p {
         font-size: 16px;
         line-height: 1.5;
     }
-    
+
     .hero-section img {
         width: 200px;
         margin-top: 25px;
@@ -390,8 +618,269 @@
 
 /* High contrast mode */
 @media (prefers-contrast: high) {
+
     .hero-section h1,
     .hero-section p {
         filter: contrast(1.2);
+    }
+}
+
+/* ===========================================
+   HEIGHT-BASED RESPONSIVE (ALL ORIENTATIONS)
+   ให้ hero section เล็กลงเมื่อ viewport สูงน้อย
+   ใช้ได้ทั้ง portrait และ landscape
+   (ไม่เปลี่ยน position แค่ย่อขนาด)
+   =========================================== */
+
+/* เมื่อ viewport สูง 850px หรือน้อยกว่า (รวม 1280x800) */
+@media (max-height: 850px) {
+    .hero-section h1 {
+        font-size: clamp(18px, 3vw, 28px);
+        margin-bottom: clamp(3px, 0.6vh, 6px);
+    }
+
+    .hero-section p {
+        font-size: clamp(10px, 1.4vw, 13px);
+        margin-top: clamp(1px, 0.3vh, 3px);
+        line-height: 1.3;
+    }
+
+    .hero-section img {
+        width: clamp(100px, 14vw, 150px);
+        margin-top: clamp(6px, 1vh, 12px);
+    }
+
+    .explore-button {
+        margin-top: clamp(5px, 0.8vh, 10px);
+        padding: 2px 2px 2px 12px;
+        gap: 8px;
+    }
+
+    .explore-text {
+        font-size: clamp(10px, 0.9vw, 12px);
+    }
+
+    .explore-icon {
+        width: clamp(22px, 2vw, 26px);
+        height: clamp(22px, 2vw, 26px);
+    }
+
+    .explore-icon svg {
+        width: 10px;
+        height: 10px;
+    }
+
+    .explore-button::after {
+        width: clamp(22px, 2vw, 26px);
+        height: clamp(22px, 2vw, 26px);
+    }
+
+    .gradient-text::after {
+        width: clamp(18px, 2.5vw, 24px);
+        height: clamp(16px, 2.2vw, 21px);
+        right: clamp(-14px, -2vw, -10px);
+    }
+}
+
+/* เมื่อ viewport สูง 750px หรือน้อยกว่า */
+@media (max-height: 750px) {
+    .hero-section h1 {
+        font-size: clamp(24px, 4.5vw, 42px);
+        margin-bottom: clamp(6px, 1.2vh, 12px);
+    }
+
+    .hero-section p {
+        font-size: clamp(12px, 2.2vw, 18px);
+        line-height: 1.4;
+        margin-top: clamp(3px, 0.6vh, 6px);
+    }
+
+    .hero-section img {
+        width: clamp(150px, 22vw, 220px);
+        margin-top: clamp(12px, 2vh, 22px);
+    }
+
+    .explore-button {
+        margin-top: clamp(10px, 1.5vh, 16px);
+        padding: 3px 3px 3px 16px;
+        gap: 10px;
+    }
+
+    .explore-text {
+        font-size: clamp(12px, 1.1vw, 14px);
+    }
+
+    .explore-icon {
+        width: clamp(28px, 2.8vw, 32px);
+        height: clamp(28px, 2.8vw, 32px);
+    }
+
+    .explore-icon svg {
+        width: 13px;
+        height: 13px;
+    }
+
+    .explore-button::after {
+        width: clamp(28px, 2.8vw, 32px);
+        height: clamp(28px, 2.8vw, 32px);
+    }
+
+    .gradient-text::after {
+        width: clamp(24px, 4vw, 35px);
+        height: clamp(22px, 3.8vw, 32px);
+    }
+}
+
+/* เมื่อ viewport สูง 650px หรือน้อยกว่า */
+@media (max-height: 650px) {
+    .hero-section h1 {
+        font-size: clamp(22px, 4vw, 36px);
+        margin-bottom: clamp(5px, 1vh, 10px);
+    }
+
+    .hero-section p {
+        font-size: clamp(11px, 2vw, 16px);
+        line-height: 1.3;
+        margin-top: clamp(2px, 0.5vh, 5px);
+    }
+
+    .hero-section img {
+        width: clamp(120px, 18vw, 180px);
+        margin-top: clamp(10px, 1.8vh, 18px);
+    }
+
+    .explore-button {
+        margin-top: clamp(8px, 1.2vh, 14px);
+        padding: 3px 3px 3px 14px;
+        gap: 8px;
+    }
+
+    .explore-text {
+        font-size: 12px;
+    }
+
+    .explore-icon {
+        width: 26px;
+        height: 26px;
+    }
+
+    .explore-icon svg {
+        width: 12px;
+        height: 12px;
+    }
+
+    .explore-button::after {
+        width: 26px;
+        height: 26px;
+    }
+
+    .gradient-text::after {
+        width: clamp(20px, 3.5vw, 30px);
+        height: clamp(18px, 3.2vw, 28px);
+        right: clamp(-16px, -3vw, -12px);
+    }
+}
+
+/* เมื่อ viewport สูง 550px หรือน้อยกว่า */
+@media (max-height: 550px) {
+    .hero-section h1 {
+        font-size: clamp(18px, 3.5vw, 30px);
+        margin-bottom: clamp(4px, 0.8vh, 8px);
+        line-height: 1.1;
+    }
+
+    .hero-section p {
+        font-size: clamp(10px, 1.8vw, 14px);
+        line-height: 1.2;
+        margin-top: clamp(1px, 0.4vh, 4px);
+    }
+
+    .hero-section img {
+        width: clamp(90px, 15vw, 140px);
+        margin-top: clamp(8px, 1.5vh, 14px);
+    }
+
+    .explore-button {
+        margin-top: clamp(6px, 1vh, 12px);
+        padding: 2px 2px 2px 12px;
+        gap: 6px;
+    }
+
+    .explore-text {
+        font-size: 11px;
+        letter-spacing: 0.4px;
+    }
+
+    .explore-icon {
+        width: 22px;
+        height: 22px;
+    }
+
+    .explore-icon svg {
+        width: 10px;
+        height: 10px;
+    }
+
+    .explore-button::after {
+        width: 22px;
+        height: 22px;
+    }
+
+    .gradient-text::after {
+        width: clamp(18px, 3vw, 26px);
+        height: clamp(16px, 2.8vw, 24px);
+        right: clamp(-14px, -2.5vw, -10px);
+    }
+}
+
+/* เมื่อ viewport สูง 450px หรือน้อยกว่า (มือถือย่อมากๆ) */
+@media (max-height: 450px) {
+    .hero-section h1 {
+        font-size: clamp(16px, 3vw, 24px);
+        margin-bottom: clamp(3px, 0.6vh, 6px);
+        line-height: 1.05;
+    }
+
+    .hero-section p {
+        font-size: clamp(9px, 1.5vw, 12px);
+        line-height: 1.15;
+        margin-top: clamp(1px, 0.3vh, 3px);
+    }
+
+    .hero-section img {
+        width: clamp(70px, 12vw, 110px);
+        margin-top: clamp(5px, 1vh, 10px);
+    }
+
+    .explore-button {
+        margin-top: clamp(5px, 0.8vh, 10px);
+        padding: 2px 2px 2px 10px;
+        gap: 5px;
+    }
+
+    .explore-text {
+        font-size: 10px;
+        letter-spacing: 0.3px;
+    }
+
+    .explore-icon {
+        width: 20px;
+        height: 20px;
+    }
+
+    .explore-icon svg {
+        width: 9px;
+        height: 9px;
+    }
+
+    .explore-button::after {
+        width: 20px;
+        height: 20px;
+    }
+
+    .gradient-text::after {
+        width: clamp(15px, 2.5vw, 22px);
+        height: clamp(13px, 2.2vw, 20px);
+        right: clamp(-12px, -2vw, -8px);
     }
 }

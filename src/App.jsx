@@ -2,6 +2,7 @@ import { useEffect, useState, useRef, lazy, Suspense } from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import Navbar from './components/Navbar/Navbar'
 import Loading from './components/Loading/Loading.jsx'
+import SmoothFollower from './components/SmoothFollower/SmoothFollower.jsx'
 
 // Lazy load components for code splitting
 const Home = lazy(() => import('./pages/Home'))
@@ -61,6 +62,7 @@ function App() {
 
   return (
     <Router>
+      <SmoothFollower />
       {isLoading && <Loading fadeOut={fadeOut} />}
       <Navbar />
       <Suspense fallback={null}>

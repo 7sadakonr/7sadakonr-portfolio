@@ -15,6 +15,9 @@ function Loading({ fadeOut }) {
 
   return (
     <div className={`deep-space ${fadeOut ? 'fade-out' : ''}`}>
+      {/* Base Dark Background */}
+      <div className="loading-bg"></div>
+
       {/* Background Stars */}
       <div className="star-layer">
         {stars.map((s) => (
@@ -32,6 +35,28 @@ function Loading({ fadeOut }) {
           />
         ))}
       </div>
+
+      {/* Shooting Stars */}
+      <div className="loading-shooting-stars">
+        <div className="shooting-star"></div>
+        <div className="shooting-star"></div>
+        <div className="shooting-star"></div>
+        <div className="shooting-star"></div>
+        <div className="shooting-star"></div>
+        <div className="shooting-star"></div>
+        <div className="shooting-star"></div>
+        <div className="shooting-star"></div>
+      </div>
+
+      {/* Mesh Gradients */}
+      <div className="loading-mesh"></div>
+      <div className="loading-mesh-extra"></div>
+
+      {/* Floor Glow */}
+      <div className="loading-floor-glow"></div>
+
+      {/* Vignette */}
+      <div className="loading-vignette"></div>
 
       {/* Horizon Glow (Planet Atmosphere) */}
       <div className="horizon-glow"></div>

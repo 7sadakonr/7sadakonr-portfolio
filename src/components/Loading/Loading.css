@@ -72,36 +72,395 @@
   }
 }
 
-/* Horizon Glow */
+/* Base dark background */
+.loading-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: #000;
+  z-index: 0;
+}
+
+/* Shooting Stars Layer */
+.loading-shooting-stars {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.shooting-star {
+  position: absolute;
+  width: 120px;
+  height: 2px;
+  background: linear-gradient(90deg,
+      rgba(138, 56, 245, 0) 0%,
+      rgba(138, 56, 245, 0.4) 20%,
+      rgba(255, 119, 119, 0.7) 50%,
+      rgba(255, 255, 255, 0.95) 100%);
+  border-radius: 50%;
+  transform: rotate(-35deg);
+  opacity: 0;
+  filter: drop-shadow(0 0 6px rgba(255, 119, 119, 0.8)) drop-shadow(0 0 12px rgba(138, 56, 245, 0.6));
+}
+
+/* Fluffy glowing tail */
+.shooting-star::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: -30px;
+  transform: translateY(-50%);
+  width: 80px;
+  height: 8px;
+  background: radial-gradient(ellipse at right,
+      rgba(138, 56, 245, 0.4) 0%,
+      rgba(138, 56, 245, 0.15) 40%,
+      transparent 100%);
+  filter: blur(4px);
+  border-radius: 50%;
+}
+
+/* Bright head glow */
+.shooting-star::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: -3px;
+  transform: translateY(-50%);
+  width: 6px;
+  height: 6px;
+  background: radial-gradient(circle,
+      rgba(255, 255, 255, 1) 0%,
+      rgba(255, 200, 200, 0.8) 50%,
+      transparent 100%);
+  filter: blur(1px);
+  border-radius: 50%;
+}
+
+.shooting-star:nth-child(1) {
+  top: 15%;
+  left: 20%;
+  animation: shootingStar 8s ease-in-out infinite;
+  animation-delay: 0s;
+}
+
+.shooting-star:nth-child(2) {
+  top: 35%;
+  left: 55%;
+  width: 80px;
+  animation: shootingStar 12s ease-in-out infinite;
+  animation-delay: 3s;
+}
+
+.shooting-star:nth-child(3) {
+  top: 60%;
+  left: 10%;
+  width: 120px;
+  animation: shootingStar 15s ease-in-out infinite;
+  animation-delay: 7s;
+}
+
+.shooting-star:nth-child(4) {
+  top: 25%;
+  left: 75%;
+  width: 60px;
+  animation: shootingStar 10s ease-in-out infinite;
+  animation-delay: 5s;
+}
+
+.shooting-star:nth-child(5) {
+  top: 45%;
+  left: 40%;
+  width: 90px;
+  animation: shootingStar 6s ease-in-out infinite;
+  animation-delay: 1s;
+}
+
+.shooting-star:nth-child(6) {
+  top: 70%;
+  left: 65%;
+  width: 70px;
+  animation: shootingStar 7s ease-in-out infinite;
+  animation-delay: 4s;
+}
+
+.shooting-star:nth-child(7) {
+  top: 20%;
+  left: 5%;
+  width: 110px;
+  animation: shootingStar 9s ease-in-out infinite;
+  animation-delay: 2s;
+}
+
+.shooting-star:nth-child(8) {
+  top: 80%;
+  left: 30%;
+  width: 85px;
+  animation: shootingStar 5s ease-in-out infinite;
+  animation-delay: 6s;
+}
+
+@keyframes shootingStar {
+  0% {
+    opacity: 0;
+    transform: rotate(-35deg) translateX(0);
+  }
+
+  3% {
+    opacity: 1;
+  }
+
+  12% {
+    opacity: 0;
+    transform: rotate(-35deg) translateX(350px);
+  }
+
+  100% {
+    opacity: 0;
+    transform: rotate(-35deg) translateX(350px);
+  }
+}
+
+/* Subtle Mesh Gradient */
+.loading-mesh {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 2;
+  overflow: hidden;
+}
+
+.loading-mesh::before {
+  content: '';
+  position: absolute;
+  top: -15%;
+  left: -15%;
+  width: 70%;
+  height: 60%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.09) 0%, rgba(255, 255, 255, 0.03) 40%, transparent 65%);
+  filter: blur(70px);
+  animation: meshFloat1 35s ease-in-out infinite;
+}
+
+.loading-mesh::after {
+  content: '';
+  position: absolute;
+  bottom: -10%;
+  right: -10%;
+  width: 65%;
+  height: 55%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.025) 40%, transparent 65%);
+  filter: blur(70px);
+  animation: meshFloat2 40s ease-in-out infinite;
+}
+
+/* Additional mesh blobs */
+.loading-mesh-extra {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 2;
+  overflow: hidden;
+}
+
+.loading-mesh-extra::before {
+  content: '';
+  position: absolute;
+  top: 35%;
+  right: -5%;
+  width: 45%;
+  height: 45%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.06) 0%, transparent 50%);
+  filter: blur(60px);
+  animation: meshFloat3 50s ease-in-out infinite;
+}
+
+.loading-mesh-extra::after {
+  content: '';
+  position: absolute;
+  bottom: 25%;
+  left: -5%;
+  width: 40%;
+  height: 40%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.05) 0%, transparent 50%);
+  filter: blur(60px);
+  animation: meshFloat4 55s ease-in-out infinite;
+}
+
+/* Mesh Float Animations */
+@keyframes meshFloat1 {
+
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  50% {
+    transform: translate(8%, 5%) scale(1.1);
+  }
+}
+
+@keyframes meshFloat2 {
+
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  50% {
+    transform: translate(-8%, -5%) scale(1.12);
+  }
+}
+
+@keyframes meshFloat3 {
+
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.6;
+  }
+
+  50% {
+    transform: translate(-10%, 8%) scale(1.15);
+    opacity: 1;
+  }
+}
+
+@keyframes meshFloat4 {
+
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.7;
+  }
+
+  50% {
+    transform: translate(10%, -6%) scale(1.1);
+    opacity: 1;
+  }
+}
+
+/* Floor Glow */
+.loading-floor-glow {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100vw;
+  height: 40vh;
+  pointer-events: none;
+  z-index: 1;
+  background: linear-gradient(to top,
+      rgba(255, 255, 255, 0.035) 0%,
+      rgba(255, 255, 255, 0.012) 35%,
+      transparent 100%);
+  filter: blur(45px);
+}
+
+/* Vignette */
+.loading-vignette {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 3;
+  background: radial-gradient(ellipse at center, transparent 50%, rgba(0, 0, 0, 0.7) 100%);
+}
+
+/* Horizon Glow - Enhanced for visibility across all platforms */
 .horizon-glow {
   position: absolute;
-  bottom: -40vh;
+  bottom: -30vh;
   left: 50%;
   transform: translateX(-50%) translateZ(0);
   -webkit-transform: translateX(-50%) translateZ(0);
-  width: 150vw;
-  height: 80vh;
-  background: radial-gradient(ellipse at center,
-      rgba(255, 77, 77, 0.2) 0%,
-      rgba(157, 78, 221, 0.15) 30%,
-      transparent 70%);
+  width: 160vw;
+  height: 70vh;
+
+  /* Softer gradient for PC - more subtle */
+  background:
+    radial-gradient(ellipse at center,
+      rgba(255, 77, 77, 0.25) 0%,
+      rgba(255, 100, 100, 0.18) 15%,
+      rgba(157, 78, 221, 0.15) 35%,
+      rgba(138, 56, 245, 0.08) 55%,
+      transparent 75%);
+
   border-radius: 50% 50% 0 0;
-  filter: blur(60px);
-  -webkit-filter: blur(60px);
+
+  /* More blur for softer look on PC */
+  filter: blur(55px);
+  -webkit-filter: blur(55px);
+
   z-index: 2;
-  animation: horizonPulse 8s ease-in-out infinite alternate;
-  /* iOS performance */
+  opacity: 0.85;
+  animation: horizonPulse 6s ease-in-out infinite alternate;
+
+  /* Cross-platform performance */
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
+  will-change: opacity;
+}
+
+/* Additional glow layer - also softened */
+.horizon-glow::before {
+  content: '';
+  position: absolute;
+  bottom: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80%;
+  height: 50%;
+  background: radial-gradient(ellipse at center,
+      rgba(255, 119, 119, 0.3) 0%,
+      rgba(255, 77, 77, 0.18) 40%,
+      transparent 70%);
+  filter: blur(40px);
+  -webkit-filter: blur(40px);
+  border-radius: 50%;
+}
+
+/* Inner bright core - softened */
+.horizon-glow::after {
+  content: '';
+  position: absolute;
+  bottom: 15%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 50%;
+  height: 30%;
+  background: radial-gradient(ellipse at center,
+      rgba(255, 200, 200, 0.25) 0%,
+      rgba(255, 150, 150, 0.15) 50%,
+      transparent 80%);
+  filter: blur(30px);
+  -webkit-filter: blur(30px);
+  border-radius: 50%;
 }
 
 @keyframes horizonPulse {
   0% {
-    opacity: 0.6;
+    opacity: 0.7;
+    transform: translateX(-50%) scale(1) translateZ(0);
   }
 
   100% {
     opacity: 0.9;
+    transform: translateX(-50%) scale(1.03) translateZ(0);
   }
 }
 

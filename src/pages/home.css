@@ -7,23 +7,44 @@ body.home-page {
     margin: 0;
     padding: 0;
     height: 100vh;
+    height: 100dvh;
+    /* Dynamic viewport height for mobile */
+    max-height: 100vh;
+    max-height: 100dvh;
     overflow: hidden !important;
     position: fixed !important;
     top: 0;
     left: 0;
+    right: 0;
+    bottom: 0;
     width: 100vw !important;
-    overscroll-behavior: none;
-    touch-action: pan-x pan-y pinch-zoom;
-    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: none !important;
+    overscroll-behavior-y: none !important;
+    touch-action: none !important;
+    /* Disable all touch scrolling */
+    -webkit-overflow-scrolling: auto !important;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* iOS Safari specific fixes */
+@supports (-webkit-touch-callout: none) {
+    body.home-page {
+        height: -webkit-fill-available;
+        max-height: -webkit-fill-available;
+    }
 }
 
 body.home-page::-webkit-scrollbar {
     display: none;
 }
 
-body.home-page {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
+/* Prevent rubber-banding on iOS */
+html:has(body.home-page) {
+    overflow: hidden !important;
+    height: 100%;
+    position: fixed;
+    width: 100%;
 }
 
 /* Home page background */
@@ -60,15 +81,21 @@ body.home-page {
 .home {
     width: 100vw;
     height: 100vh;
+    height: 100dvh;
     min-width: 100vw;
     min-height: 100vh;
-    overflow: hidden;
+    min-height: 100dvh;
+    overflow: hidden !important;
     position: fixed;
     top: 0;
     left: 0;
+    right: 0;
+    bottom: 0;
     z-index: 0;
     background-color: #000;
     transition: opacity 0.8s ease-in-out;
+    touch-action: none;
+    overscroll-behavior: none;
 
     /* iOS Safari performance optimizations */
     -webkit-transform: translateZ(0);
