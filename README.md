@@ -91,7 +91,7 @@ Visit the live site: [7sadakonr.xyz](https://7sadakonr.xyz)
 
 ### Projects Page
 - Interactive project cards
-- Image magnifier with liquid glass effect
+- Image magnifier with glass effect
 - Tech stack badges
 
 ## License
