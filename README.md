@@ -102,7 +102,7 @@ This project is dual-licensed:
 2.  **Content & Assets**: The images, personal data, and text content are licensed under **Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)**. This means you cannot use them for commercial purposes without permission.
 
 ---
-&copy; 2025 Jetsadakobr Muangwichit. All Rights Reserved.
+&copy; 2025 Jetsadakorn Muangwichit. All Rights Reserved.
 
 
 ## 📬 Contact
