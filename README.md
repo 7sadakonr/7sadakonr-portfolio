@@ -110,7 +110,7 @@ This project is dual-licensed:
 ## 📬 Contact
 
 - **GitHub**: [@7sadakonr](https://github.com/7sadakonr)
-- **Portfolio**: [7sadakonr-portfolio.vercel.app](https://7sadakonr-portfolio.vercel.app)
+- **Portfolio**: [7sadakonr.xyz]
 
 ---
 
