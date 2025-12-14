@@ -94,15 +94,17 @@ Visit the live site: [https://7sadakonr-portfolio.vercel.app](https://7sadakonr-
 - Image magnifier with liquid glass effect
 - Tech stack badges
 
-## 📄 License
+#### License
 
 This project is dual-licensed:
 
 1.  **Source Code**: The code is licensed under the **MIT License**. You are free to use, modify, and distribute it as long as you include the original copyright notice.
-2.  **Content & Assets**: The images, personal data, and text content are licensed under **Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)**. This means you cannot use them for commercial purposes without permission.
+2.  **Content & Assets**: The images, personal data, and text content are licensed under **[Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)](https://creativecommons.org/licenses/by-nc-sa/4.0/)**. This means you cannot use them for commercial purposes without permission.
 
 ---
+
 &copy; 2025 Jetsadakorn Muangwichit. All Rights Reserved.
+
 
 
 ## 📬 Contact
