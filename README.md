@@ -94,7 +94,7 @@ Visit the live site: [https://7sadakonr-portfolio.vercel.app](https://7sadakonr-
 - Image magnifier with liquid glass effect
 - Tech stack badges
 
-#### License
+## License
 
 This project is dual-licensed:
 
