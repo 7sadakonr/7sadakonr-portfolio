@@ -6,12 +6,12 @@ A modern, responsive portfolio website showcasing my work and skills. Built with
 
 ## Features
 
-- ** Glass Morphism UI** - Beautiful translucent glass effect design
-- ** Universe Theme** - Animated twinkling stars and shooting stars background
-- ** Interactive Magnifier** - Zoom into project images with a liquid glass lens effect
-- ** Mobile Optimized** - Fully responsive design optimized for all devices
-- ** Smooth Animations** - Elegant transitions and animations throughout
-- ** Fast Performance** - Built with Vite for lightning-fast load times
+- Glass Morphism UI** - Beautiful translucent glass effect design
+- Universe Theme** - Animated twinkling stars and shooting stars background
+- Interactive Magnifier** - Zoom into project images with a liquid glass lens effect
+- Mobile Optimized** - Fully responsive design optimized for all devices
+- Smooth Animations** - Elegant transitions and animations throughout
+- Fast Performance** - Built with Vite for lightning-fast load times
 
 ## Tech Stack
 
