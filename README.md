@@ -1,19 +1,19 @@
-# 🌌 7sadakonr Portfolio
+# 7sadakonr Portfolio
 
 A modern, responsive portfolio website showcasing my work and skills. Built with React and featuring a stunning universe-themed design.
 
 ![Portfolio Preview](src/assets/img/portfolio.png)
 
-## ✨ Features
+## Features
 
-- **🎨 Glass Morphism UI** - Beautiful translucent glass effect design
-- **🌟 Universe Theme** - Animated twinkling stars and shooting stars background
-- **🖱️ Interactive Magnifier** - Zoom into project images with a liquid glass lens effect
-- **📱 Mobile Optimized** - Fully responsive design optimized for all devices
-- **🎭 Smooth Animations** - Elegant transitions and animations throughout
-- **⚡ Fast Performance** - Built with Vite for lightning-fast load times
+- ** Glass Morphism UI** - Beautiful translucent glass effect design
+- ** Universe Theme** - Animated twinkling stars and shooting stars background
+- ** Interactive Magnifier** - Zoom into project images with a liquid glass lens effect
+- ** Mobile Optimized** - Fully responsive design optimized for all devices
+- ** Smooth Animations** - Elegant transitions and animations throughout
+- ** Fast Performance** - Built with Vite for lightning-fast load times
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 | Technology | Description |
 |------------|-------------|
@@ -24,7 +24,7 @@ A modern, responsive portfolio website showcasing my work and skills. Built with
 | **Three.js** | 3D graphics |
 | **CSS** | Custom styling with glass morphism |
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 src/
@@ -42,7 +42,7 @@ src/
 └── App.jsx           # Main app component
 ```
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 
@@ -75,7 +75,7 @@ npm run dev
 npm run build
 ```
 
-## 🌐 Live Demo
+## Live Demo
 
 Visit the live site: [https://7sadakonr-portfolio.vercel.app](https://7sadakonr-portfolio.vercel.app)
 
@@ -107,7 +107,7 @@ This project is dual-licensed:
 
 
 
-## 📬 Contact
+## Contact
 
 - **GitHub**: [@7sadakonr](https://github.com/7sadakonr)
 - **Portfolio**: [7sadakonr.xyz](http://7sadakonr.xyz)
