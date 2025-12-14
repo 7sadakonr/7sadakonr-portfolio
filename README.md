@@ -110,7 +110,7 @@ This project is dual-licensed:
 ## 📬 Contact
 
 - **GitHub**: [@7sadakonr](https://github.com/7sadakonr)
-- **Portfolio**: [7sadakonr.xyz]
+- **Portfolio**: [7sadakonr.xyz](http://7sadakonr.xyz)
 
 ---
 
