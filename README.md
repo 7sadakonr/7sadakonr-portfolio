@@ -75,7 +75,7 @@ npm run dev
 npm run build
 ```
 
-## Live Demo
+## View Site
 
 Visit the live site: [7sadakonr.xyz](https://7sadakonr.xyz)
 
