@@ -77,7 +77,7 @@ npm run build
 
 ## Live Demo
 
-Visit the live site: [https://7sadakonr-portfolio.vercel.app](https://7sadakonr-portfolio.vercel.app)
+Visit the live site: [7sadakonr.xyz](https://7sadakonr.xyz)
 
 ### Home Page
 - Hero section with animated gradient text
