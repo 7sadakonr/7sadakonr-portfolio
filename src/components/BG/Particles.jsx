@@ -64,28 +64,41 @@ const fragment = /* glsl */ `
     vec2 uv = gl_PointCoord.xy;
     float d = length(uv - vec2(0.5));
     
-    if(uAlphaParticles < 0.5) {
-      if(d > 0.5) {
-        discard;
-      }
-      gl_FragColor = vec4(vColor + 0.2 * sin(uv.yxx + uTime + vRandom.y * 6.28), 1.0);
-    } else {
-      float circle = smoothstep(0.5, 0.4, d) * 0.8;
-      gl_FragColor = vec4(vColor + 0.2 * sin(uv.yxx + uTime + vRandom.y * 6.28), circle);
-    }
+    // Smooth twinkling effect - realistic star shimmer
+    float twinkleSpeed1 = vRandom.x * 1.2 + 0.3;
+    float twinkleSpeed2 = vRandom.y * 0.8 + 0.2;
+    float twinkleSpeed3 = vRandom.z * 0.5 + 0.1;
+    
+    // Multiple sine waves for organic twinkling
+    float twinkle = sin(uTime * twinkleSpeed1 + vRandom.z * 6.28) * 0.25 + 0.75;
+    twinkle *= sin(uTime * twinkleSpeed2 + vRandom.w * 6.28) * 0.15 + 0.85;
+    twinkle *= sin(uTime * twinkleSpeed3 + vRandom.x * 6.28) * 0.1 + 0.9;
+    
+    // Brighter soft glow effect
+    float glow = smoothstep(0.5, 0.0, d) * 1.5;
+    float softEdge = smoothstep(0.5, 0.1, d);
+    
+    // Combine for bright star-like appearance
+    float alpha = glow * twinkle * softEdge;
+    alpha = clamp(alpha, 0.0, 1.0);
+    
+    // Warm/cool color variation for natural look
+    vec3 starColor = vColor + 0.15 * sin(vRandom.xyz * 6.28 + uTime * 0.3);
+    
+    gl_FragColor = vec4(starColor * 1.2, alpha);
   }
 `;
 
 const Particles = ({
-  particleCount = 1000,
-  particleSpread = 15,
-  speed = 0.1,
+  particleCount = 3000, // จำนวนดาวเยอะมาก
+  particleSpread = 20, // กระจายกว้างขึ้น
+  speed = 0.05, // ช้าลงให้ smooth มากขึ้น
   particleColors,
   moveParticlesOnHover = false,
   particleHoverFactor = 0,
   alphaParticles = true,
-  particleBaseSize = 50, // ลดขนาดเม็ด default
-  sizeRandomness = 0, // ลดความต่างขนาด ไม่ให้มีเม็ดใหญ่
+  particleBaseSize = 50, // ขนาดใหญ่ขึ้นให้เห็นชัด
+  sizeRandomness = 0.3, // ขนาดต่างกันเล็กน้อยให้ดูธรรมชาติ
   cameraDistance = 50,
   disableRotation = true,
   className,
@@ -139,7 +152,10 @@ const Particles = ({
         z = Math.random() * 2 - 1;
         len = x * x + y * y + z * z;
       } while (len > 1 || len === 0);
-      const r = Math.cbrt(Math.random());
+
+      // Use power distribution to concentrate particles in center
+      // Lower power = more concentrated in center
+      const r = Math.pow(Math.random(), 0.4); // 0.4 makes center denser
       positions.set([x * r, y * r, z * r], i * 3);
       randoms.set([Math.random(), Math.random(), Math.random(), Math.random()], i * 4);
       const col = hexToRgb(palette[Math.floor(Math.random() * palette.length)]);

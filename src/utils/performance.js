@@ -41,7 +41,7 @@ export const trackWebVitals = () => {
 export const preloadCriticalResources = () => {
   // Preload critical images
   const criticalImages = [
-    '/src/assets/img/BG.png',
+    '/src/assets/img/BG.webp',
     '/src/assets/img/Group 23.png'
   ]
 
