@@ -11,11 +11,10 @@ const Navbar = () => {
   const [hasInitialized, setHasInitialized] = useState(false)
   const [isIPad, setIsIPad] = useState(false)
 
-  // ตรวจจับ iPad
+  // Detect iPad
   useEffect(() => {
     const detectIPad = () => {
       const ua = navigator.userAgent;
-      // ตรวจจับ iPad (รวมถึง iPad ที่ใช้ iPadOS ที่แสดงเป็น Mac)
       const isIPadUA = /iPad/.test(ua);
       const isIPadOS = /Macintosh/.test(ua) && navigator.maxTouchPoints > 1;
       return isIPadUA || isIPadOS;
@@ -119,7 +118,7 @@ const Navbar = () => {
 
   return (
     <>
-      {/* Desktop Navbar - ซ่อนถ้าเป็น iPad */}
+      {/* Desktop Navbar */}
       {!isIPad && (
         <nav className="navbar" role="navigation" aria-label="Main navigation">
           <GlassSurface
@@ -130,8 +129,8 @@ const Navbar = () => {
             opacity={0.93}
             borderRadius={50}
             borderWidth={0.1}
-            blur={11}
-            displace={3}
+            blur={20}
+            displace={4}
             backgroundOpacity={0.05}
           >
             <div
@@ -160,9 +159,9 @@ const Navbar = () => {
         </nav>
       )}
 
-      {/* Mobile Fullscreen Navbar - แสดงถ้าเป็น Mobile หรือ iPad */}
+      {/* Mobile Fullscreen Navbar */}
       <nav className={`mobile-navbar-fullscreen ${isIPad ? 'show-for-ipad' : ''}`} role="navigation" aria-label="Mobile navigation">
-        {/* ใช้ GlassSurface wrapper สำหรับปุ่ม hamburger */}
+        {/* GlassSurface hamburger button */}
         <div className="mobile-navbar-toggle-wrapper">
           <GlassSurface
             width={64}

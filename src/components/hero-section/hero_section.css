@@ -32,6 +32,7 @@
     font-weight: 700;
     line-height: 1.2;
     margin-bottom: clamp(6px, 1.5vh, 20px);
+    white-space: nowrap;
 }
 
 .hero-section p {
@@ -88,7 +89,6 @@
     position: relative;
     display: inline-block;
     line-height: 1.4;
-    /* เพิ่ม line-height ให้มีพื้นที่มากขึ้น */
 }
 
 .gradient-text-glow {
@@ -128,7 +128,7 @@
     white-space: pre;
     line-height: 1.4;
 
-    /* ขยายพื้นที่มากขึ้น โดยเฉพาะด้านล่าง */
+    /* Extended padding for descenders */
     padding: 0.15em 0.10em 0.35em 0.10em;
     margin: -0.15em -0.10em -0.35em -0.10em;
     overflow: visible;
@@ -157,7 +157,7 @@
     background-repeat: no-repeat;
     background-position: center;
     position: absolute;
-    /* Dynamic size ตาม viewport */
+    /* Dynamic viewport scaling */
     width: clamp(16px, calc(1.5vw + 1vh + 10px), 40px);
     height: clamp(14px, calc(1.4vw + 0.9vh + 9px), 35px);
     right: clamp(-20px, calc(-1vw - 0.8vh - 8px), -10px);
@@ -311,48 +311,48 @@
     .explore-button {
         display: flex;
         /* Show on mobile */
-        padding: 6px 6px 6px 24px;
-        gap: 14px;
+        padding: 4px 4px 4px 16px;
+        gap: 10px;
 
         /* Enhanced glass effect for mobile */
         background: linear-gradient(135deg,
                 rgba(255, 255, 255, 0.08) 0%,
                 rgba(255, 255, 255, 0.03) 100%);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        backdrop-filter: blur(25px) saturate(1.8);
-        -webkit-backdrop-filter: blur(25px) saturate(1.8);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(20px) saturate(1.6);
+        -webkit-backdrop-filter: blur(20px) saturate(1.6);
 
         box-shadow:
-            0 8px 32px rgba(0, 0, 0, 0.25),
-            0 4px 12px rgba(0, 0, 0, 0.15),
-            inset 0 1px 0 0 rgba(255, 255, 255, 0.15);
+            0 4px 16px rgba(0, 0, 0, 0.2),
+            0 2px 8px rgba(0, 0, 0, 0.1),
+            inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
     }
 
     .explore-text {
-        font-size: 15px;
-        font-weight: 600;
-        letter-spacing: 1px;
-        color: rgba(255, 255, 255, 0.95);
-        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+        font-size: 12px;
+        font-weight: 500;
+        letter-spacing: 0.6px;
+        color: rgba(255, 255, 255, 0.9);
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
     }
 
     .explore-icon {
-        width: 36px;
-        height: 36px;
+        width: 26px;
+        height: 26px;
         background: linear-gradient(135deg, #fff 0%, #f0f0f0 100%);
         box-shadow:
-            0 4px 12px rgba(0, 0, 0, 0.2),
+            0 2px 8px rgba(0, 0, 0, 0.15),
             inset 0 1px 0 rgba(255, 255, 255, 0.5);
     }
 
     .explore-icon svg {
-        width: 16px;
-        height: 16px;
+        width: 12px;
+        height: 12px;
     }
 
     .explore-button::after {
-        width: 36px;
-        height: 36px;
+        width: 26px;
+        height: 26px;
     }
 }
 
@@ -360,29 +360,29 @@
 @media (max-width: 480px) {
     .explore-button {
         display: flex;
-        padding: 5px 5px 5px 20px;
-        gap: 12px;
-        margin-top: 20px;
+        padding: 3px 3px 3px 14px;
+        gap: 8px;
+        margin-top: 16px;
     }
 
     .explore-text {
-        font-size: 14px;
-        letter-spacing: 0.8px;
+        font-size: 11px;
+        letter-spacing: 0.5px;
     }
 
     .explore-icon {
-        width: 32px;
-        height: 32px;
+        width: 24px;
+        height: 24px;
     }
 
     .explore-icon svg {
-        width: 14px;
-        height: 14px;
+        width: 11px;
+        height: 11px;
     }
 
     .explore-button::after {
-        width: 32px;
-        height: 32px;
+        width: 24px;
+        height: 24px;
     }
 }
 
@@ -400,10 +400,9 @@
    TABLET LANDSCAPE / iPAD AIR LANDSCAPE FIX
    =========================================== */
 
-/* iPad Air และ Tablet แนวนอน (Landscape) - 768px ถึง 1024px */
+/* Tablet landscape */
 @media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
 
-    /* ใช้ scale แทนการเลื่อน top */
     .hero-content {
         transform: scale(0.75);
     }
@@ -416,10 +415,9 @@
     }
 }
 
-/* iPad Pro 11" และ 12.9" Landscape */
+/* iPad Pro landscape */
 @media (min-width: 1024px) and (max-width: 1366px) and (orientation: landscape) and (max-height: 1024px) {
 
-    /* ใช้ scale แทนการเลื่อน top */
     .hero-content {
         transform: scale(0.85);
     }
@@ -432,10 +430,9 @@
     }
 }
 
-/* ทุกอุปกรณ์ที่ความสูงน้อยกว่า 600px (Landscape mode ทั่วไป) */
+/* Low height landscape mode */
 @media (max-height: 600px) and (orientation: landscape) {
 
-    /* ใช้ scale แทนการเลื่อน top สำหรับ landscape ต่ำ */
     .hero-content {
         transform: scale(0.6);
     }
@@ -448,10 +445,9 @@
     }
 }
 
-/* iPhone และ Smartphone Landscape (สูงน้อยกว่า 450px) */
+/* Small smartphone landscape */
 @media (max-height: 450px) and (orientation: landscape) {
 
-    /* ใช้ scale เล็กสุดสำหรับจอต่ำมาก */
     .hero-content {
         transform: scale(0.5);
     }
@@ -471,7 +467,6 @@
 /* Mobile Portrait (320px to 480px) */
 @media (max-width: 480px) {
 
-    /* Mobile เล็ก - ใช้ scale เท่านั้น ไม่เปลี่ยนตำแหน่ง */
     .hero-content {
         transform: scale(0.85);
     }
@@ -487,7 +482,6 @@
 /* Mobile Landscape (481px to 767px) */
 @media (min-width: 481px) and (max-width: 767px) {
 
-    /* Mobile กลาง - ใช้ scale เท่านั้น ไม่เปลี่ยนตำแหน่ง */
     .hero-content {
         transform: scale(0.9);
     }
@@ -517,229 +511,227 @@
 }
 
 /* ===========================================
-   HEIGHT-BASED RESPONSIVE - ใช้ SCALE + TRANSLATEY
-   ครอบคลุมทุกขนาดหน้าจอ
-   translateY ชดเชยการเลื่อนขึ้นจาก top: -200px
+   HEIGHT-BASED RESPONSIVE
    =========================================== */
 
-/* Viewport สูง 1080px หรือน้อยกว่า - เริ่ม scale ลง */
+/* Viewport height scaling (1080px and below) */
 @media (max-height: 1080px) {
     .hero-content {
         transform: scale(0.95) translateY(10px);
     }
 }
 
-/* Viewport สูง 1000px หรือน้อยกว่า */
+/* 1000px and below */
 @media (max-height: 1000px) {
     .hero-content {
         transform: scale(0.92) translateY(30px);
     }
 }
 
-/* Viewport สูง 950px หรือน้อยกว่า */
+/* 950px and below */
 @media (max-height: 950px) {
     .hero-content {
         transform: scale(0.88) translateY(50px);
     }
 }
 
-/* Viewport สูง 900px หรือน้อยกว่า */
+/* 900px and below */
 @media (max-height: 900px) {
     .hero-content {
         transform: scale(0.85) translateY(70px);
     }
 }
 
-/* Viewport สูง 850px หรือน้อยกว่า */
+/* 850px and below */
 @media (max-height: 850px) {
     .hero-content {
         transform: scale(0.82) translateY(90px);
     }
 }
 
-/* Viewport สูง 800px หรือน้อยกว่า */
+/* 800px and below */
 @media (max-height: 800px) {
     .hero-content {
         transform: scale(0.78) translateY(110px);
     }
 }
 
-/* Viewport สูง 750px หรือน้อยกว่า */
+/* 750px and below */
 @media (max-height: 750px) {
     .hero-content {
         transform: scale(0.75) translateY(130px);
     }
 }
 
-/* Viewport สูง 700px หรือน้อยกว่า */
+/* 700px and below */
 @media (max-height: 700px) {
     .hero-content {
         transform: scale(0.70) translateY(150px);
     }
 }
 
-/* Viewport สูง 650px หรือน้อยกว่า */
+/* 650px and below */
 @media (max-height: 650px) {
     .hero-content {
         transform: scale(0.65) translateY(170px);
     }
 }
 
-/* Viewport สูง 600px หรือน้อยกว่า */
+/* 600px and below */
 @media (max-height: 600px) {
     .hero-content {
         transform: scale(0.60) translateY(180px);
     }
 }
 
-/* Viewport สูง 550px หรือน้อยกว่า */
+/* 550px and below */
 @media (max-height: 550px) {
     .hero-content {
         transform: scale(0.55) translateY(230px);
     }
 }
 
-/* Viewport สูง 525px หรือน้อยกว่า */
+/* 525px and below */
 @media (max-height: 525px) {
     .hero-content {
         transform: scale(0.52) translateY(250px);
     }
 }
 
-/* Viewport สูง 500px หรือน้อยกว่า */
+/* 500px and below */
 @media (max-height: 500px) {
     .hero-content {
         transform: scale(0.50) translateY(270px);
     }
 }
 
-/* Viewport สูง 475px หรือน้อยกว่า */
+/* 475px and below */
 @media (max-height: 475px) {
     .hero-content {
         transform: scale(0.47) translateY(300px);
     }
 }
 
-/* Viewport สูง 470px หรือน้อยกว่า */
+/* 470px and below */
 @media (max-height: 470px) {
     .hero-content {
         transform: scale(0.46) translateY(310px);
     }
 }
 
-/* Viewport สูง 460px หรือน้อยกว่า */
+/* 460px and below */
 @media (max-height: 460px) {
     .hero-content {
         transform: scale(0.45) translateY(320px);
     }
 }
 
-/* Viewport สูง 450px หรือน้อยกว่า */
+/* 450px and below */
 @media (max-height: 450px) {
     .hero-content {
         transform: scale(0.44) translateY(330px);
     }
 }
 
-/* Viewport สูง 440px หรือน้อยกว่า */
+/* 440px and below */
 @media (max-height: 440px) {
     .hero-content {
         transform: scale(0.43) translateY(340px);
     }
 }
 
-/* Viewport สูง 430px หรือน้อยกว่า */
+/* 430px and below */
 @media (max-height: 430px) {
     .hero-content {
         transform: scale(0.42) translateY(350px);
     }
 }
 
-/* Viewport สูง 420px หรือน้อยกว่า */
+/* 420px and below */
 @media (max-height: 420px) {
     .hero-content {
         transform: scale(0.41) translateY(360px);
     }
 }
 
-/* Viewport สูง 410px หรือน้อยกว่า */
+/* 410px and below */
 @media (max-height: 410px) {
     .hero-content {
         transform: scale(0.40) translateY(370px);
     }
 }
 
-/* Viewport สูง 400px หรือน้อยกว่า */
+/* 400px and below */
 @media (max-height: 400px) {
     .hero-content {
         transform: scale(0.39) translateY(380px);
     }
 }
 
-/* Viewport สูง 390px หรือน้อยกว่า */
+/* 390px and below */
 @media (max-height: 390px) {
     .hero-content {
         transform: scale(0.38) translateY(390px);
     }
 }
 
-/* Viewport สูง 380px หรือน้อยกว่า */
+/* 380px and below */
 @media (max-height: 380px) {
     .hero-content {
         transform: scale(0.37) translateY(400px);
     }
 }
 
-/* Viewport สูง 370px หรือน้อยกว่า */
+/* 370px and below */
 @media (max-height: 370px) {
     .hero-content {
         transform: scale(0.36) translateY(410px);
     }
 }
 
-/* Viewport สูง 360px หรือน้อยกว่า */
+/* 360px and below */
 @media (max-height: 360px) {
     .hero-content {
         transform: scale(0.35) translateY(420px);
     }
 }
 
-/* Viewport สูง 350px หรือน้อยกว่า */
+/* 350px and below */
 @media (max-height: 350px) {
     .hero-content {
         transform: scale(0.34) translateY(430px);
     }
 }
 
-/* Viewport สูง 340px หรือน้อยกว่า */
+/* 340px and below */
 @media (max-height: 340px) {
     .hero-content {
         transform: scale(0.33) translateY(440px);
     }
 }
 
-/* Viewport สูง 330px หรือน้อยกว่า */
+/* 330px and below */
 @media (max-height: 330px) {
     .hero-content {
         transform: scale(0.32) translateY(450px);
     }
 }
 
-/* Viewport สูง 320px หรือน้อยกว่า */
+/* 320px and below */
 @media (max-height: 320px) {
     .hero-content {
         transform: scale(0.31) translateY(460px);
     }
 }
 
-/* Viewport สูง 310px หรือน้อยกว่า */
+/* 310px and below */
 @media (max-height: 310px) {
     .hero-content {
         transform: scale(0.30) translateY(470px);
     }
 }
 
-/* Viewport สูง 300px หรือน้อยกว่า */
+/* 300px and below */
 @media (max-height: 300px) {
     .hero-content {
         transform: scale(0.28) translateY(480px);
