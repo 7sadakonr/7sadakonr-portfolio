@@ -29,7 +29,7 @@ const CurvedLoop = ({
   const [offset, setOffset] = useState(0);
   const uid = useId();
   const pathId = `curve-${uid}`;
-  const pathD = `M-210,40 Q730,${40 + curveAmount} 1650,40`; // ปรับจุดควบคุมให้โค้งกลางมากขึ้น
+  const pathD = `M-210,40 Q730,${40 + curveAmount} 1650,40`;  // Bezier curve path
 
   const dragRef = useRef(false);
   const lastXRef = useRef(0);

@@ -90,15 +90,15 @@ const fragment = /* glsl */ `
 `;
 
 const Particles = ({
-  particleCount = 3000, // จำนวนดาวเยอะมาก
-  particleSpread = 20, // กระจายกว้างขึ้น
-  speed = 0.05, // ช้าลงให้ smooth มากขึ้น
+  particleCount = 3000, // High density star count
+  particleSpread = 20, // Wide spread range
+  speed = 0.05, // Slower smooth movement
   particleColors,
   moveParticlesOnHover = false,
   particleHoverFactor = 0,
   alphaParticles = true,
-  particleBaseSize = 50, // ขนาดใหญ่ขึ้นให้เห็นชัด
-  sizeRandomness = 0.3, // ขนาดต่างกันเล็กน้อยให้ดูธรรมชาติ
+  particleBaseSize = 50, // Base star size
+  sizeRandomness = 0.3, // Natural size variation
   cameraDistance = 50,
   disableRotation = true,
   className,

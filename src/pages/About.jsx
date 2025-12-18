@@ -6,6 +6,7 @@ import resumePDF from '../assets/resume.pdf'
 const About = () => {
   useEffect(() => {
     document.body.classList.add('about-page')
+
     return () => {
       document.body.classList.remove('about-page')
     }

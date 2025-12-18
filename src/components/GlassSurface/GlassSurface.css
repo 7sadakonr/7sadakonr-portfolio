@@ -29,21 +29,17 @@
   z-index: 1;
 }
 
-/* iOS และ Safari Fallback - Glass Effect ที่ดีที่สุด */
+/* iOS and Safari Fallback */
 .glass-surface--ios {
-  /* พื้นหลังแบบ semi-transparent */
   background: rgba(20, 20, 20, 0.4);
-  
-  /* Backdrop filter ที่ iOS รองรับ */
+
   backdrop-filter: blur(20px) saturate(1.8) brightness(1.1);
   -webkit-backdrop-filter: blur(20px) saturate(1.8) brightness(1.1);
-  
-  /* เส้นขอบที่มีความโปร่งใส */
   border: 1px solid rgba(255, 255, 255, 0.18);
-  
+
   position: relative;
-  
-  /* เงาหลายชั้นเพื่อความลึก */
+
+  /* Multi-layer shadow */
   box-shadow:
     /* Inner light reflection */
     inset 0 1px 0 0 rgba(255, 255, 255, 0.2),
@@ -53,23 +49,21 @@
     0 2px 8px rgba(0, 0, 0, 0.4);
 }
 
-/* เพิ่ม pseudo-element สำหรับ gradient border บน iOS */
+/* Gradient border pseudo-element for iOS */
 .glass-surface--ios::before {
   content: '';
   position: absolute;
   inset: -1px;
   border-radius: inherit;
   padding: 1px;
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.3),
-    rgba(255, 255, 255, 0.1) 30%,
-    rgba(255, 255, 255, 0.05) 50%,
-    rgba(255, 255, 255, 0.1) 70%,
-    rgba(255, 255, 255, 0.3)
-  );
-  -webkit-mask: 
-    linear-gradient(#fff 0 0) content-box, 
+  background: linear-gradient(135deg,
+      rgba(255, 255, 255, 0.3),
+      rgba(255, 255, 255, 0.1) 30%,
+      rgba(255, 255, 255, 0.05) 50%,
+      rgba(255, 255, 255, 0.1) 70%,
+      rgba(255, 255, 255, 0.3));
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
     linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
@@ -77,7 +71,7 @@
   z-index: 2;
 }
 
-/* เพิ่มแสงสะท้อนด้านบน */
+/* Top highlight reflection */
 .glass-surface--ios::after {
   content: '';
   position: absolute;
@@ -85,26 +79,24 @@
   left: 10%;
   right: 10%;
   height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.5) 50%,
-    transparent
-  );
+  background: linear-gradient(90deg,
+      transparent,
+      rgba(255, 255, 255, 0.5) 50%,
+      transparent);
   opacity: 0.6;
   pointer-events: none;
   z-index: 3;
 }
 
-/* SVG Filter Version (สำหรับ Chrome/Edge บน Desktop) */
+/* SVG Filter Version (for Chrome/Edge on Desktop) */
 .glass-surface--svg {
   background: hsl(0 0% 15% / var(--glass-frost, 0));
   backdrop-filter: var(--filter-id, url(#glass-filter)) saturate(var(--glass-saturation, 1));
   -webkit-backdrop-filter: var(--filter-id, url(#glass-filter)) saturate(var(--glass-saturation, 1));
-  
+
   border: 1.5px solid rgba(255, 255, 255, 0.18);
   position: relative;
-  
+
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.1) inset,
     0 0 20px 2px rgba(255, 255, 255, 0.05) inset,
@@ -119,16 +111,14 @@
   inset: -1px;
   border-radius: inherit;
   padding: 1.5px;
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.3),
-    rgba(255, 255, 255, 0.05) 25%,
-    rgba(255, 255, 255, 0.02) 50%,
-    rgba(255, 255, 255, 0.05) 75%,
-    rgba(255, 255, 255, 0.3)
-  );
-  -webkit-mask: 
-    linear-gradient(#fff 0 0) content-box, 
+  background: linear-gradient(135deg,
+      rgba(255, 255, 255, 0.3),
+      rgba(255, 255, 255, 0.05) 25%,
+      rgba(255, 255, 255, 0.02) 50%,
+      rgba(255, 255, 255, 0.05) 75%,
+      rgba(255, 255, 255, 0.3));
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
     linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
@@ -142,14 +132,13 @@
   inset: 0;
   border-radius: inherit;
   border: 1px solid transparent;
-  background: 
-    linear-gradient(var(--bg-angle, 135deg), 
-      transparent 0%, 
-      rgba(255, 255, 255, 0.1) 50%, 
-      transparent 100%
-    ) border-box;
-  -webkit-mask: 
-    linear-gradient(#fff 0 0) padding-box, 
+  background:
+    linear-gradient(var(--bg-angle, 135deg),
+      transparent 0%,
+      rgba(255, 255, 255, 0.1) 50%,
+      transparent 100%) border-box;
+  -webkit-mask:
+    linear-gradient(#fff 0 0) padding-box,
     linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
@@ -158,15 +147,15 @@
   z-index: 3;
 }
 
-/* Fallback สำหรับ browser อื่นๆ */
+/* Fallback for other browsers */
 .glass-surface--fallback {
   background: rgba(44, 44, 44, 0.4);
   backdrop-filter: blur(12px) saturate(1.8) brightness(1.15);
   -webkit-backdrop-filter: blur(12px) saturate(1.8) brightness(1.15);
-  
+
   border: 1.5px solid rgba(255, 255, 255, 0.2);
   position: relative;
-  
+
   box-shadow:
     0 8px 32px 0 rgba(0, 0, 0, 0.4),
     0 2px 16px 0 rgba(0, 0, 0, 0.3),
@@ -182,7 +171,7 @@
     backdrop-filter: blur(20px) saturate(1.8) brightness(1.05);
     -webkit-backdrop-filter: blur(20px) saturate(1.8) brightness(1.05);
     border: 1px solid rgba(255, 255, 255, 0.15);
-    
+
     box-shadow:
       inset 0 1px 0 0 rgba(255, 255, 255, 0.15),
       inset 0 -1px 0 0 rgba(0, 0, 0, 0.4),
@@ -194,11 +183,8 @@
 /* iOS specific optimizations */
 @supports (-webkit-touch-callout: none) {
   .glass-surface--ios {
-    /* เพิ่ม GPU acceleration */
     transform: translateZ(0);
     will-change: transform;
-    
-    /* ปรับ backdrop-filter สำหรับ iOS */
     backdrop-filter: blur(25px) saturate(2) brightness(1.1) contrast(1.05);
     -webkit-backdrop-filter: blur(25px) saturate(2) brightness(1.1) contrast(1.05);
   }
@@ -236,9 +222,12 @@
 
 /* Animation for border shine */
 @keyframes borderShine {
-  0%, 100% {
+
+  0%,
+  100% {
     --bg-angle: 135deg;
   }
+
   50% {
     --bg-angle: 315deg;
   }
@@ -256,6 +245,7 @@
 
 /* Accessibility - Reduced motion */
 @media (prefers-reduced-motion: reduce) {
+
   .glass-surface,
   .glass-surface::before,
   .glass-surface::after {

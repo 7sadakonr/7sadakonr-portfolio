@@ -30,8 +30,13 @@
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 /* Optimize animations */
@@ -40,43 +45,52 @@
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
 }
 
 body {
-    min-height: 100vh;
-    min-width: 100vw;
-    width: 100vw;
-    height: 100vh;
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-    background: #000;
-    -webkit-text-size-adjust: 100%;
-    -ms-text-size-adjust: 100%;
-    text-size-adjust: 100%;
+  min-height: 100vh;
+  min-width: 100vw;
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: #000;
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 /* Prevent horizontal scrolling on mobile */
-html, body {
-    overflow-x: hidden;
-    max-width: 100vw;
+html,
+body {
+  overflow-x: hidden;
+  max-width: 100vw;
 }
 
 /* Improve touch targets on mobile */
 @media (max-width: 768px) {
-    .nav-item {
-        min-height: 44px;
-        min-width: 44px;
-    }
+  .nav-item {
+    min-height: 44px;
+    min-width: 44px;
+  }
 }
 
 /* Optimize for high DPI displays */
-@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-    .gradient-text-glow {
-        filter: blur(clamp(6px, 1.5vw, 12px)) brightness(1);
-    }
+@media (-webkit-min-device-pixel-ratio: 2),
+(min-resolution: 192dpi) {
+  .gradient-text-glow {
+    filter: blur(clamp(6px, 1.5vw, 12px)) brightness(1);
+  }
 }
 
 .particles-container {
