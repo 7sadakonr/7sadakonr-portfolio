@@ -20,26 +20,83 @@ body.project-page {
     min-height: 100vh;
     background-color: #000;
     overflow-x: hidden;
+    /* Disable iOS pull-to-refresh */
+    overscroll-behavior: none;
+    overscroll-behavior-y: none;
+    -webkit-overflow-scrolling: touch;
+    /* Page entrance animation */
+    animation: pageEnter 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes pageEnter {
+    0% {
+        opacity: 0;
+        transform: translateY(40px);
+        filter: blur(4px);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+        filter: blur(0px);
+    }
+}
+
+/* Page transition animations for scroll navigation */
+.project-page-wrapper.transitioning-up {
+    animation: pageSlideDown 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.project-page-wrapper.transitioning-down {
+    animation: pageSlideUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes pageSlideUp {
+    0% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        filter: blur(0px);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translateY(-60px) scale(0.95);
+        filter: blur(8px);
+    }
+}
+
+@keyframes pageSlideDown {
+    0% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        filter: blur(0px);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translateY(60px) scale(0.95);
+        filter: blur(8px);
+    }
 }
 
 /* Base dark background */
 .project-bg {
-    position: fixed;
+    position: absolute;
     top: 0;
     left: 0;
-    width: 100vw;
-    height: 100vh;
+    width: 100%;
+    height: 100%;
     background: #000;
     z-index: 0;
 }
 
 /* Stars Layer */
 .project-star-layer {
-    position: fixed;
+    position: absolute;
     top: 0;
     left: 0;
-    width: 100vw;
-    height: 100vh;
+    width: 100%;
+    height: 100%;
     z-index: 1;
     pointer-events: none;
     overflow: hidden;
@@ -70,11 +127,11 @@ body.project-page {
 
 /* Shooting Stars Layer */
 .project-shooting-stars {
-    position: fixed;
+    position: absolute;
     top: 0;
     left: 0;
-    width: 100vw;
-    height: 100vh;
+    width: 100%;
+    height: 100%;
     z-index: 1;
     pointer-events: none;
     overflow: hidden;
@@ -174,6 +231,22 @@ body.project-page {
     animation-delay: 3s;
 }
 
+.project-shooting-stars .shooting-star:nth-child(7) {
+    top: 20%;
+    left: 5%;
+    width: 110px;
+    animation: shootingStar 9s ease-in-out infinite;
+    animation-delay: 2s;
+}
+
+.project-shooting-stars .shooting-star:nth-child(8) {
+    top: 80%;
+    left: 30%;
+    width: 85px;
+    animation: shootingStar 5s ease-in-out infinite;
+    animation-delay: 6s;
+}
+
 @keyframes shootingStar {
     0% {
         opacity: 0;
@@ -197,11 +270,11 @@ body.project-page {
 
 /* Subtle Mesh Gradient */
 .project-mesh {
-    position: fixed;
+    position: absolute;
     top: 0;
     left: 0;
-    width: 100vw;
-    height: 100vh;
+    width: 100%;
+    height: 100%;
     pointer-events: none;
     z-index: 2;
     overflow: hidden;
@@ -232,11 +305,11 @@ body.project-page {
 }
 
 .project-mesh-extra {
-    position: fixed;
+    position: absolute;
     top: 0;
     left: 0;
-    width: 100vw;
-    height: 100vh;
+    width: 100%;
+    height: 100%;
     pointer-events: none;
     z-index: 2;
     overflow: hidden;
@@ -268,10 +341,10 @@ body.project-page {
 
 /* Floor gradient */
 .project-floor-glow {
-    position: fixed;
+    position: absolute;
     bottom: 0;
     left: 0;
-    width: 100vw;
+    width: 100%;
     height: 40vh;
     pointer-events: none;
     z-index: 1;
@@ -284,11 +357,11 @@ body.project-page {
 
 /* Vignette */
 .project-vignette {
-    position: fixed;
+    position: absolute;
     top: 0;
     left: 0;
-    width: 100vw;
-    height: 100vh;
+    width: 100%;
+    height: 100%;
     pointer-events: none;
     z-index: 3;
     background: radial-gradient(ellipse at center, transparent 50%, rgba(0, 0, 0, 0.7) 100%);

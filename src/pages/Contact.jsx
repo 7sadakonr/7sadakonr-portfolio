@@ -1,15 +1,72 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState, useRef, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import emailjs from '@emailjs/browser'
 import './contact.css'
 import AnimatedContent from '../components/Animation/AnimatedContent.jsx'
 
 const Contact = () => {
+  const navigate = useNavigate()
+  const [isTransitioning, setIsTransitioning] = useState(false)
+  const isNavigatingRef = useRef(false)
+
+  const handleNavigate = useCallback(() => {
+    if (isNavigatingRef.current) return
+    isNavigatingRef.current = true
+    setIsTransitioning(true)
+
+    setTimeout(() => {
+      window.scrollTo(0, 0)
+      navigate('/project')
+    }, 600)
+  }, [navigate])
+
   useEffect(() => {
     document.body.classList.add('contact-page')
+
+    // Desktop scroll navigation - only up to Project
+    const handleWheel = (e) => {
+      if (isNavigatingRef.current) return
+
+      const scrollTop = window.scrollY || document.documentElement.scrollTop
+      const atTop = scrollTop <= 5
+
+      // Scroll up at top → go to Project
+      if (atTop && e.deltaY < -80) {
+        handleNavigate()
+      }
+    }
+
+    // Mobile touch navigation
+    let touchStartY = 0
+    const handleTouchStart = (e) => {
+      touchStartY = e.touches[0].clientY
+    }
+
+    const handleTouchEnd = (e) => {
+      if (isNavigatingRef.current) return
+      const touchEndY = e.changedTouches[0].clientY
+      const deltaY = touchStartY - touchEndY
+
+      const scrollTop = window.scrollY || document.documentElement.scrollTop
+      const atTop = scrollTop <= 5
+
+      // Swipe down at top → go to Project
+      if (atTop && deltaY < -100) {
+        handleNavigate()
+      }
+    }
+
+    window.addEventListener('wheel', handleWheel, { passive: true })
+    window.addEventListener('touchstart', handleTouchStart, { passive: true })
+    window.addEventListener('touchend', handleTouchEnd, { passive: true })
+
     return () => {
       document.body.classList.remove('contact-page')
+      window.removeEventListener('wheel', handleWheel)
+      window.removeEventListener('touchstart', handleTouchStart)
+      window.removeEventListener('touchend', handleTouchEnd)
     }
-  }, [])
+  }, [handleNavigate])
 
   // Generate stars like About/Project pages
   const stars = useMemo(() => [...Array(250)].map((_, i) => ({
@@ -76,7 +133,7 @@ const Contact = () => {
   }
 
   return (
-    <div className="contact-page-wrapper">
+    <div className={`contact-page-wrapper ${isTransitioning ? 'transitioning-up' : ''}`}>
       {/* Background Elements - Universe Theme */}
       <div className="contact-bg" />
 
@@ -100,6 +157,8 @@ const Contact = () => {
 
       {/* Shooting Stars Layer */}
       <div className="contact-shooting-stars">
+        <div className="shooting-star" />
+        <div className="shooting-star" />
         <div className="shooting-star" />
         <div className="shooting-star" />
         <div className="shooting-star" />
