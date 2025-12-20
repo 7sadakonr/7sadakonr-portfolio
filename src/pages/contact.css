@@ -20,26 +20,65 @@ body.contact-page {
     min-height: 100vh;
     background-color: #000;
     overflow-x: hidden;
+    /* Disable iOS pull-to-refresh */
+    overscroll-behavior: none;
+    overscroll-behavior-y: none;
+    -webkit-overflow-scrolling: touch;
+    /* Page entrance animation */
+    animation: pageEnter 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes pageEnter {
+    0% {
+        opacity: 0;
+        transform: translateY(40px);
+        filter: blur(4px);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+        filter: blur(0px);
+    }
+}
+
+/* Page transition animation for scroll up navigation */
+.contact-page-wrapper.transitioning-up {
+    animation: pageSlideDown 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes pageSlideDown {
+    0% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        filter: blur(0px);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translateY(60px) scale(0.95);
+        filter: blur(8px);
+    }
 }
 
 /* Base dark background */
 .contact-bg {
-    position: fixed;
+    position: absolute;
     top: 0;
     left: 0;
-    width: 100vw;
-    height: 100vh;
+    width: 100%;
+    height: 100%;
     background: #000;
     z-index: 0;
 }
 
 /* Stars Layer */
 .contact-star-layer {
-    position: fixed;
+    position: absolute;
     top: 0;
     left: 0;
-    width: 100vw;
-    height: 100vh;
+    width: 100%;
+    height: 100%;
     z-index: 1;
     pointer-events: none;
     overflow: hidden;
@@ -70,11 +109,11 @@ body.contact-page {
 
 /* Shooting Stars Layer */
 .contact-shooting-stars {
-    position: fixed;
+    position: absolute;
     top: 0;
     left: 0;
-    width: 100vw;
-    height: 100vh;
+    width: 100%;
+    height: 100%;
     z-index: 1;
     pointer-events: none;
     overflow: hidden;
@@ -174,6 +213,22 @@ body.contact-page {
     animation-delay: 4s;
 }
 
+.contact-shooting-stars .shooting-star:nth-child(7) {
+    top: 20%;
+    left: 5%;
+    width: 110px;
+    animation: shootingStar 9s ease-in-out infinite;
+    animation-delay: 2s;
+}
+
+.contact-shooting-stars .shooting-star:nth-child(8) {
+    top: 80%;
+    left: 30%;
+    width: 85px;
+    animation: shootingStar 5s ease-in-out infinite;
+    animation-delay: 6s;
+}
+
 @keyframes shootingStar {
     0% {
         opacity: 0;
@@ -197,11 +252,11 @@ body.contact-page {
 
 /* Subtle Mesh Gradient */
 .contact-mesh {
-    position: fixed;
+    position: absolute;
     top: 0;
     left: 0;
-    width: 100vw;
-    height: 100vh;
+    width: 100%;
+    height: 100%;
     pointer-events: none;
     z-index: 2;
     overflow: hidden;
@@ -232,11 +287,11 @@ body.contact-page {
 }
 
 .contact-mesh-extra {
-    position: fixed;
+    position: absolute;
     top: 0;
     left: 0;
-    width: 100vw;
-    height: 100vh;
+    width: 100%;
+    height: 100%;
     pointer-events: none;
     z-index: 2;
     overflow: hidden;
@@ -268,10 +323,10 @@ body.contact-page {
 
 /* Floor gradient */
 .contact-floor-glow {
-    position: fixed;
+    position: absolute;
     bottom: 0;
     left: 0;
-    width: 100vw;
+    width: 100%;
     height: 40vh;
     pointer-events: none;
     z-index: 1;
@@ -284,11 +339,11 @@ body.contact-page {
 
 /* Vignette */
 .contact-vignette {
-    position: fixed;
+    position: absolute;
     top: 0;
     left: 0;
-    width: 100vw;
-    height: 100vh;
+    width: 100%;
+    height: 100%;
     pointer-events: none;
     z-index: 3;
     background: radial-gradient(ellipse at center, transparent 50%, rgba(0, 0, 0, 0.7) 100%);

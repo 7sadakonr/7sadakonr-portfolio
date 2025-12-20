@@ -61,6 +61,33 @@ function App() {
     };
   }, [isLoading, fadeOut]);
 
+  // Prevent iOS pull-to-refresh
+  useEffect(() => {
+    let lastTouchY = 0;
+
+    const handleTouchStart = (e) => {
+      lastTouchY = e.touches[0].clientY;
+    };
+
+    const handleTouchMove = (e) => {
+      const touchY = e.touches[0].clientY;
+      const scrollTop = window.scrollY || document.documentElement.scrollTop;
+
+      // If at top of page and pulling down, prevent default
+      if (scrollTop <= 0 && touchY > lastTouchY) {
+        e.preventDefault();
+      }
+    };
+
+    document.addEventListener('touchstart', handleTouchStart, { passive: true });
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
+
+    return () => {
+      document.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('touchmove', handleTouchMove);
+    };
+  }, []);
+
   return (
     <Router>
       <Analytics />

@@ -1,16 +1,95 @@
-import React, { useEffect, useMemo, useState, useRef } from 'react'
+import React, { useEffect, useMemo, useState, useRef, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import './project.css'
 import AnimatedContent from '../components/Animation/AnimatedContent.jsx'
 import todoListImage from '../assets/img/todo-list.png'
 import portfolioImage from '../assets/img/portfolio.png'
 
 const Project = () => {
+  const navigate = useNavigate()
+  const [isTransitioning, setIsTransitioning] = useState(false)
+  const [transitionDirection, setTransitionDirection] = useState('up')
+  const isNavigatingRef = useRef(false)
+
+  const handleNavigate = useCallback((direction) => {
+    if (isNavigatingRef.current) return
+    isNavigatingRef.current = true
+    setTransitionDirection(direction)
+    setIsTransitioning(true)
+
+    setTimeout(() => {
+      window.scrollTo(0, 0)
+      if (direction === 'up') {
+        navigate('/about')
+      } else {
+        navigate('/contact')
+      }
+    }, 600)
+  }, [navigate])
+
   useEffect(() => {
     document.body.classList.add('project-page')
+
+    // Desktop scroll navigation
+    const handleWheel = (e) => {
+      if (isNavigatingRef.current) return
+
+      const scrollTop = window.scrollY || document.documentElement.scrollTop
+      const scrollHeight = document.documentElement.scrollHeight
+      const clientHeight = window.innerHeight
+
+      const atTop = scrollTop <= 5
+      const atBottom = scrollTop + clientHeight >= scrollHeight - 10
+
+      // Scroll up at top → go to About
+      if (atTop && e.deltaY < -80) {
+        handleNavigate('up')
+      }
+      // Scroll down at bottom → go to Contact
+      else if (atBottom && e.deltaY > 80) {
+        handleNavigate('down')
+      }
+    }
+
+    // Mobile touch navigation
+    let touchStartY = 0
+    const handleTouchStart = (e) => {
+      touchStartY = e.touches[0].clientY
+    }
+
+    const handleTouchEnd = (e) => {
+      if (isNavigatingRef.current) return
+      const touchEndY = e.changedTouches[0].clientY
+      const deltaY = touchStartY - touchEndY
+
+      const scrollTop = window.scrollY || document.documentElement.scrollTop
+      const scrollHeight = document.documentElement.scrollHeight
+      const clientHeight = window.innerHeight
+
+      const atTop = scrollTop <= 5
+      const atBottom = scrollTop + clientHeight >= scrollHeight - 10
+
+      // Swipe up at bottom → go to Contact
+      if (atBottom && deltaY > 100) {
+        handleNavigate('down')
+      }
+      // Swipe down at top → go to About
+      else if (atTop && deltaY < -100) {
+        handleNavigate('up')
+      }
+    }
+
+    window.addEventListener('wheel', handleWheel, { passive: true })
+    window.addEventListener('touchstart', handleTouchStart, { passive: true })
+    window.addEventListener('touchend', handleTouchEnd, { passive: true })
+
     return () => {
       document.body.classList.remove('project-page')
+      window.removeEventListener('wheel', handleWheel)
+      window.removeEventListener('touchstart', handleTouchStart)
+      window.removeEventListener('touchend', handleTouchEnd)
     }
-  }, [])
+  }, [handleNavigate])
 
   // Generate stars like About page
   const stars = useMemo(() => [...Array(250)].map((_, i) => ({
@@ -193,7 +272,7 @@ const Project = () => {
   }
 
   return (
-    <div className="project-page-wrapper">
+    <div className={`project-page-wrapper ${isTransitioning ? `transitioning-${transitionDirection}` : ''}`}>
       {/* Background Elements - Universe Theme */}
       <div className="project-bg" />
 
@@ -217,6 +296,8 @@ const Project = () => {
 
       {/* Shooting Stars Layer */}
       <div className="project-shooting-stars">
+        <div className="shooting-star" />
+        <div className="shooting-star" />
         <div className="shooting-star" />
         <div className="shooting-star" />
         <div className="shooting-star" />

@@ -18,6 +18,7 @@ function Home() {
 
     // Wait for transition animation to complete before navigating
     setTimeout(() => {
+      window.scrollTo(0, 0)
       navigate('/about')
     }, 600)
   }, [navigate])
