@@ -4,6 +4,7 @@ import './project.css'
 import AnimatedContent from '../components/Animation/AnimatedContent.jsx'
 import todoListImage from '../assets/img/todo-list.png'
 import portfolioImage from '../assets/img/portfolio.png'
+import fliqImage from '../assets/img/fliq.png'
 
 const Project = () => {
   const navigate = useNavigate()
@@ -122,6 +123,17 @@ const Project = () => {
       image: portfolioImage,
       liveUrl: "https://7sadakonr-portfolio.vercel.app",
       githubUrl: "https://github.com/7sadakonr/7sadakonr-portfolio",
+      gradient: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)"
+    },
+    {
+      id: 3,
+      title: "Fliq File Transfer",
+      subtitle: " peer-to-peer file and clipboard sharing web app",
+      description: "Fliq is a peer-to-peer file and clipboard sharing web app. Transfer files and text directly between devices without uploading to the cloud.",
+      tech: ["React", "Vite", "TailwindCSS", "Zustand", "PeerJS (WebRTC)", "React Router"],
+      image: fliqImage,
+      liveUrl: "https://fliq-file-transfer.vercel.app/transfer",
+      githubUrl: "https://github.com/7sadakonr/Fliq-Clipboard-and-File-Transfer-Web-App",
       gradient: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)"
     }
   ]

@@ -109,6 +109,25 @@ const Navbar = () => {
     return () => document.removeEventListener('keydown', handleEscape)
   }, [isMobileMenuOpen])
 
+  const [activePath, setActivePath] = useState(location.pathname)
+
+  // Update active path on mount and location change
+  useEffect(() => {
+    setActivePath(location.pathname)
+  }, [location.pathname])
+
+  // Listen for scroll events from LandingPage
+  useEffect(() => {
+    const handleLandingScroll = (e) => {
+      if (e.detail && e.detail.path) {
+        setActivePath(e.detail.path)
+      }
+    }
+
+    window.addEventListener('landing-scroll', handleLandingScroll)
+    return () => window.removeEventListener('landing-scroll', handleLandingScroll)
+  }, [])
+
   const menuItems = [
     { path: "/", label: "HOME" },
     { path: "/about", label: "ABOUT" },
@@ -147,8 +166,8 @@ const Navbar = () => {
                 <li key={path}>
                   <NavLink
                     to={path}
-                    className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}
-                    aria-current={location.pathname === path ? 'page' : undefined}
+                    className={() => activePath === path ? 'nav-item active' : 'nav-item'}
+                    aria-current={activePath === path ? 'page' : undefined}
                   >
                     {label}
                   </NavLink>
@@ -215,11 +234,11 @@ const Navbar = () => {
                   >
                     <NavLink
                       to={path}
-                      className={({ isActive }) =>
-                        `mobile-menu-link ${isActive ? 'active' : ''}`
+                      className={() =>
+                        `mobile-menu-link ${activePath === path ? 'active' : ''}`
                       }
                       onClick={() => setIsMobileMenuOpen(false)}
-                      aria-current={location.pathname === path ? 'page' : undefined}
+                      aria-current={activePath === path ? 'page' : undefined}
                     >
                       <span className="menu-link-text">{label}</span>
                       <div className="menu-link-indicator">
