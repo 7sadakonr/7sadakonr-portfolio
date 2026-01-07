@@ -7,9 +7,10 @@ import SmoothFollower from './components/SmoothFollower/SmoothFollower.jsx'
 
 // Lazy load components for code splitting
 const Home = lazy(() => import('./pages/Home'))
-const About = lazy(() => import('./pages/About'))
-const Project = lazy(() => import('./pages/Project'))
-const Contact = lazy(() => import('./pages/Contact'))
+const LandingPage = lazy(() => import('./pages/LandingPage'))
+// const About = lazy(() => import('./pages/About'))
+// const Project = lazy(() => import('./pages/Project'))
+// const Contact = lazy(() => import('./pages/Contact'))
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
@@ -97,9 +98,9 @@ function App() {
       <Suspense fallback={null}>
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/project" element={<Project />} />
-          <Route path="/contact" element={<Contact />} />
+          <Route path="/about" element={<LandingPage />} />
+          <Route path="/project" element={<LandingPage />} />
+          <Route path="/contact" element={<LandingPage />} />
         </Routes>
       </Suspense>
     </Router>

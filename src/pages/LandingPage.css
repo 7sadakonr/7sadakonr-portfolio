@@ -1,0 +1,51 @@
+/* Standard smooth scrolling */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Landing Page Wrapper */
+.landing-page-container {
+    width: 100%;
+    min-height: 100vh;
+    background-color: #000;
+    position: relative;
+}
+
+/* Fixed Background Wrapper */
+.landing-background-wrapper {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    z-index: 0;
+    pointer-events: none;
+    /* Let clicks pass through */
+    overflow: hidden;
+}
+
+/* Ensure content sits above background */
+.landing-content-flow {
+    position: relative;
+    z-index: 1;
+}
+
+/* Sections */
+.landing-section {
+    width: 100%;
+    min-height: 100vh;
+    /* Allow natural growth */
+    position: relative;
+    padding-top: 60px;
+    /* Optional spacing */
+    /* No snap properties */
+}
+
+/* CRITICAL FIX: Override section backgrounds to be transparent 
+   so the unified fixed background is visible */
+.landing-section.about-page-wrapper,
+.landing-section.project-page-wrapper,
+.landing-section.contact-page-wrapper {
+    background-color: transparent !important;
+    background: transparent !important;
+}
