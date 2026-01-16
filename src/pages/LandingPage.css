@@ -11,6 +11,45 @@ html {
     position: relative;
 }
 
+/* Landing Content Flow */
+.landing-content-flow {
+    transition: opacity 0.6s ease-in-out, transform 0.6s ease-in-out, filter 0.6s ease-in-out;
+}
+
+/* Transition animation when going back to Home */
+.landing-content-flow.transitioning-to-home {
+    animation: pageSlideDown 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Fade background to black during transition */
+.landing-page-container.transitioning-to-home .landing-background-wrapper {
+    animation: fadeToBlack 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes pageSlideDown {
+    0% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        filter: blur(0px);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translateY(60px) scale(0.95);
+        filter: blur(8px);
+    }
+}
+
+@keyframes fadeToBlack {
+    0% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0;
+    }
+}
+
 /* Fixed Background Wrapper */
 .landing-background-wrapper {
     position: fixed;

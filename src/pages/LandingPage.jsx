@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useMemo } from 'react'
-import { useLocation } from 'react-router-dom'
+import React, { useEffect, useRef, useMemo, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import AboutSection from '../components/sections/AboutSection.jsx'
 import ProjectSection from '../components/sections/ProjectSection.jsx'
 import ContactSection from '../components/sections/ContactSection.jsx'
@@ -8,8 +8,11 @@ import './LandingPage.css'
 
 const LandingPage = () => {
     const location = useLocation()
+    const navigate = useNavigate()
     const containerRef = useRef(null)
     const isScrollingRef = useRef(false)
+    const isNavigatingToHomeRef = useRef(false)
+    const [isTransitioningToHome, setIsTransitioningToHome] = useState(false)
 
     // Generate stars for the global background
     const stars = useMemo(() => [...Array(200)].map((_, i) => ({
@@ -73,9 +76,61 @@ const LandingPage = () => {
         return () => observer.disconnect()
     }, [])
 
+    // Scroll up to navigate back to Home
+    useEffect(() => {
+        const handleScrollUp = (e) => {
+            if (isNavigatingToHomeRef.current) return
+
+            // Only trigger when at the very top of the page
+            const isAtTop = window.scrollY <= 0
+            const isScrollingUp = e.deltaY < -30
+
+            if (isAtTop && isScrollingUp) {
+                isNavigatingToHomeRef.current = true
+                setIsTransitioningToHome(true)
+                // Wait for animation to complete before navigating
+                setTimeout(() => {
+                    navigate('/')
+                }, 600)
+            }
+        }
+
+        // Mobile touch support
+        let touchStartY = 0
+
+        const handleTouchStart = (e) => {
+            touchStartY = e.touches[0].clientY
+        }
+
+        const handleTouchEnd = (e) => {
+            if (isNavigatingToHomeRef.current) return
+
+            const touchEndY = e.changedTouches[0].clientY
+            const deltaY = touchEndY - touchStartY // positive = swipe down
+            const isAtTop = window.scrollY <= 0
+
+            if (isAtTop && deltaY > 50) {
+                isNavigatingToHomeRef.current = true
+                setIsTransitioningToHome(true)
+                setTimeout(() => {
+                    navigate('/')
+                }, 600)
+            }
+        }
+
+        window.addEventListener('wheel', handleScrollUp, { passive: true })
+        window.addEventListener('touchstart', handleTouchStart, { passive: true })
+        window.addEventListener('touchend', handleTouchEnd, { passive: true })
+
+        return () => {
+            window.removeEventListener('wheel', handleScrollUp)
+            window.removeEventListener('touchstart', handleTouchStart)
+            window.removeEventListener('touchend', handleTouchEnd)
+        }
+    }, [navigate])
+
     return (
-        <div className="landing-page-container" ref={containerRef}>
-            {/* Unified Fixed Background */}
+        <div className={`landing-page-container ${isTransitioningToHome ? 'transitioning-to-home' : ''}`} ref={containerRef}>            {/* Unified Fixed Background */}
             <div className="landing-background-wrapper">
                 <div className="landing-bg-layer" />
                 <div className="landing-star-layer">
@@ -105,12 +160,10 @@ const LandingPage = () => {
                 <div className="landing-mesh" />
                 <div className="landing-mesh-extra" />
                 <div className="landing-floor-glow" />
-                {/* Removed vignette or kept? about-vignette was removed from about.css. If I didn't add landing-vignette to LandingPage.css, I should remove it here. */}
-                {/* I did not add landing-vignette to LandingPage.css. So I will remove it. */}
             </div>
 
-            {/* Sections Content */}
-            <div className="landing-content-flow">
+            {/* Sections Content - Animation applies here only */}
+            <div className={`landing-content-flow ${isTransitioningToHome ? 'transitioning-to-home' : ''}`}>
                 <AboutSection />
                 <ProjectSection />
                 <ContactSection />
