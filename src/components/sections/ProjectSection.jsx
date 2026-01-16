@@ -3,7 +3,7 @@ import AnimatedContent from '../Animation/AnimatedContent.jsx'
 import todoListImage from '../../assets/img/todo-list.png'
 import portfolioImage from '../../assets/img/portfolio.png'
 import fliqImage from '../../assets/img/fliq.png'
-import '../../pages/project.css'
+// CSS is now in LandingPage.css
 
 const ProjectSection = () => {
     // Stars logic (unused in this component now, but kept for minimal diff if moved back)

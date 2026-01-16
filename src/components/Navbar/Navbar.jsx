@@ -128,6 +128,17 @@ const Navbar = () => {
     return () => window.removeEventListener('landing-scroll', handleLandingScroll)
   }, [])
 
+  // Update indicator when activePath changes (for LandingPage scroll)
+  useEffect(() => {
+    if (!isIPad && hasInitialized) {
+      // Wait for DOM to update after activePath state change
+      const timeoutId = setTimeout(() => {
+        updateIndicatorPosition()
+      }, 200)
+      return () => clearTimeout(timeoutId)
+    }
+  }, [activePath, hasInitialized, updateIndicatorPosition, isIPad])
+
   const menuItems = [
     { path: "/", label: "HOME" },
     { path: "/about", label: "ABOUT" },

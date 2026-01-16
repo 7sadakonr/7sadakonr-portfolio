@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import AnimatedContent from '../Animation/AnimatedContent.jsx'
 import resumePDF from '../../assets/resume.pdf'
-import '../../pages/about.css'
+// CSS is now in LandingPage.css
 
 const AboutSection = () => {
     const handleResumeDownload = () => {
