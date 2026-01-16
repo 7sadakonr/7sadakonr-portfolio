@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react'
 import emailjs from '@emailjs/browser'
 import AnimatedContent from '../Animation/AnimatedContent.jsx'
-import '../../pages/contact.css'
+// CSS is now in LandingPage.css
 
 const ContactSection = () => {
     const form = useRef()

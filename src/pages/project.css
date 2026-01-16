@@ -28,6 +28,12 @@ body.project-page {
     animation: pageEnter 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
+/* CRITICAL: When used inside landing page, make background transparent */
+.project-page-wrapper.landing-section {
+    background-color: transparent !important;
+    background: transparent !important;
+}
+
 @keyframes pageEnter {
     0% {
         opacity: 0;
@@ -426,7 +432,6 @@ body.project-page {
 
 .project-content {
     position: relative;
-    z-index: 10;
     width: 100%;
     min-height: 100vh;
     display: flex;

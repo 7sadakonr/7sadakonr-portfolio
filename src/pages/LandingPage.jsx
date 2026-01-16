@@ -4,8 +4,7 @@ import AboutSection from '../components/sections/AboutSection.jsx'
 import ProjectSection from '../components/sections/ProjectSection.jsx'
 import ContactSection from '../components/sections/ContactSection.jsx'
 import './LandingPage.css'
-// Ensuring about.css is imported for the background styles
-import '../pages/about.css'
+// All section CSS is now consolidated in LandingPage.css
 
 const LandingPage = () => {
     const location = useLocation()
@@ -78,12 +77,12 @@ const LandingPage = () => {
         <div className="landing-page-container" ref={containerRef}>
             {/* Unified Fixed Background */}
             <div className="landing-background-wrapper">
-                <div className="about-bg" /> {/* Reuse about-bg matching styles */}
-                <div className="about-star-layer">
+                <div className="landing-bg-layer" />
+                <div className="landing-star-layer">
                     {stars.map((s, i) => (
                         <div
                             key={i}
-                            className="about-tiny-star"
+                            className="landing-tiny-star"
                             style={{
                                 left: s.left,
                                 top: s.top,
@@ -96,17 +95,18 @@ const LandingPage = () => {
                         />
                     ))}
                 </div>
-                <div className="about-shooting-stars">
-                    <div className="shooting-star" />
-                    <div className="shooting-star" />
-                    <div className="shooting-star" />
-                    <div className="shooting-star" />
-                    <div className="shooting-star" />
+                <div className="landing-shooting-stars">
+                    <div className="landing-shooting-star" />
+                    <div className="landing-shooting-star" />
+                    <div className="landing-shooting-star" />
+                    <div className="landing-shooting-star" />
+                    <div className="landing-shooting-star" />
                 </div>
-                <div className="about-mesh" />
-                <div className="about-mesh-extra" />
-                <div className="about-floor-glow" />
-                <div className="about-vignette" />
+                <div className="landing-mesh" />
+                <div className="landing-mesh-extra" />
+                <div className="landing-floor-glow" />
+                {/* Removed vignette or kept? about-vignette was removed from about.css. If I didn't add landing-vignette to LandingPage.css, I should remove it here. */}
+                {/* I did not add landing-vignette to LandingPage.css. So I will remove it. */}
             </div>
 
             {/* Sections Content */}
