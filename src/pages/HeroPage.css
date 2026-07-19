@@ -89,7 +89,7 @@
     position: absolute;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%) translateZ(0);
     width: 120vw;
     height: 70vh;
     background: linear-gradient(90deg, rgba(138, 56, 245, 0.06) 10%, rgba(255, 119, 119, 0.04) 90%);
@@ -98,6 +98,7 @@
     filter: blur(60px);
     z-index: -2;
     pointer-events: none;
+    will-change: transform, opacity;
 }
 
 /* Gradient Text (for Portfolio) and Star Icon */

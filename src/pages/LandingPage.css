@@ -252,6 +252,7 @@ html {
     background: radial-gradient(circle, rgba(255, 255, 255, 0.09) 0%, rgba(255, 255, 255, 0.03) 40%, transparent 65%);
     filter: blur(70px);
     animation: meshFloat1 35s ease-in-out infinite;
+    will-change: transform;
 }
 
 .landing-mesh::after {
@@ -264,6 +265,7 @@ html {
     background: radial-gradient(circle, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.025) 40%, transparent 65%);
     filter: blur(70px);
     animation: meshFloat2 40s ease-in-out infinite;
+    will-change: transform;
 }
 
 .landing-mesh-extra {
@@ -287,6 +289,7 @@ html {
     background: radial-gradient(circle, rgba(255, 255, 255, 0.06) 0%, transparent 50%);
     filter: blur(60px);
     animation: meshFloat3 50s ease-in-out infinite;
+    will-change: transform, opacity;
 }
 
 .landing-mesh-extra::after {
@@ -299,6 +302,7 @@ html {
     background: radial-gradient(circle, rgba(255, 255, 255, 0.05) 0%, transparent 50%);
     filter: blur(60px);
     animation: meshFloat4 55s ease-in-out infinite;
+    will-change: transform, opacity;
 }
 
 /* Floor gradient */
@@ -315,6 +319,8 @@ html {
             rgba(255, 255, 255, 0.012) 35%,
             transparent 100%);
     filter: blur(45px);
+    transform: translateZ(0);
+    will-change: transform;
 }
 
 /* Animations */
@@ -326,7 +332,7 @@ html {
     }
 
     50% {
-        transform: translate(8%, 5%) scale(1.1);
+        transform: translate(8%, 5%) scale(1.1) translateZ(0);
     }
 }
 
@@ -338,7 +344,7 @@ html {
     }
 
     50% {
-        transform: translate(-8%, -5%) scale(1.12);
+        transform: translate(-8%, -5%) scale(1.12) translateZ(0);
     }
 }
 
@@ -346,12 +352,12 @@ html {
 
     0%,
     100% {
-        transform: translate(0, 0) scale(1);
+        transform: translate(0, 0) scale(1) translateZ(0);
         opacity: 0.6;
     }
 
     50% {
-        transform: translate(-10%, 8%) scale(1.15);
+        transform: translate(-10%, 8%) scale(1.15) translateZ(0);
         opacity: 1;
     }
 }
@@ -360,12 +366,12 @@ html {
 
     0%,
     100% {
-        transform: translate(0, 0) scale(1);
+        transform: translate(0, 0) scale(1) translateZ(0);
         opacity: 0.7;
     }
 
     50% {
-        transform: translate(10%, -6%) scale(1.1);
+        transform: translate(10%, -6%) scale(1.1) translateZ(0);
         opacity: 1;
     }
 }
