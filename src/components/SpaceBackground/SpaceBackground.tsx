@@ -109,11 +109,13 @@ export function SpaceBackground({
           ))}
         </div>
       </div>
-      <canvas
-        ref={canvasRef}
-        className="space-background__stars"
-        aria-hidden="true"
-      />
+      {starCount > 0 && (
+        <canvas
+          ref={canvasRef}
+          className="space-background__stars"
+          aria-hidden="true"
+        />
+      )}
       {showPlanet && (
         <div className="space-background__planet" aria-hidden="true" />
       )}

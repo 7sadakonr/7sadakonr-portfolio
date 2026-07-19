@@ -9,7 +9,7 @@
 .deep-space {
   position: fixed;
   inset: 0;
-  background: #000000;
+  background: #0d0d0f;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -79,7 +79,7 @@
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: #000;
+  background: #0d0d0f;
   z-index: 0;
 }
 

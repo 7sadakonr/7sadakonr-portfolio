@@ -6,7 +6,7 @@
   isolation: isolate;
   min-height: 100svh;
   overflow: hidden;
-  background: #010103;
+  background: #0d0d0f;
   color: white;
 }
 
@@ -27,7 +27,7 @@
   z-index: -5;
   background:
     radial-gradient(circle at 50% 25%, rgba(23, 14, 30, 0.22), transparent 42%),
-    linear-gradient(#010103 0%, #030104 67%, #080308 100%);
+    linear-gradient(#0d0d0f 0%, #0d0d0f 67%, #0a0a0c 100%);
 }
 
 .space-background__nebula {
@@ -130,7 +130,7 @@
   height: auto;
   translate: -50% 74.53%;
   border-radius: 50% 50% 0 0 / 100% 100% 0 0;
-  background: #010102;
+  background: #0d0d0f;
   box-shadow: 0 -16px 58px color-mix(in srgb, var(--space-center-glow) 42%, transparent);
 }
 

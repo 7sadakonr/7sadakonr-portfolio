@@ -24,7 +24,8 @@ export function useStarCanvas(
     const context = canvas.getContext("2d");
     if (!context) return;
 
-    const count = Math.max(0, Math.min(2000, Math.round(starCount)));
+    const isMobile = window.innerWidth <= 768;
+    const count = Math.max(0, Math.min(isMobile ? 300 : 2000, Math.round(starCount)));
     const stars = createStars(count, seed);
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
     let width = 0;
@@ -123,7 +124,7 @@ export function useStarCanvas(
     const observer = new ResizeObserver(resize);
     observer.observe(root);
     intersectionObserver.observe(root);
-    media.addEventListener("change", onMotionChange);
+    media.addEventListener("change", onMotionChange, { passive: true });
     document.addEventListener("visibilitychange", () => {
         if (!document.hidden && root.getBoundingClientRect().top < window.innerHeight && root.getBoundingClientRect().bottom > 0) {
             if (!isVisible) {

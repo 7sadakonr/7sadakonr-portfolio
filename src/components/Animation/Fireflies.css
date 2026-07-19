@@ -1,0 +1,89 @@
+.fireflies-container {
+  position: absolute;
+  top: -120px;
+  bottom: -120px;
+  left: -150px;
+  right: -150px;
+  pointer-events: none;
+  z-index: -1; /* Behind the text */
+  overflow: visible;
+}
+
+.firefly {
+  position: absolute;
+  /* Base font size for desktop. The random scale makes it vary between 0.6 and 1.8 of base */
+  font-size: calc(var(--size-scale) * 1.5px);
+  width: 1em;
+  height: 1em;
+  border-radius: 50%;
+  opacity: 0;
+  animation: 
+    float var(--float-duration) ease-in-out infinite alternate var(--float-delay),
+    twinkle calc(var(--float-duration) * 0.5) ease-in-out infinite alternate calc(var(--float-delay) * 0.8);
+}
+
+.firefly-purple {
+  background-color: #8A38F5;
+  box-shadow: 
+    0 0 3em 1em rgba(138, 56, 245, 0.7),
+    0 0 8em 2.5em rgba(138, 56, 245, 0.4);
+}
+
+.firefly-pink {
+  background-color: #FF7777;
+  box-shadow: 
+    0 0 3em 1em rgba(255, 119, 119, 0.7),
+    0 0 8em 2.5em rgba(255, 119, 119, 0.4);
+}
+
+@keyframes float {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(12em, -20em) scale(1.1);
+  }
+  66% {
+    transform: translate(-10em, -35em) scale(0.9);
+  }
+  100% {
+    transform: translate(6em, -55em) scale(1);
+  }
+}
+
+@keyframes twinkle {
+  0% { opacity: 0; }
+  50% { opacity: 0.8; }
+  100% { opacity: 0.1; }
+}
+
+/* Impeccable Skill: Respect Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .firefly {
+    animation: twinkle-reduced 4s ease-in-out infinite alternate var(--float-delay);
+  }
+  
+  @keyframes twinkle-reduced {
+    0% { opacity: 0.1; }
+    100% { opacity: 0.4; }
+  }
+}
+
+/* Responsive size adjustments */
+@media (max-width: 1024px) {
+  .firefly {
+    font-size: calc(var(--size-scale) * 1.35px);
+  }
+}
+
+@media (max-width: 768px) {
+  .firefly {
+    font-size: calc(var(--size-scale) * 1.25px);
+  }
+}
+
+@media (max-width: 480px) {
+  .firefly {
+    font-size: calc(var(--size-scale) * 1.15px);
+  }
+}

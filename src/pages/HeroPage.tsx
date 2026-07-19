@@ -1,21 +1,28 @@
+import { useEffect, useState } from 'react';
 import './HeroPage.css'
-import { useState, useEffect } from 'react';
 import hero from '../assets/img/hero.svg';
 import heroPng from '../assets/img/logo-7m.png';
 import AnimatedContent from '../components/Animation/AnimatedContent';
+import Fireflies from '../components/Animation/Fireflies';
+
+// Detect Apple devices for PNG fallback synchronously to avoid re-renders
+const isAppleDevice = () => {
+  if (typeof navigator === 'undefined') return false;
+  const ua = navigator.userAgent;
+  const isIOS = /iPad|iPhone|iPod/.test(ua);
+  const isIPadOS = /Macintosh/.test(ua) && navigator.maxTouchPoints > 1;
+  return isIOS || isIPadOS;
+};
 
 const HeroPage = () => {
-  // Detect Apple devices for PNG fallback (SVG has issues on iOS)
-  const [isApple, setIsApple] = useState(false);
+  const [isShown, setIsShown] = useState(false);
 
   useEffect(() => {
-    const ua = navigator.userAgent;
-    const isIOS = /iPad|iPhone|iPod/.test(ua);
-    const isIPadOS = /Macintosh/.test(ua) && navigator.maxTouchPoints > 1;
-    setIsApple(isIOS || isIPadOS);
+    const timer = setTimeout(() => setIsShown(true), 100);
+    return () => clearTimeout(timer);
   }, []);
 
-  const heroImg = isApple ? heroPng : hero;
+  const heroImg = isAppleDevice() ? heroPng : hero;
 
   const handleExploreClick = () => {
     const aboutSection = document.getElementById('about');
@@ -25,7 +32,7 @@ const HeroPage = () => {
   };
 
   return (
-    <main className="hero-section" id="home">
+    <main className="hero-section">
       <AnimatedContent
         distance={150}
         direction="vertical"
@@ -37,18 +44,21 @@ const HeroPage = () => {
         threshold={0.2}
         delay={0.1}
       >
-        <div className="hero-content">
-          <h1 className="main-title">
-            Welcome to my <span className="gradient-text">
-              <span className="gradient-text-glow">portfolio</span>
-              <span className="gradient-text-content">portfolio</span>
-            </span>
-          </h1>
-          <p className="subtitle">
-            Hi, I'm Jetsadakonr Muangwichit, a Computer Science Student.
-          </p>
-          <img src={heroImg} alt="Hero" />
-          <button className="explore-button" onClick={handleExploreClick}>
+        <div className={`hero-content t-stagger ${isShown ? 'is-shown' : ''}`}>
+          <div style={{ position: 'relative', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <Fireflies count={7} />
+            <h1 className="main-title t-stagger-line t-stagger-line--1">
+              Welcome to my <span className="gradient-text">
+                <span className="gradient-text-glow">portfolio</span>
+                <span className="gradient-text-content t-shimmer" data-text="portfolio">portfolio</span>
+              </span>
+            </h1>
+            <p className="subtitle t-stagger-line t-stagger-line--2">
+              Hi, I'm Jetsadakonr Muangwichit, a Computer Science Student.
+            </p>
+          </div>
+          <img src={heroImg} alt="Hero" fetchpriority="high" loading="eager" className="t-stagger-line t-stagger-line--3" />
+          <button className="explore-button t-stagger-line t-stagger-line--4" onClick={handleExploreClick}>
             <span className="explore-text">Explore</span>
             <div className="explore-icon">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
