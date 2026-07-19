@@ -1,45 +1,50 @@
 # 7sadakonr Portfolio
 
-A modern, responsive portfolio website showcasing my work and skills. Built with React and featuring a stunning universe-themed design.
+A modern, responsive portfolio website showcasing my work and skills. Built with React and TypeScript, featuring a stunning universe-themed design, smooth animations, and a rich glass-morphism aesthetic.
 
 ![Portfolio Preview](src/assets/img/portfolio.png)
 
 ## Features
 
-- Glass Morphism UI** - Beautiful translucent glass effect design
-- Universe Theme** - Animated twinkling stars and shooting stars background
-- Interactive Magnifier** - Zoom into project images with a liquid glass lens effect
-- Mobile Optimized** - Fully responsive design optimized for all devices
-- Smooth Animations** - Elegant transitions and animations throughout
-- Fast Performance** - Built with Vite for lightning-fast load times
+- **Glass Morphism UI** - Beautiful translucent glass effect design
+- **Universe Theme** - Animated background with auroras, shooting stars, and a glowing planet
+- **Command Menu** - Fast global navigation via `⌘K` or `Ctrl+K` shortcuts
+- **Interactive Magnifier** - Zoom into project images with a liquid glass lens effect
+- **Text Reveal Animations** - Smooth text stagger and character swap transitions
+- **Mobile Optimized** - Fully responsive design tailored for all devices
+- **Fast Performance** - Built with Vite, React Lazy Loading, and optimized rendering
+- **Analytics** - Integrated with Vercel Analytics
 
 ## Tech Stack
 
 | Technology | Description |
 |------------|-------------|
 | **React 19** | Frontend framework |
-| **Vite** | Build tool & dev server |
+| **TypeScript** | Static typing for JavaScript |
+| **Vite** | Build tool & fast dev server |
 | **React Router** | Client-side routing |
-| **GSAP** | Animation library |
-| **Three.js** | 3D graphics |
-| **CSS** | Custom styling with glass morphism |
+| **GSAP** | Advanced animation library |
+| **Three.js** | 3D graphics and rendering |
+| **CSS Modules / CSS** | Custom styling with glass morphism and hardware acceleration |
 
 ## Project Structure
 
 ```
 src/
-├── assets/           # Images, icons, and static assets
+├── assets/           # Images, icons, CSS files, and static assets
 ├── components/       # Reusable UI components
-│   ├── Animation/    # Animation wrappers
-│   ├── Loading/      # Loading screen component
-│   ├── Navbar/       # Navigation bar
-│   └── hero-section/ # Hero section component
+│   ├── Animation/    # Animation wrappers and Fireflies effect
+│   ├── CommandMenu/  # Global command palette
+│   ├── GlassSurface/ # Glass-morphism containers
+│   ├── Navbar/       # Navigation bar and indicator
+│   └── SpaceBackground/ # Universe-themed background components
 ├── pages/            # Page components
-│   ├── Home.jsx      # Landing page
-│   ├── About.jsx     # About me page
-│   ├── Project.jsx   # Project showcase
-│   └── Contact.jsx   # Contact page
-└── App.jsx           # Main app component
+│   ├── HeroPage.tsx  # Landing page
+│   ├── AboutPage.tsx # About me page
+│   ├── ProjectPage.tsx # Project showcase
+│   └── ContactPage.tsx # Contact page
+├── App.tsx           # Main app component (Lazy loading & Routing)
+└── main.tsx          # Application entry point
 ```
 
 ## Getting Started
@@ -80,8 +85,8 @@ npm run build
 Visit the live site: [7sadakonr.xyz](https://7sadakonr.xyz)
 
 ### Home Page
-- Hero section with animated gradient text
-- Universe-themed background with twinkling stars
+- Hero section with animated gradient text and fireflies
+- Universe-themed background with dynamic auroras
 - Smooth scroll navigation
 
 ### About Page
@@ -94,6 +99,10 @@ Visit the live site: [7sadakonr.xyz](https://7sadakonr.xyz)
 - Image magnifier with glass effect
 - Tech stack badges
 
+### Contact Page
+- Glass-morphism contact form
+- Social media links and direct contact info
+
 ## License
 
 This project is dual-licensed:
@@ -105,12 +114,10 @@ This project is dual-licensed:
 
 &copy; 2025 Jetsadakorn Muangwichit. All Rights Reserved.
 
-
-
 ## Contact
 
 - **GitHub**: [@7sadakonr](https://github.com/7sadakonr)
-- **Portfolio**: [7sadakonr.xyz](http://7sadakonr.xyz)
+- **Portfolio**: [7sadakonr.xyz](https://7sadakonr.xyz)
 
 ---
 
