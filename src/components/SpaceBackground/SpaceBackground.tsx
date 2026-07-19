@@ -46,13 +46,18 @@ export function SpaceBackground({
 }: SpaceBackgroundProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rootRef = useRef<HTMLDivElement>(null);
-  const [isPaused, setIsPaused] = useState(false);
 
   useEffect(() => {
     if (!rootRef.current) return;
     const observer = new IntersectionObserver(
       (entries) => {
-        setIsPaused(!entries[0].isIntersecting);
+        if (rootRef.current) {
+          if (entries[0].isIntersecting) {
+            rootRef.current.classList.remove("space-background--paused");
+          } else {
+            rootRef.current.classList.add("space-background--paused");
+          }
+        }
       },
       { threshold: 0, rootMargin: '1000px 0px 1000px 0px' }
     );
@@ -71,12 +76,11 @@ export function SpaceBackground({
   } as CSSProperties;
   
   const motionClass = motion === "none" ? "space-background--motion-none" : "";
-  const pausedClass = isPaused ? "space-background--paused" : "";
 
   return (
     <div
       ref={rootRef}
-      className={`space-background ${motionClass} ${pausedClass} ${className}`.trim()}
+      className={`space-background ${motionClass} ${className}`.trim()}
       style={cssVariables}
       {...rest}
     >
