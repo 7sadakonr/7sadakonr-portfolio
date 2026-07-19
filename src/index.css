@@ -1,3 +1,5 @@
+@import "./transitions.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -63,7 +65,7 @@ body {
   margin: 0;
   padding: 0;
   overflow-x: hidden;
-  background: #000;
+  background: #0d0d0f;
   -webkit-text-size-adjust: 100%;
   -ms-text-size-adjust: 100%;
   text-size-adjust: 100%;

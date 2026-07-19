@@ -261,22 +261,38 @@
    DESKTOP COMMAND HINT
    =========================================== */
 
-.desktop-command-hint {
+.desktop-command-button-wrapper {
   position: absolute;
-  left: calc(100% + 25px);
+  left: calc(100% + 20px);
   top: 50%;
   transform: translateY(-50%);
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 15px;
-  font-weight: 500;
-  letter-spacing: 0.5px;
-  pointer-events: none;
-  font-family: 'Outfit', sans-serif;
-  user-select: none;
-  white-space: nowrap;
   display: flex;
   align-items: center;
-  gap: 4px;
+  justify-content: center;
+}
+
+.desktop-command-btn {
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.7);
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  border-radius: 50%;
+}
+
+.desktop-command-btn:hover {
+  color: white;
+  transform: scale(1.1);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.desktop-command-btn:active {
+  transform: scale(0.95);
 }
 
 /* ===========================================

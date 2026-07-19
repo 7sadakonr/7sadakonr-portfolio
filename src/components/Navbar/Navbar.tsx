@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react'
-import { NavLink, useLocation } from 'react-router-dom'
+import { useLocation } from 'react-router-dom'
 import './Navbar.css'
 import GlassSurface from '../GlassSurface/GlassSurface'
 import CommandMenu from '../CommandMenu/CommandMenu'
@@ -8,10 +8,11 @@ const Navbar = () => {
   const indicatorRef = useRef<HTMLDivElement>(null)
   const location = useLocation()
   const [indicatorLeft, setIndicatorLeft] = useState(0)
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isCommandMenuOpen, setIsCommandMenuOpen] = useState(false)
   const [hasInitialized, setHasInitialized] = useState(false)
   const [isIPad, setIsIPad] = useState(false)
   const [isMac, setIsMac] = useState(true)
+  const pillTextRef = useRef<HTMLSpanElement>(null)
 
   // Detect iPad and Mac
   useEffect(() => {
@@ -27,26 +28,22 @@ const Navbar = () => {
   }, []);
 
   const updateIndicatorPosition = useCallback(() => {
-    const timeoutId = setTimeout(() => {
-      const activeLink = document.querySelector('.nav-item.active')
-      const navLinks = document.querySelector('.nav-links')
+    const activeLink = document.querySelector('.nav-item.active')
+    const navLinks = document.querySelector('.nav-links')
 
-      if (activeLink && navLinks) {
-        const parentRect = navLinks.getBoundingClientRect()
-        const rect = activeLink.getBoundingClientRect()
+    if (activeLink && navLinks) {
+      const parentRect = navLinks.getBoundingClientRect()
+      const rect = activeLink.getBoundingClientRect()
 
-        if (rect && parentRect) {
-          const left = rect.left - parentRect.left + (rect.width / 2) - (65 / 2)
-          setIndicatorLeft(Math.max(0, left))
+      if (rect && parentRect) {
+        const left = rect.left - parentRect.left + (rect.width / 2) - (65 / 2)
+        setIndicatorLeft(Math.max(0, left))
 
-          if (!hasInitialized) {
-            setHasInitialized(true)
-          }
+        if (!hasInitialized) {
+          setHasInitialized(true)
         }
       }
-    }, 150)
-
-    return () => clearTimeout(timeoutId)
+    }
   }, [hasInitialized])
 
   // Initial position (no animation)
@@ -77,17 +74,17 @@ const Navbar = () => {
         updateIndicatorPosition()
       }
 
-      window.addEventListener('resize', handleResize)
+      window.addEventListener('resize', handleResize, { passive: true })
       return () => window.removeEventListener('resize', handleResize)
     }
   }, [updateIndicatorPosition, isIPad])
 
   useEffect(() => {
-    setIsMobileMenuOpen(false)
+    setIsCommandMenuOpen(false)
   }, [location.pathname])
 
   useEffect(() => {
-    if (isMobileMenuOpen) {
+    if (isCommandMenuOpen) {
       document.body.style.overflow = 'hidden'
     } else {
       document.body.style.overflow = 'unset'
@@ -96,17 +93,17 @@ const Navbar = () => {
     return () => {
       document.body.style.overflow = 'unset'
     }
-  }, [isMobileMenuOpen])
+  }, [isCommandMenuOpen])
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault()
-        setIsMobileMenuOpen(prev => !prev)
+        setIsCommandMenuOpen(prev => !prev)
       }
     }
 
-    window.addEventListener('keydown', handleKeyDown)
+    window.addEventListener('keydown', handleKeyDown, { passive: true })
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [])
 
@@ -126,7 +123,7 @@ const Navbar = () => {
       }
     }
 
-    window.addEventListener('landing-scroll', handleLandingScroll)
+    window.addEventListener('landing-scroll', handleLandingScroll, { passive: true })
     return () => window.removeEventListener('landing-scroll', handleLandingScroll)
   }, [])
 
@@ -141,28 +138,88 @@ const Navbar = () => {
     }
   }, [activePath, hasInitialized, updateIndicatorPosition, isIPad])
 
-  const menuItems = [
-    { path: "/", label: "HOME" },
-    { path: "/about", label: "ABOUT" },
-    { path: "/project", label: "PROJECT" },
-    { path: "/contact", label: "CONTACT" }
+  const navItems = [
+    { path: '/', label: 'HOME' },
+    { path: '/about', label: 'ABOUT' },
+    { path: '/project', label: 'PROJECT' },
+    { path: '/contact', label: 'CONTACT' },
   ]
 
-  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, path: string) => {
-    let targetId = 'home';
-    if (path === '/about') targetId = 'about';
-    if (path === '/project') targetId = 'projects';
-    if (path === '/contact') targetId = 'contact';
+  const commandMenuItems = [
+    { id: 'nav-home', path: '/', label: 'HOME', category: 'Navigation', keywords: 'home landing start', targetId: 'home' },
+    { id: 'nav-about', path: '/about', label: 'ABOUT', category: 'Navigation', keywords: 'about profile me', targetId: 'about' },
+    { id: 'nav-project', path: '/project', label: 'PROJECTS', category: 'Navigation', keywords: 'projects work portfolio', targetId: 'projects' },
+    { id: 'nav-contact', path: '/contact', label: 'CONTACT', category: 'Navigation', keywords: 'contact email hire social', targetId: 'contact' },
+    
+    { id: 'sec-about', path: '/about', label: 'About Me', category: 'Content', keywords: 'about me background story', targetId: 'about-me' },
+    { id: 'sec-skills', path: '/about', label: 'My Skills', category: 'Content', keywords: 'skills html css javascript react figma tech', targetId: 'skills' },
+    
+    { id: 'proj-1', path: '/project', label: 'Todo-List', category: 'Projects', keywords: 'todo task list project nextjs express postgres', targetId: 'project-0' },
+    { id: 'proj-2', path: '/project', label: 'Portfolio Website', category: 'Projects', keywords: 'portfolio personal project react vite framer', targetId: 'project-1' },
+    { id: 'proj-3', path: '/project', label: 'Zendix File Transfer', category: 'Projects', keywords: 'zendix file transfer share peer webrtc', targetId: 'project-2' },
+  ];
+
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, path: string, explicitTargetId?: string) => {
+    let targetId = explicitTargetId;
+    if (!targetId) {
+      if (path === '/about') targetId = 'about';
+      else if (path === '/project') targetId = 'projects';
+      else if (path === '/contact') targetId = 'contact';
+      else targetId = 'home';
+    }
 
     const element = document.getElementById(targetId);
     if (element) {
       e.preventDefault();
-      element.scrollIntoView({ behavior: 'smooth' });
+      
+      // Prevent scroll-spy from bouncing during smooth scroll
+      (window as any).isNavigating = true;
+      if ((window as any).navTimeoutId) clearTimeout((window as any).navTimeoutId);
+      (window as any).navTimeoutId = setTimeout(() => {
+        (window as any).isNavigating = false;
+      }, 1000);
+
+      element.scrollIntoView({ 
+        behavior: 'smooth',
+        block: explicitTargetId && (explicitTargetId.startsWith('project-') || explicitTargetId === 'skills') ? 'center' : 'start'
+      });
       window.history.pushState(null, '', path);
       setActivePath(path);
-      setIsMobileMenuOpen(false);
+      setIsCommandMenuOpen(false);
+
+      if (explicitTargetId && explicitTargetId.startsWith('project-')) {
+          const index = parseInt(explicitTargetId.replace('project-', ''), 10);
+          window.dispatchEvent(new CustomEvent('project-scroll', { detail: { index } }));
+      }
     }
   };
+
+  const currentLabel = navItems.find(item => item.path === activePath)?.label || 'Home';
+
+  useEffect(() => {
+    const el = pillTextRef.current;
+    if (!el) return;
+
+    const nextText = currentLabel.charAt(0) + currentLabel.slice(1).toLowerCase();
+
+    if (el.textContent === '' || el.textContent === nextText) {
+      el.textContent = nextText;
+      return;
+    }
+
+    const dur = parseFloat(
+      getComputedStyle(document.documentElement).getPropertyValue("--text-swap-dur") || "150"
+    );
+
+    el.classList.add("is-exit");
+    setTimeout(() => {
+      el.textContent = nextText;
+      el.classList.remove("is-exit");
+      el.classList.add("is-enter-start");
+      void el.offsetHeight; // force reflow
+      el.classList.remove("is-enter-start");
+    }, dur);
+  }, [currentLabel]);
 
   return (
     <>
@@ -191,31 +248,45 @@ const Navbar = () => {
               aria-hidden="true"
             />
             <ul className="nav-links">
-              {menuItems.map(({ path, label }) => (
+              {navItems.map(({ path, label }) => (
                 <li key={path}>
-                  <NavLink
-                    to={path}
+                  <a
+                    href={path}
                     onClick={(e) => handleNavClick(e, path)}
-                    className={() => activePath === path ? 'nav-item active' : 'nav-item'}
+                    className={activePath === path ? 'nav-item active' : 'nav-item'}
                     aria-current={activePath === path ? 'page' : undefined}
                   >
                     {label}
-                  </NavLink>
+                  </a>
                 </li>
               ))}
             </ul>
           </GlassSurface>
 
-          <div className="desktop-command-hint" aria-hidden="true">
-            {isMac ? (
-              <span style={{ fontSize: '16px' }}>⌘</span>
-            ) : (
-              <svg width="38" height="22" viewBox="0 0 38 22" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginTop: '1px' }}>
-                <rect x="1.5" y="1.5" width="35" height="19" rx="4.5" />
-                <text x="19" y="15" fontSize="11.5" textAnchor="middle" fill="currentColor" stroke="none" fontWeight="500" fontFamily="Outfit, sans-serif" letterSpacing="0.5">ctrl</text>
-              </svg>
-            )}
-            <span style={{ fontSize: '15px', fontWeight: '500' }}>K</span>
+          <div className="desktop-command-button-wrapper">
+            <GlassSurface
+              width={65}
+              height={65}
+              saturation={1.8}
+              brightness={50}
+              opacity={0.93}
+              borderRadius={50}
+              borderWidth={0.1}
+              blur={20}
+              displace={4}
+              backgroundOpacity={0.05}
+            >
+              <button 
+                className="desktop-command-btn" 
+                onClick={() => setIsCommandMenuOpen(true)}
+                aria-label="Open command menu"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+              </button>
+            </GlassSurface>
           </div>
         </nav>
       )}
@@ -237,11 +308,11 @@ const Navbar = () => {
           >
             <button 
               className="command-pill-button" 
-              onClick={() => setIsMobileMenuOpen(true)}
+              onClick={() => setIsCommandMenuOpen(true)}
               aria-label="Open command menu"
             >
               <svg className="pill-search-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-              <span className="pill-text">Search...</span>
+              <span className="pill-text t-text-swap" ref={pillTextRef}></span>
               <span className="pill-shortcut">{isMac ? '⌘K' : 'Ctrl K'}</span>
             </button>
           </GlassSurface>
@@ -249,9 +320,9 @@ const Navbar = () => {
       </nav>
 
       <CommandMenu 
-        isOpen={isMobileMenuOpen} 
-        onClose={() => setIsMobileMenuOpen(false)} 
-        menuItems={menuItems}
+        isOpen={isCommandMenuOpen} 
+        onClose={() => setIsCommandMenuOpen(false)} 
+        menuItems={commandMenuItems}
         activePath={activePath}
         handleNavClick={handleNavClick}
       />

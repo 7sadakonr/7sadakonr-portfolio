@@ -13,7 +13,14 @@
   align-items: flex-start;
   padding-top: 15vh;
   opacity: 0;
-  animation: fadeIn 0.2s ease-out forwards;
+  pointer-events: none;
+  transition: opacity var(--toast-close) var(--toast-ease);
+}
+
+.command-menu-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+  transition: opacity var(--toast-open) var(--toast-ease);
 }
 
 .command-menu-modal {
@@ -26,18 +33,7 @@
   border-radius: 16px;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.1);
   overflow: hidden;
-  transform: scale(0.95);
-  animation: scaleIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes scaleIn {
-  from { transform: scale(0.95); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
+  /* Animations handled by t-toast class */
 }
 
 .command-search-wrapper {
@@ -51,6 +47,7 @@
 .command-search-icon {
   color: rgba(255, 255, 255, 0.5);
   margin-right: 12px;
+  z-index: 4;
 }
 
 .command-search-input {
@@ -62,10 +59,47 @@
   outline: none;
   font-weight: 500;
   font-family: inherit;
+  z-index: 4;
 }
 
 .command-search-input::placeholder {
+  color: transparent;
+}
+
+.t-clear-mirror, .t-clear-placeholder {
+  padding-left: 52px;
+  padding-right: 80px;
+  font-size: 16px;
+  font-weight: 500;
+  font-family: inherit;
+}
+.t-clear-placeholder {
   color: rgba(255, 255, 255, 0.4);
+}
+.t-clear-mirror {
+  color: white;
+}
+
+.t-clear-btn {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin-right: 12px;
+  z-index: 4;
+  font-size: 16px;
+  line-height: 1;
+  padding-bottom: 2px;
+  transition: background 0.2s ease;
+}
+.t-clear-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
 }
 
 .command-shortcut-badge {
@@ -83,6 +117,9 @@
   max-height: 400px;
   overflow-y: auto;
   padding: 12px;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
 }
 
 /* Scrollbar styling */

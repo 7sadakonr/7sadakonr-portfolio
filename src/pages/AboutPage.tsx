@@ -64,7 +64,7 @@ const AboutSection = () => {
                 </section>
 
                 {/* About Me Section */}
-                <section className="about-section">
+                <section className="about-section" id="about-me">
                     <AnimatedContent
                         distance={50}
                         direction="vertical"
@@ -107,7 +107,7 @@ const AboutSection = () => {
                 </section>
 
                 {/* Skills Section */}
-                <section className="about-section">
+                <section className="about-section" id="skills">
                     <AnimatedContent
                         distance={50}
                         direction="vertical"

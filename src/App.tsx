@@ -8,7 +8,7 @@ import './pages/home.css'
 import './pages/LandingPage.css'
 
 // Lazy load components for code splitting
-const HeroPage = lazy(() => import('./pages/HeroPage'))
+import HeroPage from './pages/HeroPage'
 const AboutPage = lazy(() => import('./pages/AboutPage'))
 const ProjectPage = lazy(() => import('./pages/ProjectPage'))
 const ContactPage = lazy(() => import('./pages/ContactPage'))
@@ -25,21 +25,48 @@ function App() {
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
+                if ((window as any).isNavigating) return; // Prevent bouncing during manual navigation
+                
                 const id = entry.target.id
-                let route = '/'
-                if (id === 'about') route = '/about'
-                if (id === 'projects') route = '/project'
-                if (id === 'contact') route = '/contact'
+                let route = null
+                if (['home'].includes(id)) route = '/'
+                if (['about', 'about-me', 'skills'].includes(id)) route = '/about'
+                if (['projects'].includes(id)) route = '/project'
+                if (['contact'].includes(id)) route = '/contact'
 
-                window.dispatchEvent(new CustomEvent('landing-scroll', {
-                    detail: { path: route }
-                }))
+                if (route) {
+                    window.dispatchEvent(new CustomEvent('landing-scroll', {
+                        detail: { path: route }
+                    }))
+                }
             }
         })
     }, observerOptions)
 
-    const sections = document.querySelectorAll('section[id]')
-    sections.forEach(sec => observer.observe(sec))
+    // Function to find and observe sections
+    const observeSections = () => {
+        const sections = document.querySelectorAll('section[id]')
+        sections.forEach(sec => observer.observe(sec))
+        if (sections.length >= 4) {
+            return true
+        }
+        return false
+    }
+
+    // Try immediately
+    if (!observeSections()) {
+        // If not found (due to Suspense), wait for them to mount
+        const mutationObserver = new MutationObserver(() => {
+            if (observeSections()) {
+                mutationObserver.disconnect()
+            }
+        })
+        mutationObserver.observe(document.body, { childList: true, subtree: true })
+        return () => {
+            observer.disconnect()
+            mutationObserver.disconnect()
+        }
+    }
 
     return () => observer.disconnect()
   }, [])
@@ -51,13 +78,13 @@ function App() {
       <Navbar />
       
       <div className="landing-page-container">
-        <Suspense fallback={null}>
-          <div className="landing-content-flow">
-            <SpaceBackground motion="subtle" showPlanet={true} starCount={0}>
-              <section id="home">
-                <HeroPage />
-              </section>
-            </SpaceBackground>
+        <div className="landing-content-flow">
+          <SpaceBackground motion="subtle" showPlanet={true} starCount={0}>
+            <section id="home">
+              <HeroPage />
+            </section>
+          </SpaceBackground>
+          <Suspense fallback={null}>
             <section id="about">
               <AboutPage />
             </section>
@@ -67,8 +94,8 @@ function App() {
             <section id="contact">
               <ContactPage />
             </section>
-          </div>
-        </Suspense>
+          </Suspense>
+        </div>
       </div>
     </Router>
   )

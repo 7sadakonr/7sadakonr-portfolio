@@ -1,5 +1,10 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react'
 import AnimatedContent from '../components/Animation/AnimatedContent'
+import LineSidebar from '../components/LineSidebar/LineSidebar'
+import { AvatarGroup } from '../components/Animation/AvatarGroup'
+import todoListImg from '../assets/img/todo_list_real.png'
+import portfolioImg from '../assets/img/portfolio_real.png'
+import fileTransferImg from '../assets/img/zendix_real.png'
 // CSS is now in LandingPage.css
 
 const ProjectSection = () => {
@@ -20,7 +25,7 @@ const ProjectSection = () => {
             subtitle: "Integrated Task Management System",
             description: "A full-stack task management application with secure JWT authentication, complete CRUD operations, and a dashboard featuring productivity analytics with Recharts. Users can manage tasks with advanced filtering by status and enjoy a responsive UI with smooth animations.",
             tech: ["Next.js", "TypeScript", "Express.js", "PostgreSQL", "Prisma", "TailwindCSS", "JWT"],
-            image: "",
+            image: todoListImg,
             liveUrl: "https://7sadakonr-todo-list.vercel.app",
             githubUrl: "https://github.com/7sadakonr/Todo-List",
             gradient: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
@@ -31,23 +36,86 @@ const ProjectSection = () => {
             subtitle: "Personal Portfolio & Showcase",
             description: "A modern, responsive portfolio website showcasing my work and skills. Features include smooth animations, glass morphism UI design, universe-themed backgrounds with twinkling stars and shooting stars, interactive image magnifier, and mobile-optimized experience.",
             tech: ["React", "Vite", "CSS", "Framer Motion"],
-            image: "",
+            image: portfolioImg,
             liveUrl: "https://7sadakonr-portfolio.vercel.app",
             githubUrl: "https://github.com/7sadakonr/7sadakonr-portfolio",
             gradient: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)"
         },
         {
             id: 3,
-            title: "Fliq File Transfer",
-            subtitle: " peer-to-peer file and clipboard sharing web app",
-            description: "Fliq is a peer-to-peer file and clipboard sharing web app. Transfer files and text directly between devices without uploading to the cloud.",
+            title: "Zendix File Transfer",
+            subtitle: "Peer-to-peer file and clipboard sharing web app",
+            description: "Zendix is a peer-to-peer file and clipboard sharing web app. Transfer files and text directly between devices without uploading to the cloud.",
             tech: ["React", "Vite", "TailwindCSS", "Zustand", "PeerJS (WebRTC)", "React Router"],
-            image: "",
-            liveUrl: "https://fliq-file-transfer.vercel.app/transfer",
-            githubUrl: "https://github.com/7sadakonr/Fliq-Clipboard-and-File-Transfer-Web-App",
+            image: fileTransferImg,
+            liveUrl: "https://zendix-file.vercel.app/",
+            githubUrl: "https://github.com/7sadakonr/Zendix-Filetransfer-Web-App",
             gradient: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)"
         }
     ]
+
+    const [activeProjectIndex, setActiveProjectIndex] = useState(0);
+    const projectRefs = useRef<(HTMLDivElement | null)[]>([]);
+    const isScrollingRef = useRef(false);
+
+    const ratios = useRef<Record<number, number>>({});
+
+    useEffect(() => {
+        const handleProjectScroll = (e: Event) => {
+            const customEvent = e as CustomEvent<{ index: number }>;
+            if (customEvent.detail && typeof customEvent.detail.index === 'number') {
+                setActiveProjectIndex(customEvent.detail.index);
+                isScrollingRef.current = true;
+                setTimeout(() => {
+                    isScrollingRef.current = false;
+                }, 1000);
+            }
+        };
+
+        window.addEventListener('project-scroll', handleProjectScroll);
+        return () => window.removeEventListener('project-scroll', handleProjectScroll);
+    }, []);
+
+    useEffect(() => {
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                const index = projectRefs.current.findIndex(ref => ref === entry.target);
+                if (index !== -1) {
+                    ratios.current[index] = entry.intersectionRatio;
+                }
+            });
+
+            if (isScrollingRef.current) return;
+
+            let maxRatio = 0;
+            let maxIndex = -1;
+
+            Object.entries(ratios.current).forEach(([idx, ratio]) => {
+                if (ratio > maxRatio) {
+                    maxRatio = ratio;
+                    maxIndex = Number(idx);
+                }
+            });
+
+            if (maxIndex !== -1 && maxRatio > 0) {
+                setActiveProjectIndex(maxIndex);
+            }
+        }, { 
+            rootMargin: "-20% 0px -20% 0px", 
+            threshold: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+        });
+
+        projectRefs.current.forEach(ref => {
+            if (ref) observer.observe(ref);
+        });
+
+        return () => observer.disconnect();
+    }, []);
+
+    const handleSidebarClick = (index: number) => {
+        setActiveProjectIndex(index);
+        projectRefs.current[index]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    };
 
     // Tech icons/badges component
     const TechBadge = ({ tech }) => (
@@ -229,8 +297,9 @@ const ProjectSection = () => {
                     </AnimatedContent>
                 </section>
 
-                {/* Projects Grid */}
-                <section className="projects-section">
+                {/* Projects Grid with Sidebar */}
+                <div className="projects-layout">
+                    <section className="projects-list">
                     {projects.map((project, index) => (
                         <AnimatedContent
                             key={project.id}
@@ -240,7 +309,13 @@ const ProjectSection = () => {
                             initialOpacity={0}
                             delay={0.2 + index * 0.15}
                         >
-                            <div className="project-card">
+                            <div 
+                                className="project-card-wrapper" 
+                                ref={el => { projectRefs.current[index] = el }}
+                                id={`project-${index}`}
+                                onMouseEnter={() => setActiveProjectIndex(index)}
+                            >
+                                <div className="project-card">
                                 {/* Project Preview/Image Area */}
                                 <div className="project-preview" style={{ background: project.image ? 'transparent' : project.gradient }}>
                                     {project.image && (
@@ -255,7 +330,7 @@ const ProjectSection = () => {
                                         <h3 className="project-title">{project.title}</h3>
                                     </div>
 
-                                    <p className="project-description">{project.description}</p>
+                                    <p className="project-description mobile-only-description">{project.description}</p>
 
                                     {/* Tech Stack */}
                                     <div className="project-tech">
@@ -285,9 +360,22 @@ const ProjectSection = () => {
                                     </div>
                                 </div>
                             </div>
-                        </AnimatedContent>
+                        </div>
+                    </AnimatedContent>
                     ))}
-                </section>
+                    </section>
+                    
+                    {/* Line Sidebar for Projects */}
+                    <aside className="projects-sidebar">
+                        <LineSidebar 
+                            items={projects.map(p => ({ label: p.title, description: p.description }))}
+                            activeIndex={activeProjectIndex}
+                            onItemClick={handleSidebarClick}
+                            accentColor="#a855f7"
+                            fontSize={1.25}
+                        />
+                    </aside>
+                </div>
 
             </div>
         </div>

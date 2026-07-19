@@ -37,21 +37,8 @@ export const trackWebVitals = () => {
   }).observe({ entryTypes: ['layout-shift'] })
 }
 
-// Resource loading optimization
 export const preloadCriticalResources = () => {
-  // Preload critical images
-  const criticalImages = [
-    
-    '/src/assets/img/Group 23.png'
-  ]
-
-  criticalImages.forEach(src => {
-    const link = document.createElement('link')
-    link.rel = 'preload'
-    link.as = 'image'
-    link.href = src
-    document.head.appendChild(link)
-  })
+  // Preloading is now handled in index.html for better LCP
 }
 
 // Initialize performance tracking in development
