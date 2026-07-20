@@ -112,7 +112,7 @@ This project is dual-licensed:
 
 ---
 
-&copy; 2025 Jetsadakorn Muangwichit. All Rights Reserved.
+&copy; 2026 Jetsadakorn Muangwichit. All Rights Reserved.
 
 ## Contact
 
