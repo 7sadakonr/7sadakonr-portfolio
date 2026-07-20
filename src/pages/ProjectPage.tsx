@@ -3,7 +3,7 @@ import AnimatedContent from '../components/Animation/AnimatedContent'
 import LineSidebar from '../components/LineSidebar/LineSidebar'
 import { AvatarGroup } from '../components/Animation/AvatarGroup'
 import todoListImg from '../assets/img/todo_list_real.png'
-import portfolioImg from '../assets/img/portfolio_real.png'
+import portfolioImg from '../assets/img/portfolio_real.jpg'
 import fileTransferImg from '../assets/img/zendix_real.png'
 // CSS is now in LandingPage.css
 
