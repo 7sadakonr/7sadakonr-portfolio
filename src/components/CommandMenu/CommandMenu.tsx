@@ -44,12 +44,16 @@ const CommandMenu: React.FC<CommandMenuProps> = ({
   }, []);
 
   const num = (name: string, fb: number) => {
-    const v = parseFloat(getComputedStyle(document.documentElement).getPropertyValue(name));
+    const str = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    if (!str) return fb;
+    let v = parseFloat(str);
+    if (Number.isNaN(v)) return fb;
+    if (str.endsWith('s') && !str.endsWith('ms')) v *= 1000;
     return Number.isFinite(v) ? v : fb;
   };
 
   const bezier = (str: string) => {
-    const m = String(str).match(/cubic-bezier\(([-\d.]+),([-\d.]+),([-\d.]+),([-\d.]+)\)/);
+    const m = String(str).match(/cubic-bezier\(([-\d.]+),\s*([-\d.]+),\s*([-\d.]+),\s*([-\d.]+)\)/);
     if (!m) return (t: number) => t;
     const [x1, y1, x2, y2] = m.slice(1).map(parseFloat);
     const cx = 3 * x1, bx = 3 * (x2 - x1) - cx, ax = 1 - cx - bx;
