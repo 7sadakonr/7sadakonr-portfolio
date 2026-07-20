@@ -7,7 +7,6 @@ import CommandMenu from '../CommandMenu/CommandMenu'
 const Navbar = () => {
   const indicatorRef = useRef<HTMLDivElement>(null)
   const location = useLocation()
-  const [indicatorLeft, setIndicatorLeft] = useState(0)
   const [isCommandMenuOpen, setIsCommandMenuOpen] = useState(false)
   const [hasInitialized, setHasInitialized] = useState(false)
   const [isIPad, setIsIPad] = useState(false)
@@ -30,17 +29,24 @@ const Navbar = () => {
   const updateIndicatorPosition = useCallback(() => {
     const activeLink = document.querySelector('.nav-item.active')
     const navLinks = document.querySelector('.nav-links')
+    const indicator = indicatorRef.current
 
-    if (activeLink && navLinks) {
+    if (activeLink && navLinks && indicator) {
       const parentRect = navLinks.getBoundingClientRect()
       const rect = activeLink.getBoundingClientRect()
 
       if (rect && parentRect) {
-        const left = rect.left - parentRect.left + (rect.width / 2) - (65 / 2)
-        setIndicatorLeft(Math.max(0, left))
+        const targetX = Math.max(0, rect.left - parentRect.left + (rect.width / 2) - (65 / 2))
 
         if (!hasInitialized) {
+          const prev = indicator.style.transition
+          indicator.style.transition = 'none'
+          indicator.style.transform = `translateX(${targetX}px)`
+          void indicator.offsetWidth // force reflow
+          indicator.style.transition = prev
           setHasInitialized(true)
+        } else {
+          indicator.style.transform = `translateX(${targetX}px)`
         }
       }
     }
@@ -240,11 +246,7 @@ const Navbar = () => {
           >
             <div
               ref={indicatorRef}
-              className={`nav-indicator ${hasInitialized ? 'initialized' : ''}`}
-              style={{
-                left: `${indicatorLeft}px`,
-                transition: hasInitialized ? 'left 0.4s cubic-bezier(0.4, 0, 0.2, 1)' : 'none'
-              }}
+              className="nav-indicator t-tabs-pill"
               aria-hidden="true"
             />
             <ul className="nav-links">
