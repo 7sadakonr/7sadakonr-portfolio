@@ -2,7 +2,7 @@
 
 A modern, responsive portfolio website showcasing my work and skills. Built with React and TypeScript, featuring a stunning universe-themed design, smooth animations, and a rich glass-morphism aesthetic.
 
-![Portfolio Preview](src/assets/img/portfolio_real.png)
+![Portfolio Preview](src/assets/img/portfolio_preview_v2.png)
 
 ## Features
 
