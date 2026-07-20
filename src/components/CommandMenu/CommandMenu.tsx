@@ -31,6 +31,7 @@ const CommandMenu: React.FC<CommandMenuProps> = ({
   const [isClosing, setIsClosing] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
+  const [clearingText, setClearingText] = useState("");
   
   const inputRef = useRef<HTMLInputElement>(null);
   const mirrorRef = useRef<HTMLDivElement>(null);
@@ -115,7 +116,9 @@ const CommandMenu: React.FC<CommandMenuProps> = ({
     const glow = glowRef.current;
     
     const keepFocus = document.activeElement === inputRef.current;
-    mirror.textContent = searchTerm.replace(/ /g, "\u00a0");
+    const textToClear = searchTerm.replace(/ /g, "\u00a0");
+    setClearingText(textToClear);
+    mirror.textContent = textToClear;
     
     const total = num("--clear-dur", 1000);
     const outDur = num("--clear-out-dur", 400);
@@ -165,7 +168,7 @@ const CommandMenu: React.FC<CommandMenuProps> = ({
       } else {
         mirror.style.cssText = "";
         phold.style.cssText = "";
-        mirror.textContent = "";
+        setClearingText("");
         glow.style.opacity = "0";
         glow.style.background = "";
         setIsClearing(false);
@@ -275,7 +278,7 @@ const CommandMenu: React.FC<CommandMenuProps> = ({
               setSelectedIndex(0);
             }}
           />
-          <div className="t-clear-mirror" aria-hidden="true" ref={mirrorRef}>{searchTerm.replace(/ /g, "\u00a0")}</div>
+          <div className="t-clear-mirror" aria-hidden="true" ref={mirrorRef}>{isClearing ? clearingText : searchTerm.replace(/ /g, "\u00a0")}</div>
           <div className="t-clear-placeholder" aria-hidden="true" ref={pholdRef}>Type a command or search...</div>
           <div className="t-clear-glow" aria-hidden="true" ref={glowRef}></div>
           {searchTerm && (
