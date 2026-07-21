@@ -3,19 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="./src/assets/img/logo.svg" />
-    <!-- Dynamic preload for hero image to stabilize LCP -->
-    <script>
-      (function(){
-        var ua = navigator.userAgent;
-        var isApple = /iPad|iPhone|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
-        var link = document.createElement('link');
-        link.rel = 'preload';
-        link.as = 'image';
-        link.fetchPriority = 'high';
-        link.href = isApple ? '/src/assets/img/logo-7m.png' : '/src/assets/img/hero.svg';
-        document.head.appendChild(link);
-      })();
-    </script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
