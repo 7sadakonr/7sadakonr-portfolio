@@ -19,6 +19,11 @@
   padding-left: calc(var(--marker-length) + var(--marker-gap));
 }
 
+.line-sidebar--align-left.line-sidebar--markers {
+  padding-left: 0;
+  padding-right: calc(var(--marker-length) + var(--marker-gap));
+}
+
 .line-sidebar__list {
   list-style: none;
   margin: 0;
@@ -50,7 +55,16 @@
   font-size: var(--font-size);
   line-height: 1.2;
   color: color-mix(in srgb, var(--accent-color) calc(var(--effect, 0) * 100%), var(--text-color));
-  transform: translateX(calc(var(--effect, 0) * var(--max-shift)));
+  transform: translateX(calc(var(--effect, 0) * var(--max-shift) * var(--shift-dir, 1)));
+}
+
+.line-sidebar--align-left .line-sidebar__label {
+  flex-direction: row-reverse;
+}
+
+.line-sidebar--align-left .line-sidebar__index {
+  margin-right: 0;
+  margin-left: 0.8rem;
 }
 
 .line-sidebar__index {
@@ -95,12 +109,10 @@
   transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.line-sidebar__item:hover .line-sidebar__description-wrapper,
 .line-sidebar__item[aria-current="true"] .line-sidebar__description-wrapper {
   grid-template-rows: 1fr;
 }
 
-.line-sidebar__item:hover .line-sidebar__description,
 .line-sidebar__item[aria-current="true"] .line-sidebar__description {
   opacity: 1;
   transform: translateY(0);
@@ -118,6 +130,12 @@
   transform: translateY(-50%) scaleX(calc(0.7 + var(--effect, 0) * 0.5));
 }
 
+.line-sidebar--align-left .line-sidebar__marker {
+  left: auto;
+  right: calc(-1 * var(--marker-length) - var(--marker-gap));
+  transform-origin: right center;
+}
+
 /* Short static tick centered in the gap between two menu items */
 .line-sidebar--markers .line-sidebar__item:not(:last-child)::after {
   content: '';
@@ -131,8 +149,17 @@
   transform: translateY(-50%);
 }
 
+.line-sidebar--align-left.line-sidebar--markers .line-sidebar__item:not(:last-child)::after {
+  left: auto;
+  right: calc(-1 * var(--marker-length) - var(--marker-gap));
+}
+
 /* When enabled, the in-between ticks grow with cursor proximity too */
 .line-sidebar--scale-tick .line-sidebar__item:not(:last-child)::after {
   transform-origin: left center;
   transform: translateY(-50%) scaleX(calc(0.7 + var(--effect, 0) * 0.6));
+}
+
+.line-sidebar--align-left.line-sidebar--scale-tick .line-sidebar__item:not(:last-child)::after {
+  transform-origin: right center;
 }

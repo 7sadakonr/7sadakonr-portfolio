@@ -65,10 +65,6 @@
     }
 }
 
-.shiny-text.disabled {
-    animation: none;
-}
-
 .hero-section img {
     width: clamp(80px, calc(10vw + 6vh + 20px), 300px);
     height: auto;
@@ -93,12 +89,10 @@
     width: 120vw;
     height: 70vh;
     background: linear-gradient(90deg, rgba(138, 56, 245, 0.06) 10%, rgba(255, 119, 119, 0.04) 90%);
-    -webkit-mask-image: radial-gradient(ellipse at center, black 20%, transparent 60%);
-    mask-image: radial-gradient(ellipse at center, black 20%, transparent 60%);
-    filter: blur(60px);
+    -webkit-mask-image: radial-gradient(ellipse at center, black 0%, transparent 50%);
+    mask-image: radial-gradient(ellipse at center, black 0%, transparent 50%);
     z-index: -2;
     pointer-events: none;
-    will-change: transform, opacity;
 }
 
 /* Gradient Text (for Portfolio) and Star Icon */

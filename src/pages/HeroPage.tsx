@@ -3,7 +3,6 @@ import './HeroPage.css'
 import hero from '../assets/img/hero.svg';
 import heroPng from '../assets/img/logo-7m.png';
 import AnimatedContent from '../components/Animation/AnimatedContent';
-import Fireflies from '../components/Animation/Fireflies';
 
 // Detect Apple devices for PNG fallback synchronously to avoid re-renders
 const isAppleDevice = () => {
@@ -18,8 +17,11 @@ const HeroPage = () => {
   const [isShown, setIsShown] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => setIsShown(true), 100);
-    return () => clearTimeout(timer);
+    // Trigger animation in the next frame to avoid arbitrary 100ms delay and improve LCP
+    const frameId = requestAnimationFrame(() => {
+      setIsShown(true);
+    });
+    return () => cancelAnimationFrame(frameId);
   }, []);
 
   const heroImg = isAppleDevice() ? heroPng : hero;
@@ -46,7 +48,6 @@ const HeroPage = () => {
       >
         <div className={`hero-content t-stagger ${isShown ? 'is-shown' : ''}`}>
           <div style={{ position: 'relative', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <Fireflies count={7} />
             <h1 className="main-title t-stagger-line t-stagger-line--1">
               Welcome to my <span className="gradient-text">
                 <span className="gradient-text-glow">portfolio</span>
