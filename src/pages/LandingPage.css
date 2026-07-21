@@ -861,7 +861,7 @@ html {
     width: 100%;
     max-width: 1300px;
     display: grid;
-    grid-template-columns: 1fr 380px;
+    grid-template-columns: 1fr 1fr;
     gap: clamp(30px, 4vw, 60px);
     align-items: start;
     position: relative;
@@ -872,6 +872,9 @@ html {
     top: 35vh;
     height: fit-content;
     margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    padding-left: clamp(20px, 4vw, 60px);
 }
 
 .projects-list {
@@ -892,12 +895,25 @@ html {
 .project-card {
     position: relative;
     display: grid;
-    grid-template-columns: 1fr 1.2fr;
+    grid-template-columns: 1fr;
     gap: clamp(25px, 4vw, 45px);
     padding: clamp(24px, 3.5vw, 40px);
     border-radius: 16px;
+    align-items: center;
     overflow: hidden;
     transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.project-card.project-card-reverse {
+    grid-template-columns: 1fr 1.2fr;
+}
+
+.project-card.project-card-reverse .project-preview {
+    order: 2;
+}
+
+.project-card.project-card-reverse .project-info {
+    order: 1;
 }
 
 .project-card:hover {
@@ -907,7 +923,7 @@ html {
 /* Project Preview */
 .project-preview {
     position: relative;
-    aspect-ratio: 16 / 10;
+    aspect-ratio: 16 / 9;
     border-radius: clamp(14px, 2vw, 20px);
     overflow: hidden;
     display: flex;
@@ -1464,9 +1480,25 @@ a.contact-item-text:hover {
    RESPONSIVE STYLES
    =========================================== */
 
+@media (min-width: 901px) {
+    /* Hide the description in the card on PC, as it is in the LineSidebar */
+    .project-card .project-description {
+        display: none !important;
+    }
+}
+
 @media (max-width: 900px) {
-    .project-card {
+    .project-card,
+    .project-card.project-card-reverse {
         grid-template-columns: 1fr;
+    }
+
+    .project-card.project-card-reverse .project-preview {
+        order: 1; /* Reset order on mobile so image is always on top */
+    }
+
+    .project-card.project-card-reverse .project-info {
+        order: 2;
     }
 
     .project-preview {
@@ -1509,7 +1541,7 @@ a.contact-item-text:hover {
     }
 
     .project-preview {
-        aspect-ratio: 16 / 8;
+        aspect-ratio: 16 / 9;
     }
 
     .project-actions {

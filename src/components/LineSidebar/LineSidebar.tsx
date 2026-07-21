@@ -26,7 +26,8 @@ export interface LineSidebarProps {
   fontSize?: number;
   smoothing?: number;
   defaultActive?: number | null;
-  activeIndex?: number | null; // Added controlled prop
+  activeIndex?: number | null;
+  align?: 'left' | 'right';
   onItemClick?: (index: number, label: string) => void;
   className?: string;
 }
@@ -71,6 +72,7 @@ const LineSidebar = ({
   smoothing = 100,
   defaultActive = null,
   activeIndex: controlledActiveIndex,
+  align = 'right',
   onItemClick,
   className = ''
 }: LineSidebarProps) => {
@@ -168,7 +170,7 @@ const LineSidebar = ({
 
   return (
     <nav
-      className={`line-sidebar${showMarker ? ' line-sidebar--markers' : ''}${scaleTick ? ' line-sidebar--scale-tick' : ''}${className ? ` ${className}` : ''}`}
+      className={`line-sidebar line-sidebar--align-${align}${showMarker ? ' line-sidebar--markers' : ''}${scaleTick ? ' line-sidebar--scale-tick' : ''}${className ? ` ${className}` : ''}`}
       style={
         {
           '--accent-color': accentColor,
@@ -188,6 +190,7 @@ const LineSidebar = ({
         {items.map((item, index) => {
           const label = typeof item === 'string' ? item : item.label;
           const description = typeof item === 'string' ? undefined : item.description;
+          const shiftDir = align === 'right' ? 1 : -1;
           
           return (
           <li
@@ -196,6 +199,7 @@ const LineSidebar = ({
               itemRefs.current[index] = el;
             }}
             className="line-sidebar__item"
+            style={{ '--shift-dir': shiftDir } as CSSProperties}
             aria-current={activeIndex === index ? 'true' : undefined}
             onClick={() => handleClick(index, label)}
           >

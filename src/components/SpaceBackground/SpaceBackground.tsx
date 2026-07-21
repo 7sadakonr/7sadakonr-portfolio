@@ -2,6 +2,7 @@ import { type CSSProperties, type ComponentPropsWithoutRef, useRef, useState, us
 import "./SpaceBackground.css";
 import { useStarCanvas } from "./hooks/useStarCanvas";
 import { STREAK_DATA } from "./utils/streakData";
+import Fireflies from "../Animation/Fireflies";
 
 export type SpaceMotion = "subtle" | "none";
 
@@ -120,6 +121,7 @@ export function SpaceBackground({
           aria-hidden="true"
         />
       )}
+      <Fireflies count={18} />
       {showPlanet && (
         <div className="space-background__planet" aria-hidden="true" />
       )}
