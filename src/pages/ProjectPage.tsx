@@ -5,6 +5,7 @@ import { AvatarGroup } from '../components/Animation/AvatarGroup'
 import todoListImg from '../assets/img/todo_list_real.png'
 import portfolioImg from '../assets/img/portfolio_real_new.png'
 import fileTransferImg from '../assets/img/zendix_real.png'
+import { lenisInstance } from '../components/SmoothScroll/SmoothScroll'
 // CSS is now in LandingPage.css
 
 const ProjectSection = () => {
@@ -114,7 +115,8 @@ const ProjectSection = () => {
 
     const handleSidebarClick = (index: number) => {
         setActiveProjectIndex(index);
-        projectRefs.current[index]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        const el = projectRefs.current[index];
+        if (el) lenisInstance?.scrollTo(el, { offset: -window.innerHeight / 4 });
     };
 
     // Tech icons/badges component
@@ -135,11 +137,20 @@ const ProjectSection = () => {
         const zoomLevel = 2
         // Offset for touch devices - move lens up so finger doesn't block view
         const touchOffsetY = -70
+        const cachedRect = useRef({ top: 0, left: 0, width: 0, height: 0 })
+
+        const updateCachedRect = () => {
+            const elem = containerRef.current
+            if (elem) {
+                const r = elem.getBoundingClientRect()
+                cachedRect.current = { top: r.top, left: r.left, width: r.width, height: r.height }
+                setImgSize({ width: r.width, height: r.height })
+            }
+        }
 
         // Desktop mouse handler
         const handleMouseMove = (e) => {
-            const elem = e.currentTarget
-            const { top, left, width, height } = elem.getBoundingClientRect()
+            const { top, left, width, height } = cachedRect.current
 
             const x = e.clientX - left
             const y = e.clientY - top
@@ -156,6 +167,7 @@ const ProjectSection = () => {
             if (!elem) return
 
             const { top, left, width, height } = elem.getBoundingClientRect()
+            cachedRect.current = { top, left, width, height }
             const x = touch.clientX - left
             const y = touch.clientY - top
 
@@ -174,7 +186,7 @@ const ProjectSection = () => {
             const elem = containerRef.current
             if (!elem) return
 
-            const { top, left, width, height } = elem.getBoundingClientRect()
+            const { top, left, width, height } = cachedRect.current
             const x = touch.clientX - left
             const y = touch.clientY - top
 
@@ -233,7 +245,7 @@ const ProjectSection = () => {
             <div
                 ref={containerRef}
                 className="magnifier-container"
-                onMouseEnter={() => setShowMagnifier(true)}
+                onMouseEnter={() => { updateCachedRect(); setShowMagnifier(true); }}
                 onMouseLeave={() => setShowMagnifier(false)}
                 onMouseMove={handleMouseMove}
                 onTouchStart={handleTouchStart}

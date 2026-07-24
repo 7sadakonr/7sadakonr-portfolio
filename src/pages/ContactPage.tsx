@@ -95,9 +95,9 @@ const ContactSection = () => {
                                 delay={0.2}
                             >
                                 <div className="glass-card contact-info-card">
-                                    <h3 className="contact-info-title">Get in touch</h3>
+                                    <h3 className="contact-info-title">Direct Contact</h3>
                                     <p className="contact-info-description">
-                                        Feel free to reach out via email or connect with me on social media. I'll get back to you as soon as possible.
+                                        Feel free to reach out via email. I'll get back to you as soon as possible.
                                     </p>
 
                                     <div className="contact-items">
@@ -111,7 +111,17 @@ const ContactSection = () => {
                                             <a href="mailto:7sadakonr@gmail.com" className="contact-item-text">7sadakonr@gmail.com</a>
                                         </div>
                                     </div>
+                                </div>
+                            </AnimatedContent>
 
+                            <AnimatedContent
+                                distance={50}
+                                direction="horizontal"
+                                duration={0.8}
+                                initialOpacity={0}
+                                delay={0.3}
+                            >
+                                <div className="glass-card contact-social-card">
                                     <div className="social-section">
                                         <span className="social-label">Social Media</span>
                                         <div className="social-links">
