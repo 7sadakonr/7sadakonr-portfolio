@@ -3,6 +3,7 @@ import { BrowserRouter as Router } from 'react-router-dom'
 import { Analytics } from "@vercel/analytics/react"
 import Navbar from './components/Navbar/Navbar'
 import { SpaceBackground } from './components/SpaceBackground/SpaceBackground'
+import SmoothScroll from './components/SmoothScroll/SmoothScroll'
 
 import './pages/home.css'
 import './pages/LandingPage.css'
@@ -73,30 +74,31 @@ function App() {
 
   return (
     <Router>
-      <Analytics />
-      
-      <Navbar />
-      
-      <div className="landing-page-container">
-        <div className="landing-content-flow">
-          <SpaceBackground motion="subtle" showPlanet={true} starCount={0}>
-            <section id="home">
-              <HeroPage />
-            </section>
-          </SpaceBackground>
-          <Suspense fallback={null}>
-            <section id="about">
-              <AboutPage />
-            </section>
-            <section id="projects">
-              <ProjectPage />
-            </section>
-            <section id="contact">
-              <ContactPage />
-            </section>
-          </Suspense>
+      <SmoothScroll>
+        <Analytics />
+        <Navbar />
+        
+        <div className="landing-page-container">
+          <div className="landing-content-flow">
+            <SpaceBackground motion="subtle" showPlanet={true} starCount={0}>
+              <section id="home">
+                <HeroPage />
+              </section>
+            </SpaceBackground>
+            <Suspense fallback={null}>
+              <section id="about">
+                <AboutPage />
+              </section>
+              <section id="projects">
+                <ProjectPage />
+              </section>
+              <section id="contact">
+                <ContactPage />
+              </section>
+            </Suspense>
+          </div>
         </div>
-      </div>
+      </SmoothScroll>
     </Router>
   )
 }

@@ -13,6 +13,7 @@ interface AnimatedContentProps {
   threshold?: number
   delay?: number
   onComplete?: () => void
+  triggerOnce?: boolean
 }
 
 const AnimatedContent: React.FC<AnimatedContentProps> = ({ children }) => {
