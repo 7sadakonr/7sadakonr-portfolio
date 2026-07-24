@@ -61,7 +61,7 @@
   inset: -8% -12% -12%;
   transform-origin: 50% 100%;
   background-repeat: no-repeat;
-  /* will-change removed for performance */
+  will-change: transform, opacity;
 }
 
 .space-background__aurora--back {
@@ -96,6 +96,7 @@
   -webkit-mask-image: linear-gradient(to top, #000 0%, rgba(0, 0, 0, 0.6) 35%, rgba(0, 0, 0, 0.15) 65%, transparent 100%);
   mask-image: linear-gradient(to top, #000 0%, rgba(0, 0, 0, 0.6) 35%, rgba(0, 0, 0, 0.15) 65%, transparent 100%);
   animation: space-aurora-breathe 9s ease-in-out infinite alternate;
+  will-change: opacity, filter;
 }
 
 .space-background__streak {
@@ -106,7 +107,7 @@
   height: var(--streak-height);
   mix-blend-mode: screen;
   transform-origin: 50% 100%;
-  /* will-change removed for performance */
+  will-change: transform, opacity;
   background: radial-gradient(
     ellipse at 50% 100%,
     color-mix(in srgb, var(--streak-color) var(--streak-percent), transparent),

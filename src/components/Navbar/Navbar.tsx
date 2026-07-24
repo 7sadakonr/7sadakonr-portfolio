@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom'
 import './Navbar.css'
 import GlassSurface from '../GlassSurface/GlassSurface'
 import CommandMenu from '../CommandMenu/CommandMenu'
+import { lenisInstance } from '../SmoothScroll/SmoothScroll'
 
 const Navbar = () => {
   const indicatorRef = useRef<HTMLDivElement>(null)
@@ -185,10 +186,8 @@ const Navbar = () => {
         (window as any).isNavigating = false;
       }, 1000);
 
-      element.scrollIntoView({ 
-        behavior: 'smooth',
-        block: explicitTargetId && (explicitTargetId.startsWith('project-') || explicitTargetId === 'skills') ? 'center' : 'start'
-      });
+      const offset = explicitTargetId && (explicitTargetId.startsWith('project-') || explicitTargetId === 'skills') ? -window.innerHeight / 4 : 0;
+      lenisInstance?.scrollTo(element, { offset });
       window.history.pushState(null, '', path);
       setActivePath(path);
       setIsCommandMenuOpen(false);

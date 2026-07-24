@@ -32,7 +32,7 @@ export default defineConfig({
           // Separate vendor chunks for better caching
           vendor: ['react', 'react-dom', 'react-router-dom'],
           three: ['three', '@react-three/fiber', '@react-three/drei'],
-          animations: ['gsap']
+          animations: ['lenis']
         }
       }
     },

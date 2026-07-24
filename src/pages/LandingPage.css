@@ -387,6 +387,7 @@ html {
 
 /* Sections */
 .landing-section {
+    contain: layout style;
     width: 100%;
     min-height: 100vh;
     position: relative;
@@ -593,7 +594,7 @@ html {
     border-radius: clamp(16px, 2.5vw, 24px);
     position: relative;
     overflow: hidden;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), background 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), color 0.4s cubic-bezier(0.4, 0, 0.2, 1), filter 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .glass-card:hover {
@@ -605,8 +606,135 @@ html {
 }
 
 /* ===========================================
-   ABOUT ME SECTION
+   ABOUT BENTO GRID SECTION
    =========================================== */
+
+.about-bento-container {
+    width: 100%;
+    max-width: 1000px;
+    margin-bottom: clamp(60px, 10vh, 100px);
+}
+
+.about-bento-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: clamp(16px, 2.5vw, 24px);
+    width: 100%;
+}
+
+@media (min-width: 768px) {
+    .about-bento-grid {
+        grid-template-columns: repeat(3, 1fr);
+        grid-template-rows: auto auto;
+    }
+    
+    .bento-main {
+        grid-column: span 2;
+        grid-row: span 2;
+    }
+    
+    .bento-skills {
+        grid-column: span 1;
+        grid-row: span 1;
+    }
+    
+    .bento-focus {
+        grid-column: span 1;
+        grid-row: span 1;
+    }
+}
+
+.bento-card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: clamp(24px, 3.5vw, 36px);
+}
+
+.bento-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: clamp(16px, 2.5vw, 24px);
+}
+
+.bento-icon {
+    width: 24px;
+    height: 24px;
+    color: #8A38F5;
+    flex-shrink: 0;
+}
+
+.bento-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: clamp(20px, 2.5vw, 26px);
+    font-weight: 600;
+    color: #fff;
+    margin: 0;
+}
+
+.focus-pulse-container {
+    margin-top: auto;
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 16px;
+}
+
+.focus-pulse {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: #0acf83;
+    box-shadow: 0 0 0 0 rgba(10, 207, 131, 0.7);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(10, 207, 131, 0.7);
+    }
+    
+    70% {
+        transform: scale(1);
+        box-shadow: 0 0 0 10px rgba(10, 207, 131, 0);
+    }
+    
+    100% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(10, 207, 131, 0);
+    }
+}
+
+.bento-skills-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.bento-skill-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: transform 0.3s ease, background 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease, opacity 0.3s ease, color 0.3s ease, filter 0.3s ease;
+}
+
+.bento-skill-item:hover {
+    background: rgba(138, 56, 245, 0.15);
+    border-color: rgba(138, 56, 245, 0.4);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(138, 56, 245, 0.2);
+}
+
+.bento-skill-item svg {
+    width: 26px;
+    height: 26px;
+}
 
 .about-section {
     width: 100%;
@@ -705,7 +833,7 @@ html {
         inset 0 1.5px 0 0 rgba(255, 255, 255, 0.15),
         inset 0 -1.5px 0 0 rgba(0, 0, 0, 0.6);
     text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8), 0 0 8px rgba(255, 255, 255, 0.1);
-    transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .resume-button:hover {
@@ -765,7 +893,7 @@ html {
         inset 0 1.5px 0 0 rgba(255, 255, 255, 0.15),
         inset 0 -1.5px 0 0 rgba(0, 0, 0, 0.6);
     text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8), 0 0 8px rgba(255, 255, 255, 0.1);
-    transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .skill-logo {
@@ -901,7 +1029,7 @@ html {
     border-radius: 16px;
     align-items: center;
     overflow: hidden;
-    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), background 0.5s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.5s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), color 0.5s cubic-bezier(0.4, 0, 0.2, 1), filter 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .project-card.project-card-reverse {
@@ -1059,6 +1187,7 @@ html {
 .tech-badge {
     display: inline-flex;
     align-items: center;
+    gap: 8px;
     padding: 6px 14px;
     font-family: 'Outfit', sans-serif;
     font-size: clamp(11px, 1.4vw, 13px);
@@ -1069,7 +1198,7 @@ html {
     border-radius: 20px;
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
-    transition: all 0.3s ease;
+    transition: transform 0.3s ease, background 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease, opacity 0.3s ease, color 0.3s ease, filter 0.3s ease;
 }
 
 .tech-badge:hover {
@@ -1077,6 +1206,12 @@ html {
     border-color: rgba(255, 255, 255, 0.25);
     color: #fff;
     transform: translateY(-2px);
+}
+
+.tech-badge svg {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
 }
 
 /* Project Buttons */
@@ -1113,7 +1248,7 @@ html {
         0 2px 4px rgba(0, 0, 0, 0.6),
         inset 0 1.5px 0 0 rgba(255, 255, 255, 0.15);
     text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
-    transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .project-btn:hover {
@@ -1139,8 +1274,14 @@ html {
 
 .contact-grid {
     display: grid;
-    grid-template-columns: 1fr 1.3fr;
+    grid-template-columns: 1fr 1.5fr;
     gap: clamp(30px, 4vw, 50px);
+}
+
+.contact-info-col {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(24px, 3vw, 30px);
 }
 
 /* Contact Info Card */
@@ -1170,9 +1311,8 @@ html {
 .contact-items {
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: flex-start;
     gap: clamp(16px, 2.5vh, 24px);
-    margin-bottom: clamp(30px, 4vh, 45px);
 }
 
 .contact-item {
@@ -1191,7 +1331,7 @@ html {
     flex-shrink: 0;
     background: transparent;
     border: 1px solid rgba(255, 255, 255, 0.12);
-    transition: all 0.3s ease;
+    transition: transform 0.3s ease, background 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease, opacity 0.3s ease, color 0.3s ease, filter 0.3s ease;
 }
 
 .contact-item-icon svg {
@@ -1218,8 +1358,8 @@ a.contact-item-text:hover {
 .social-section {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: clamp(12px, 2vh, 18px);
+    align-items: flex-start;
+    gap: clamp(16px, 2vh, 20px);
 }
 
 .social-label {
@@ -1233,7 +1373,8 @@ a.contact-item-text:hover {
 
 .social-links {
     display: flex;
-    justify-content: center;
+    justify-content: flex-start;
+    flex-wrap: wrap;
     gap: clamp(12px, 2vw, 16px);
 }
 
@@ -1264,14 +1405,14 @@ a.contact-item-text:hover {
         0 2px 4px rgba(0, 0, 0, 0.6),
         inset 0 1.5px 0 0 rgba(255, 255, 255, 0.15);
     text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
-    transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .social-link svg {
     width: clamp(16px, 2vw, 20px);
     height: clamp(16px, 2vw, 20px);
     color: rgba(255, 255, 255, 0.8);
-    transition: all 0.3s ease;
+    transition: transform 0.3s ease, background 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease, opacity 0.3s ease, color 0.3s ease, filter 0.3s ease;
 }
 
 .social-link:hover {
@@ -1321,7 +1462,7 @@ a.contact-item-text:hover {
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     outline: none;
-    transition: all 0.3s ease;
+    transition: transform 0.3s ease, background 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease, opacity 0.3s ease, color 0.3s ease, filter 0.3s ease;
     resize: none;
 }
 
@@ -1367,7 +1508,7 @@ a.contact-item-text:hover {
         0 2px 4px rgba(0, 0, 0, 0.6),
         inset 0 1.5px 0 0 rgba(255, 255, 255, 0.15);
     text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
-    transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .submit-btn:hover:not(:disabled) {
@@ -1510,11 +1651,11 @@ a.contact-item-text:hover {
         gap: clamp(24px, 4vh, 40px);
     }
 
-    .contact-info-card {
+    .contact-info-col {
         order: 2;
     }
 
-    .contact-form-card {
+    .contact-form-col {
         order: 1;
     }
 }
