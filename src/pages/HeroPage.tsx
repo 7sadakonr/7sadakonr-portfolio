@@ -3,6 +3,7 @@ import './HeroPage.css'
 import hero from '../assets/img/hero.svg';
 import heroPng from '../assets/img/logo-7m.png';
 import AnimatedContent from '../components/Animation/AnimatedContent';
+import { lenisInstance } from '../components/SmoothScroll/SmoothScroll';
 
 // Detect Apple devices for PNG fallback synchronously to avoid re-renders
 const isAppleDevice = () => {
@@ -29,7 +30,7 @@ const HeroPage = () => {
   const handleExploreClick = () => {
     const aboutSection = document.getElementById('about');
     if (aboutSection) {
-      aboutSection.scrollIntoView({ behavior: 'smooth' });
+      lenisInstance?.scrollTo(aboutSection, { offset: 0 });
     }
   };
 
@@ -58,7 +59,7 @@ const HeroPage = () => {
               Hi, I'm Jetsadakonr Muangwichit, a Computer Science Student.
             </p>
           </div>
-          <img src={heroImg} alt="Hero" fetchpriority="high" loading="eager" className="t-stagger-line t-stagger-line--3" />
+          <img src={heroImg} alt="Hero" fetchPriority="high" loading="eager" className="t-stagger-line t-stagger-line--3" />
           <button className="explore-button t-stagger-line t-stagger-line--4" onClick={handleExploreClick}>
             <span className="explore-text">Explore</span>
             <div className="explore-icon">

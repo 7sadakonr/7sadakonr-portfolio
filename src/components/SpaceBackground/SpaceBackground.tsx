@@ -49,21 +49,8 @@ export function SpaceBackground({
   const rootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!rootRef.current) return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (rootRef.current) {
-          if (entries[0].isIntersecting) {
-            rootRef.current.classList.remove("space-background--paused");
-          } else {
-            rootRef.current.classList.add("space-background--paused");
-          }
-        }
-      },
-      { threshold: 0, rootMargin: '1000px 0px 1000px 0px' }
-    );
-    observer.observe(rootRef.current);
-    return () => observer.disconnect();
+    // Rely on browser's native optimization for out-of-viewport CSS animations
+    // Manually pausing/unpausing causes composite layer recreation which leads to scroll stutter
   }, []);
 
   useStarCanvas(canvasRef, rootRef, { starCount, seed, motion });

@@ -33,3 +33,6 @@ dist-ssr
 # Internal Agent Tools
 .codex
 .agents
+
+# Documentation
+/doc
