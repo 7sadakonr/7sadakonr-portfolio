@@ -37,17 +37,25 @@ const Navbar = () => {
       const rect = activeLink.getBoundingClientRect()
 
       if (rect && parentRect) {
-        const targetX = Math.max(0, rect.left - parentRect.left + (rect.width / 2) - (65 / 2))
+        // offsetLeft and offsetTop are exactly relative to the nearest positioned ancestor (.nav-links)
+        const targetX = (activeLink as HTMLElement).offsetLeft;
+        const targetTop = (activeLink as HTMLElement).offsetTop;
+        const targetWidth = (activeLink as HTMLElement).offsetWidth;
+        const targetHeight = (activeLink as HTMLElement).offsetHeight;
 
         if (!hasInitialized) {
           const prev = indicator.style.transition
           indicator.style.transition = 'none'
-          indicator.style.transform = `translateX(${targetX}px)`
+          indicator.style.transform = `translateX(${targetX}px) translateY(${targetTop}px)`
+          indicator.style.width = `${targetWidth}px`
+          indicator.style.height = `${targetHeight}px`
           void indicator.offsetWidth // force reflow
           indicator.style.transition = prev
           setHasInitialized(true)
         } else {
-          indicator.style.transform = `translateX(${targetX}px)`
+          indicator.style.transform = `translateX(${targetX}px) translateY(${targetTop}px)`
+          indicator.style.width = `${targetWidth}px`
+          indicator.style.height = `${targetHeight}px`
         }
       }
     }
@@ -157,10 +165,10 @@ const Navbar = () => {
     { id: 'nav-about', path: '/about', label: 'ABOUT', category: 'Navigation', keywords: 'about profile me', targetId: 'about' },
     { id: 'nav-project', path: '/project', label: 'PROJECTS', category: 'Navigation', keywords: 'projects work portfolio', targetId: 'projects' },
     { id: 'nav-contact', path: '/contact', label: 'CONTACT', category: 'Navigation', keywords: 'contact email hire social', targetId: 'contact' },
-    
+
     { id: 'sec-about', path: '/about', label: 'About Me', category: 'Content', keywords: 'about me background story', targetId: 'about-me' },
     { id: 'sec-skills', path: '/about', label: 'My Skills', category: 'Content', keywords: 'skills html css javascript react figma tech', targetId: 'skills' },
-    
+
     { id: 'proj-1', path: '/project', label: 'Todo-List', category: 'Projects', keywords: 'todo task list project nextjs express postgres', targetId: 'project-0' },
     { id: 'proj-2', path: '/project', label: 'Portfolio Website', category: 'Projects', keywords: 'portfolio personal project react vite framer', targetId: 'project-1' },
     { id: 'proj-3', path: '/project', label: 'Zendix File Transfer', category: 'Projects', keywords: 'zendix file transfer share peer webrtc', targetId: 'project-2' },
@@ -178,7 +186,7 @@ const Navbar = () => {
     const element = document.getElementById(targetId);
     if (element) {
       e.preventDefault();
-      
+
       // Prevent scroll-spy from bouncing during smooth scroll
       (window as any).isNavigating = true;
       if ((window as any).navTimeoutId) clearTimeout((window as any).navTimeoutId);
@@ -232,23 +240,29 @@ const Navbar = () => {
       {!isIPad && (
         <nav className="navbar" role="navigation" aria-label="Main navigation">
           <GlassSurface
-            width={595}
-            height={65}
-            saturation={1.8}
+            width={480}
+            height={50}
+            saturation={1.0}
             brightness={50}
             opacity={0.93}
             borderRadius={50}
             borderWidth={0.1}
-            blur={20}
-            displace={4}
-            backgroundOpacity={0.05}
+            blur={11}
+            displace={1}
+            frostBlur={5}
+            distortionScale={70}
+            redOffset={0}
+            greenOffset={5}
+            blueOffset={5}
+            backgroundOpacity={0.45}
+            mixBlendMode="screen"
           >
-            <div
-              ref={indicatorRef}
-              className="nav-indicator t-tabs-pill"
-              aria-hidden="true"
-            />
             <ul className="nav-links">
+              <div
+                ref={indicatorRef}
+                className="nav-indicator t-tabs-pill"
+                aria-hidden="true"
+              />
               {navItems.map(({ path, label }) => (
                 <li key={path}>
                   <a
@@ -266,19 +280,25 @@ const Navbar = () => {
 
           <div className="desktop-command-button-wrapper">
             <GlassSurface
-              width={65}
-              height={65}
-              saturation={1.8}
+              width={50}
+              height={50}
+              saturation={1.0}
               brightness={50}
               opacity={0.93}
               borderRadius={50}
               borderWidth={0.1}
-              blur={20}
-              displace={4}
-              backgroundOpacity={0.05}
+              blur={11}
+              displace={1}
+              frostBlur={12}
+              distortionScale={70}
+              redOffset={0}
+              greenOffset={5}
+              blueOffset={5}
+              backgroundOpacity={0.50}
+              mixBlendMode="screen"
             >
-              <button 
-                className="desktop-command-btn" 
+              <button
+                className="desktop-command-btn"
                 onClick={() => setIsCommandMenuOpen(true)}
                 aria-label="Open command menu"
               >
@@ -298,17 +318,23 @@ const Navbar = () => {
           <GlassSurface
             width={180}
             height={45}
-            saturation={1.8}
+            saturation={1.0}
             brightness={50}
             opacity={0.93}
             borderRadius={50}
             borderWidth={0.1}
-            blur={15}
-            displace={3}
-            backgroundOpacity={0.08}
+            blur={11}
+            displace={1}
+            frostBlur={12}
+            distortionScale={70}
+            redOffset={0}
+            greenOffset={5}
+            blueOffset={5}
+            backgroundOpacity={0.50}
+            mixBlendMode="screen"
           >
-            <button 
-              className="command-pill-button" 
+            <button
+              className="command-pill-button"
               onClick={() => setIsCommandMenuOpen(true)}
               aria-label="Open command menu"
             >
@@ -320,9 +346,9 @@ const Navbar = () => {
         </div>
       </nav>
 
-      <CommandMenu 
-        isOpen={isCommandMenuOpen} 
-        onClose={() => setIsCommandMenuOpen(false)} 
+      <CommandMenu
+        isOpen={isCommandMenuOpen}
+        onClose={() => setIsCommandMenuOpen(false)}
         menuItems={commandMenuItems}
         activePath={activePath}
         handleNavClick={handleNavClick}

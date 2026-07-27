@@ -20,6 +20,7 @@
   height: 1em;
   border-radius: 50%;
   opacity: 0;
+  will-change: transform, opacity, box-shadow;
   
   /* Mix white with the target color based on distance from center */
   --start-color: color-mix(in srgb, #ffffff var(--white-pct), var(--target-color));
