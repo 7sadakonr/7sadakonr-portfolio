@@ -25,7 +25,7 @@ const ProjectSection = () => {
             title: "Todo-List",
             subtitle: "Integrated Task Management System",
             description: "A full-stack task management application with secure JWT authentication, complete CRUD operations, and a dashboard featuring productivity analytics with Recharts. Users can manage tasks with advanced filtering by status and enjoy a responsive UI with smooth animations.",
-            tech: ["Next.js", "TypeScript", "Express.js", "PostgreSQL", "Prisma", "TailwindCSS", "JWT"],
+            tech: ["Next.js", "React", "TypeScript", "Tailwind CSS", "Node.js", "Express", "Prisma", "PostgreSQL", "JWT"],
             image: todoListImg,
             liveUrl: "https://7sadakonr-todo-list.vercel.app",
             githubUrl: "https://github.com/7sadakonr/Todo-List",
@@ -36,7 +36,7 @@ const ProjectSection = () => {
             title: "Portfolio Website",
             subtitle: "Personal Portfolio & Showcase",
             description: "A modern, responsive portfolio website showcasing my work and skills. Features include smooth animations, glass morphism UI design, universe-themed backgrounds with twinkling stars and shooting stars, interactive image magnifier, and mobile-optimized experience.",
-            tech: ["React", "Vite", "CSS", "Framer Motion"],
+            tech: ["React", "Vite", "TypeScript", "GSAP", "Three.js", "Lenis", "CSS"],
             image: portfolioImg,
             liveUrl: "https://7sadakonr-portfolio.vercel.app",
             githubUrl: "https://github.com/7sadakonr/7sadakonr-portfolio",
@@ -47,11 +47,22 @@ const ProjectSection = () => {
             title: "Zendix File Transfer",
             subtitle: "Peer-to-peer file and clipboard sharing web app",
             description: "Zendix is a peer-to-peer file and clipboard sharing web app. Transfer files and text directly between devices without uploading to the cloud.",
-            tech: ["React", "Vite", "TailwindCSS", "Zustand", "PeerJS (WebRTC)", "React Router"],
+            tech: ["React", "Vite", "Tailwind CSS", "Zustand", "PeerJS (WebRTC)", "React Router"],
             image: fileTransferImg,
             liveUrl: "https://zendix-file.vercel.app/",
             githubUrl: "https://github.com/7sadakonr/Zendix-Filetransfer-Web-App",
             gradient: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)"
+        },
+        {
+            id: 4,
+            title: "Nyeta",
+            subtitle: "Visual Assistance System with AI",
+            description: "Nyeta is a real-time visual assistance platform for the visually impaired. It integrates WebRTC for volunteer calling and Llama 3.2 Vision AI for automated visual queries via an accessible, voice-controlled UI.",
+            tech: ["Next.js", "Tailwind CSS", "Pusher", "PeerJS", "Llama 3.2 Vision", "Groq API"],
+            image: null,
+            liveUrl: "https://nyeta.vercel.app",
+            githubUrl: "https://github.com/7sadakonr/Nyeta",
+            gradient: "linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)"
         }
     ]
 
