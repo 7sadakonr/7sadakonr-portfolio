@@ -13,6 +13,8 @@ interface GlassSurfaceProps {
   opacity?: number;
   blur?: number;
   displace?: number;
+  frostBlur?: number;
+  frostGrain?: number;
   backgroundOpacity?: number;
   saturation?: number;
   distortionScale?: number;
@@ -37,6 +39,8 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
   opacity = 0.93,
   blur = 11,
   displace = 5,
+  frostBlur = 0,
+  frostGrain = 0,
   backgroundOpacity = 0,
   saturation = 1,
   distortionScale = -200,
@@ -61,6 +65,17 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
   const greenChannelRef = useRef<SVGFEDisplacementMapElement>(null);
   const blueChannelRef = useRef<SVGFEDisplacementMapElement>(null);
   const gaussianBlurRef = useRef<SVGFEGaussianBlurElement>(null);
+
+  // Calculate filter region padding based on displace value
+  // Gaussian blur needs ~3σ padding on each side to avoid edge clipping
+  const filterPadding = useMemo(() => {
+    const w = typeof width === 'number' ? width : 400;
+    const h = typeof height === 'number' ? height : 200;
+    // 3σ in percentage of element dimensions, with a minimum of 10%
+    const xPad = Math.max(10, Math.ceil((displace * 3) / w * 100) + 5);
+    const yPad = Math.max(10, Math.ceil((displace * 3) / h * 100) + 5);
+    return { xPad, yPad };
+  }, [displace, width, height]);
 
   const generateDisplacementMap = () => {
     // Exact pixel dimensions for perfect rx and blur mapping
@@ -146,6 +161,7 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
     borderRadius: `${borderRadius}px`,
     '--glass-frost': backgroundOpacity,
     '--glass-saturation': saturation,
+    '--glass-frost-blur': `${frostBlur}px`,
     '--filter-id': `url(#${filterId})`
   } as React.CSSProperties;
 
@@ -158,14 +174,14 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
       onClick={onClick}
       tabIndex={onClick ? 0 : undefined}
     >
-      {/* Layer 1: Native CSS Blur for safe, edge-to-edge frosted background without Chromium clipping bugs */}
+      {/* Layer 1: Native CSS for saturation */}
       {supportsSVGFilters() && (
         <div 
           className="glass-surface__layer-blur"
           style={{
             position: 'absolute', inset: 0, borderRadius: 'inherit',
-            backdropFilter: `blur(12px) saturate(${saturation})`,
-            WebkitBackdropFilter: `blur(12px) saturate(${saturation})`,
+            backdropFilter: `blur(${frostBlur}px) saturate(${saturation})`,
+            WebkitBackdropFilter: `blur(${frostBlur}px) saturate(${saturation})`,
             zIndex: -3
           }} 
         />
@@ -184,9 +200,31 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
         />
       )}
 
+      {/* Layer 2.5: Frost Grain Overlay */}
+      {frostGrain > 0 && (
+        <div
+          className="glass-surface__layer-grain"
+          style={{
+            position: 'absolute', inset: 0, borderRadius: 'inherit',
+            opacity: frostGrain,
+            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
+            mixBlendMode: 'soft-light',
+            zIndex: 4,
+            pointerEvents: 'none'
+          }}
+        />
+      )}
+
       <svg className="glass-surface__filter" xmlns="http://www.w3.org/2000/svg">
         <defs>
-          <filter id={filterId} colorInterpolationFilters="sRGB" x="-10%" y="-10%" width="120%" height="120%">
+          <filter 
+            id={filterId} 
+            colorInterpolationFilters="sRGB" 
+            x={`-${filterPadding.xPad}%`} 
+            y={`-${filterPadding.yPad}%`} 
+            width={`${100 + filterPadding.xPad * 2}%`} 
+            height={`${100 + filterPadding.yPad * 2}%`}
+          >
             <feImage ref={feImageRef} x="0" y="0" width="100%" height="100%" preserveAspectRatio="none" result="map" />
 
             <feDisplacementMap ref={redChannelRef} in="SourceGraphic" in2="map" id="redchannel" result="dispRed" />

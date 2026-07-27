@@ -133,6 +133,8 @@
   border-radius: 50% 50% 0 0 / 100% 100% 0 0;
   background: #0d0d0f;
   box-shadow: 0 -16px 58px color-mix(in srgb, var(--space-center-glow) 42%, transparent);
+  transform: translateZ(0);
+  will-change: transform;
 }
 
 .space-background__planet::before,
