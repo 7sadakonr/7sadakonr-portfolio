@@ -183,8 +183,8 @@ const CommandMenu: React.FC<CommandMenuProps> = ({
     setIsClosing(true);
     setIsMounted(false);
     const closeMs = parseFloat(
-      getComputedStyle(document.documentElement).getPropertyValue("--toast-close")
-    ) || 250;
+      getComputedStyle(document.documentElement).getPropertyValue("--modal-close-dur")
+    ) || 150;
     setTimeout(() => {
       setIsClosing(false);
       onClose();
@@ -203,11 +203,9 @@ const CommandMenu: React.FC<CommandMenuProps> = ({
       const currentIdx = menuItems.findIndex(item => item.path === activePath && item.category === 'Navigation');
       setSelectedIndex(currentIdx !== -1 ? currentIdx : 0);
       
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          setIsMounted(true);
-        });
-      });
+      setTimeout(() => {
+        setIsMounted(true);
+      }, 50);
 
       // Focus input after animation
       const timer = setTimeout(() => {
@@ -254,41 +252,49 @@ const CommandMenu: React.FC<CommandMenuProps> = ({
 
   if (!isOpen && !isClosing) return null;
 
+  const stateClass = isMounted ? 'is-open' : isClosing ? 'is-closing' : '';
+
   return (
-    <div className={`command-menu-overlay ${isMounted ? 'open' : ''}`} onClick={handleClose}>
+    <div className={`command-menu-overlay ${isMounted ? 'open' : ''}`} onClick={handleClose} data-lenis-prevent>
+      <div className="command-menu-bg" aria-hidden="true" />
       <div 
-        className={`command-menu-modal t-toast ${isMounted ? 'is-open' : ''}`} 
+        className={`command-menu-modal ${stateClass}`} 
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
       >
-        <div ref={wrapRef} className={`command-search-wrapper t-clear ${searchTerm ? 'has-value' : ''} ${isClearing ? 'is-clearing' : ''}`}>
-          <svg className="command-search-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="11" cy="11" r="8"></circle>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-          </svg>
-          <input 
-            ref={inputRef}
-            type="text" 
-            className="command-search-input" 
-            placeholder=""
-            value={searchTerm}
-            onChange={(e) => {
-              setSearchTerm(e.target.value);
-              setSelectedIndex(0);
-            }}
-          />
-          <div className="t-clear-mirror" aria-hidden="true" ref={mirrorRef}>{isClearing ? clearingText : searchTerm.replace(/ /g, "\u00a0")}</div>
-          <div className="t-clear-placeholder" aria-hidden="true" ref={pholdRef}>Type a command or search...</div>
-          <div className="t-clear-glow" aria-hidden="true" ref={glowRef}></div>
-          {searchTerm && (
-            <button className="t-clear-btn" aria-label="Clear" onPointerDown={(e) => { if (document.activeElement === inputRef.current) e.preventDefault(); }} onClick={clearWithAnimation}>×</button>
-          )}
-          <div className="command-shortcut-badge">ESC</div>
+        <div className="command-search-row">
+          <div ref={wrapRef} className={`command-search-wrapper t-modal t-clear ${stateClass} ${searchTerm ? 'has-value' : ''} ${isClearing ? 'is-clearing' : ''}`}>
+            <svg className="command-search-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input 
+              ref={inputRef}
+              type="text" 
+              className="command-search-input" 
+              placeholder=""
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setSelectedIndex(0);
+              }}
+            />
+            <div className="t-clear-mirror" aria-hidden="true" ref={mirrorRef}>{isClearing ? clearingText : searchTerm.replace(/ /g, "\u00a0")}</div>
+            <div className="t-clear-placeholder" aria-hidden="true" ref={pholdRef}>Type a command or search...</div>
+            <div className="t-clear-glow" aria-hidden="true" ref={glowRef}></div>
+            {searchTerm && (
+              <button className="t-clear-btn" aria-label="Clear" onPointerDown={(e) => { if (document.activeElement === inputRef.current) e.preventDefault(); }} onClick={clearWithAnimation}>×</button>
+            )}
+          </div>
+          <button className={`command-close-btn t-modal ${stateClass}`} onClick={handleClose} aria-label="Close menu">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
         </div>
 
-        <div className="command-menu-content">
-          {filteredItems.length > 0 ? (
+        <div className={`command-menu-content t-modal ${stateClass}`}>
+          <div className="command-menu-content-inner">
+            {filteredItems.length > 0 ? (
             ['Navigation', 'Content', 'Projects'].map(cat => {
               const catItems = filteredItems.filter(i => i.category === cat);
               if (catItems.length === 0) return null;
@@ -335,6 +341,7 @@ const CommandMenu: React.FC<CommandMenuProps> = ({
               No results found.
             </div>
           )}
+          </div>
         </div>
       </div>
     </div>
