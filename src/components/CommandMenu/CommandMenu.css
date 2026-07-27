@@ -100,8 +100,12 @@
   z-index: 4;
 }
 
+
+
 .command-search-input {
   flex: 1;
+  min-width: 0;
+  padding-right: 42px;
   background: transparent;
   border: none;
   color: white;
@@ -130,26 +134,33 @@
   color: white;
 }
 
+
 .t-clear-btn {
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
-  border: none;
-  border-radius: 50%;
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  z-index: 5;
   width: 24px;
   height: 24px;
+  margin: 0;
+  padding-bottom: 2px;
   display: flex;
   align-items: center;
   justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
   cursor: pointer;
-  margin-right: 12px;
-  z-index: 4;
   font-size: 16px;
   line-height: 1;
-  padding-bottom: 2px;
-  transition: background 0.2s ease;
+  transform: translateY(-50%);
+  transition: background 0.2s ease, transform 0.2s ease;
 }
+
 .t-clear-btn:hover {
   background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-50%) scale(1.08);
 }
 
 .command-menu-content {
