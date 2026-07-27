@@ -1,9 +1,32 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import './Navbar.css'
 import GlassSurface from '../GlassSurface/GlassSurface'
 import CommandMenu from '../CommandMenu/CommandMenu'
 import { lenisInstance } from '../SmoothScroll/SmoothScroll'
+
+const NAVBAR_GLASS_PRESET =
+  /* NAVBAR_GLASS_PRESET_START */
+  {
+    "borderRadius": 25,
+    "borderWidth": 0.07,
+    "brightness": 77,
+    "opacity": 0.8,
+    "blur": 6,
+    "displace": 1,
+    "frostBlur": 5,
+    "frostGrain": 0,
+    "backgroundOpacity": 0.53,
+    "saturation": 2.13,
+    "distortionScale": 70,
+    "redOffset": 0,
+    "greenOffset": 5,
+    "blueOffset": 5,
+    "xChannel": "R",
+    "yChannel": "G",
+    "mixBlendMode": "darken"
+  } as const
+  /* NAVBAR_GLASS_PRESET_END */
 
 const Navbar = () => {
   const indicatorRef = useRef<HTMLDivElement>(null)
@@ -240,22 +263,9 @@ const Navbar = () => {
       {!isIPad && (
         <nav className="navbar" role="navigation" aria-label="Main navigation">
           <GlassSurface
+            {...NAVBAR_GLASS_PRESET}
             width={480}
             height={50}
-            saturation={1.0}
-            brightness={50}
-            opacity={0.93}
-            borderRadius={50}
-            borderWidth={0.1}
-            blur={11}
-            displace={1}
-            frostBlur={5}
-            distortionScale={70}
-            redOffset={0}
-            greenOffset={5}
-            blueOffset={5}
-            backgroundOpacity={0.45}
-            mixBlendMode="screen"
           >
             <ul className="nav-links">
               <div
@@ -280,22 +290,9 @@ const Navbar = () => {
 
           <div className="desktop-command-button-wrapper">
             <GlassSurface
+              {...NAVBAR_GLASS_PRESET}
               width={50}
               height={50}
-              saturation={1.0}
-              brightness={50}
-              opacity={0.93}
-              borderRadius={50}
-              borderWidth={0.1}
-              blur={11}
-              displace={1}
-              frostBlur={12}
-              distortionScale={70}
-              redOffset={0}
-              greenOffset={5}
-              blueOffset={5}
-              backgroundOpacity={0.50}
-              mixBlendMode="screen"
             >
               <button
                 className="desktop-command-btn"
@@ -316,22 +313,9 @@ const Navbar = () => {
       <nav className={`mobile-navbar-fullscreen ${isIPad ? 'show-for-ipad' : ''}`} role="navigation" aria-label="Mobile navigation">
         <div className="mobile-pill-container">
           <GlassSurface
+            {...NAVBAR_GLASS_PRESET}
             width={180}
             height={45}
-            saturation={1.0}
-            brightness={50}
-            opacity={0.93}
-            borderRadius={50}
-            borderWidth={0.1}
-            blur={11}
-            displace={1}
-            frostBlur={12}
-            distortionScale={70}
-            redOffset={0}
-            greenOffset={5}
-            blueOffset={5}
-            backgroundOpacity={0.50}
-            mixBlendMode="screen"
           >
             <button
               className="command-pill-button"
@@ -353,6 +337,7 @@ const Navbar = () => {
         activePath={activePath}
         handleNavClick={handleNavClick}
       />
+
     </>
   )
 }
