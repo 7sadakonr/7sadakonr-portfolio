@@ -9,10 +9,12 @@
   align-items: flex-start;
   padding-top: 15vh;
   pointer-events: none;
+  overscroll-behavior: none;
 }
 
 .command-menu-overlay.open {
   pointer-events: auto;
+  touch-action: none;
 }
 
 .command-menu-bg {
@@ -194,6 +196,7 @@
   box-shadow:
     inset 0 1px 1px rgba(255, 255, 255, 0.05),
     0 16px 40px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
   /* Animations handled by t-modal class */
 }
 

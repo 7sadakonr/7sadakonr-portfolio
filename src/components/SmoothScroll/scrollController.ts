@@ -20,4 +20,16 @@ export const scrollToTarget = (target: HTMLElement, options: ScrollToOptions = {
   window.scrollTo({ top, behavior: 'auto' })
 }
 
+export const pauseScroll = () => {
+  if (activeLenis) {
+    activeLenis.stop()
+  }
+}
+
+export const resumeScroll = () => {
+  if (activeLenis) {
+    activeLenis.start()
+  }
+}
+
 export { REDUCED_MOTION_QUERY }

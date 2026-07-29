@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { NavLink } from 'react-router-dom';
+import { pauseScroll, resumeScroll } from '../SmoothScroll/scrollController';
 import './CommandMenu.css';
 
 export interface CommandMenuItem {
@@ -200,6 +201,8 @@ const CommandMenu: React.FC<CommandMenuProps> = ({
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
+      pauseScroll();
       setSearchTerm('');
       const currentIdx = menuItems.findIndex(item => item.path === activePath && item.category === 'Navigation');
       setSelectedIndex(currentIdx !== -1 ? currentIdx : 0);
@@ -215,9 +218,13 @@ const CommandMenu: React.FC<CommandMenuProps> = ({
       return () => {
         clearTimeout(timer);
         document.body.style.overflow = 'unset';
+        document.documentElement.style.overflow = 'unset';
+        resumeScroll();
       };
     } else {
       document.body.style.overflow = 'unset';
+      document.documentElement.style.overflow = 'unset';
+      resumeScroll();
       setIsMounted(false);
       setIsClosing(false);
     }
