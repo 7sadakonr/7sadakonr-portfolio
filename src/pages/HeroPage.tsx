@@ -1,6 +1,7 @@
 import './HeroPage.css'
 import heroPng from '../assets/img/logo-7m.png';
 import { scrollToTarget } from '../components/SmoothScroll/scrollController';
+import BackgroundBeams from '../components/BackgroundBeams/BackgroundBeams';
 
 const HeroPage = () => {
   const heroImg = heroPng;
@@ -14,6 +15,10 @@ const HeroPage = () => {
 
   return (
     <main className="hero-section">
+      <div className="hero-scales-container">
+        <BackgroundBeams />
+      </div>
+
       <div className="hero-content t-stagger">
         <div style={{ position: 'relative', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <h1 className="main-title t-stagger-line t-stagger-line--1">
