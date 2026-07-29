@@ -42,16 +42,17 @@
   font-weight: 400;
   line-height: 1.6;
   margin-top: clamp(3px, 0.8vh, 10px);
-  color: #b5b5b5a4;
+  color: rgba(181, 181, 181, 0.64);
   background: linear-gradient(
     120deg,
-    rgba(255, 255, 255, 0) 40%,
-    rgba(255, 255, 255, 100) 50%,
-    rgba(255, 255, 255, 0) 60%
+    rgba(181, 181, 181, 0.64) 30%,
+    rgba(255, 255, 255, 1) 50%,
+    rgba(181, 181, 181, 0.64) 70%
   );
   background-size: 200% 100%;
   -webkit-background-clip: text;
   background-clip: text;
+  -webkit-text-fill-color: transparent;
   display: inline-block;
   animation: shine 5s linear infinite;
   max-width: 90vw;
