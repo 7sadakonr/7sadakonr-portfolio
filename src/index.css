@@ -1,9 +1,5 @@
 @import "./transitions.css";
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
 /* Performance optimizations */
 * {
   box-sizing: border-box;
@@ -16,21 +12,6 @@
   }
 }
 
-/* Loading states */
-.loading-placeholder {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 200px;
-  color: #fff;
-  font-size: 1rem;
-}
-
-/* Smooth transitions */
-.fade-in {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -41,13 +22,7 @@
   }
 }
 
-/* Optimize animations */
-.animate-pulse {
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
 @keyframes pulse {
-
   0%,
   100% {
     opacity: 1;
@@ -59,6 +34,7 @@
 }
 
 body {
+  --page-gutter: clamp(24px, 4vw, 48px);
   min-height: 100vh;
   min-width: 100vw;
   width: 100vw;
@@ -94,19 +70,8 @@ body {
 }
 
 /* Optimize for high DPI displays */
-@media (-webkit-min-device-pixel-ratio: 2),
-(min-resolution: 192dpi) {
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
   .gradient-text-glow {
     filter: blur(clamp(6px, 1.5vw, 12px)) brightness(1);
   }
-}
-
-.particles-container {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  z-index: 0;
-  pointer-events: none;
 }

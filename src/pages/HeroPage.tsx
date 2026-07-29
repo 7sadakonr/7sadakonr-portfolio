@@ -1,18 +1,8 @@
 import { useEffect, useState } from 'react';
 import './HeroPage.css'
-import hero from '../assets/img/hero.svg';
 import heroPng from '../assets/img/logo-7m.png';
 import AnimatedContent from '../components/Animation/AnimatedContent';
-import { lenisInstance } from '../components/SmoothScroll/SmoothScroll';
-
-// Detect Apple devices for PNG fallback synchronously to avoid re-renders
-const isAppleDevice = () => {
-  if (typeof navigator === 'undefined') return false;
-  const ua = navigator.userAgent;
-  const isIOS = /iPad|iPhone|iPod/.test(ua);
-  const isIPadOS = /Macintosh/.test(ua) && navigator.maxTouchPoints > 1;
-  return isIOS || isIPadOS;
-};
+import { scrollToTarget } from '../components/SmoothScroll/scrollController';
 
 const HeroPage = () => {
   const [isShown, setIsShown] = useState(false);
@@ -25,12 +15,12 @@ const HeroPage = () => {
     return () => cancelAnimationFrame(frameId);
   }, []);
 
-  const heroImg = isAppleDevice() ? heroPng : hero;
+  const heroImg = heroPng;
 
   const handleExploreClick = () => {
     const aboutSection = document.getElementById('about');
     if (aboutSection) {
-      lenisInstance?.scrollTo(aboutSection, { offset: 0 });
+      scrollToTarget(aboutSection, { offset: 0 });
     }
   };
 
@@ -59,7 +49,16 @@ const HeroPage = () => {
               Hi, I'm Jetsadakonr Muangwichit, a Computer Science Student.
             </p>
           </div>
-          <img src={heroImg} alt="Hero" fetchPriority="high" loading="eager" className="t-stagger-line t-stagger-line--3" />
+          <img
+            src={heroImg}
+            alt="Hero"
+            width="519"
+            height="403"
+            fetchPriority="high"
+            loading="eager"
+            decoding="async"
+            className="t-stagger-line t-stagger-line--3"
+          />
           <button className="explore-button t-stagger-line t-stagger-line--4" onClick={handleExploreClick}>
             <span className="explore-text">Explore</span>
             <div className="explore-icon">

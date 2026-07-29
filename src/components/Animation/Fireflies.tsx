@@ -67,6 +67,9 @@ const Fireflies: React.FC<FirefliesProps> = ({ count = 7 }) => {
 
       return {
         id: i,
+        // Keep the sparkle shapes evenly distributed across the horizon.
+        isStar: i % 3 === 1,
+        starRotation: `${(Math.random() * 70 - 35).toFixed(1)}deg`,
         isPurple,
         left: `${leftStart}%`,
         topOffset: topOffset,
@@ -84,7 +87,7 @@ const Fireflies: React.FC<FirefliesProps> = ({ count = 7 }) => {
       {fireflies.map((fly) => (
         <div
           key={fly.id}
-          className={`firefly ${fly.isPurple ? 'firefly-purple' : 'firefly-pink'}`}
+          className={`firefly ${fly.isStar ? 'firefly-star' : ''} ${fly.isPurple ? 'firefly-purple' : 'firefly-pink'}`}
           style={{
             left: fly.left,
             '--top-offset': fly.topOffset,
@@ -94,6 +97,7 @@ const Fireflies: React.FC<FirefliesProps> = ({ count = 7 }) => {
             '--tx': fly.tx,
             '--ty': fly.ty,
             '--white-pct': fly.whitePct,
+            '--star-rotation': fly.starRotation,
           } as React.CSSProperties}
         />
       ))}
