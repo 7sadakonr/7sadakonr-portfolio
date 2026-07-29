@@ -195,7 +195,11 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
             position: 'absolute', inset: 0, borderRadius: 'inherit',
             backdropFilter: `url(#${filterId})`,
             WebkitBackdropFilter: `url(#${filterId})`,
-            zIndex: -2
+            zIndex: -2,
+            clipPath: 'inset(0 round inherit)',
+            transform: 'translate3d(0, 0, 0)',
+            backfaceVisibility: 'hidden',
+            willChange: 'transform'
           }} 
         />
       )}

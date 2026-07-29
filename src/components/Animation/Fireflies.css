@@ -21,36 +21,104 @@
   border-radius: 50%;
   opacity: 0;
   will-change: transform, opacity, box-shadow;
-  
-  /* Mix white with the target color based on distance from center */
-  --start-color: color-mix(in srgb, #ffffff var(--white-pct), var(--target-color));
-  --start-shadow-1: color-mix(in srgb, rgba(255, 255, 255, 0.8) var(--white-pct), var(--target-shadow-1));
-  --start-shadow-2: color-mix(in srgb, rgba(255, 255, 255, 0.5) var(--white-pct), var(--target-shadow-2));
 
-  animation: 
+  /* Mix white with the target color based on distance from center */
+  --start-color: color-mix(
+    in srgb,
+    #ffffff var(--white-pct),
+    var(--target-color)
+  );
+  --start-shadow-1: color-mix(
+    in srgb,
+    rgba(255, 255, 255, 0.8) var(--white-pct),
+    var(--target-shadow-1)
+  );
+  --start-shadow-2: color-mix(
+    in srgb,
+    rgba(255, 255, 255, 0.5) var(--white-pct),
+    var(--target-shadow-2)
+  );
+
+  animation:
     burst var(--float-duration) linear infinite var(--float-delay),
-    twinkle calc(var(--float-duration) * 0.5) ease-in-out infinite alternate calc(var(--float-delay) * 0.8);
+    twinkle calc(var(--float-duration) * 0.5) ease-in-out infinite alternate
+      calc(var(--float-delay) * 0.8);
 }
 
+/* Keep the original glowing core and layer a longer, randomly tilted
+   four-point sparkle over it. */
+.firefly-star::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: clamp(9px, calc(var(--size-scale) * 11px), 13px);
+  height: clamp(11px, calc(var(--size-scale) * 13px), 15px);
+  background-color: inherit;
+  clip-path: polygon(
+    50% 0%,
+    59% 41%,
+    100% 50%,
+    59% 59%,
+    50% 100%,
+    41% 59%,
+    0% 50%,
+    41% 41%
+  );
+  -webkit-mask-image: radial-gradient(
+    ellipse at center,
+    #000 0%,
+    #000 42%,
+    rgba(0, 0, 0, 0.78) 60%,
+    transparent 100%
+  );
+  mask-image: radial-gradient(
+    ellipse at center,
+    #000 0%,
+    #000 42%,
+    rgba(0, 0, 0, 0.78) 60%,
+    transparent 100%
+  );
+  transform: translate(-50%, -50%) rotate(var(--star-rotation));
+  opacity: 0.88;
+  filter:
+    blur(0.2px)
+    drop-shadow(0 0 4px var(--target-shadow-1))
+    drop-shadow(0 0 7px var(--target-shadow-2));
+}
+
+.firefly-star::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: clamp(1.5px, calc(var(--size-scale) * 2px), 2.5px);
+  height: clamp(1.5px, calc(var(--size-scale) * 2px), 2.5px);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.78);
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 2px rgba(255, 255, 255, 0.65);
+}
 @media (max-width: 768px) {
   .firefly {
     /* Mobile (Portrait): Horizon is ~84.9%.
        Base is set to 84.5% + (2 * 0.4 = 0.8%) = 85.3% so they spawn perfectly. */
     top: calc(84.5% + var(--top-offset) * 0.4%);
-    animation: 
+    animation:
       burst-mobile var(--float-duration) linear infinite var(--float-delay),
-      twinkle calc(var(--float-duration) * 0.5) ease-in-out infinite alternate calc(var(--float-delay) * 0.8);
+      twinkle calc(var(--float-duration) * 0.5) ease-in-out infinite alternate
+        calc(var(--float-delay) * 0.8);
   }
 }
 
 .firefly-purple {
-  --target-color: #8A38F5;
+  --target-color: #8a38f5;
   --target-shadow-1: rgba(138, 56, 245, 0.7);
   --target-shadow-2: rgba(138, 56, 245, 0.4);
 }
 
 .firefly-pink {
-  --target-color: #FF7777;
+  --target-color: #ff7777;
   --target-shadow-1: rgba(255, 119, 119, 0.7);
   --target-shadow-2: rgba(255, 119, 119, 0.4);
 }
@@ -59,31 +127,44 @@
   0% {
     transform: translate(0, 0) scale(0);
     background-color: var(--start-color);
-    box-shadow: 0 0 3em 1em var(--start-shadow-1), 0 0 8em 2.5em var(--start-shadow-2);
+    box-shadow:
+      0 0 3em 1em var(--start-shadow-1),
+      0 0 8em 2.5em var(--start-shadow-2);
   }
   15% {
-    transform: translate(calc(var(--tx) * 0.15), calc(var(--ty) * 0.15)) scale(1.1);
+    transform: translate(calc(var(--tx) * 0.15), calc(var(--ty) * 0.15))
+      scale(1.1);
     background-color: var(--start-color);
-    box-shadow: 0 0 3em 1em var(--start-shadow-1), 0 0 8em 2.5em var(--start-shadow-2);
+    box-shadow:
+      0 0 3em 1em var(--start-shadow-1),
+      0 0 8em 2.5em var(--start-shadow-2);
   }
   25% {
-    transform: translate(calc(var(--tx) * 0.25), calc(var(--ty) * 0.25)) scale(1);
+    transform: translate(calc(var(--tx) * 0.25), calc(var(--ty) * 0.25))
+      scale(1);
     background-color: var(--target-color);
-    box-shadow: 0 0 3em 1em var(--target-shadow-1), 0 0 8em 2.5em var(--target-shadow-2);
+    box-shadow:
+      0 0 3em 1em var(--target-shadow-1),
+      0 0 8em 2.5em var(--target-shadow-2);
   }
 
   60% {
-    transform: translate(calc(var(--tx) * 0.6), calc(var(--ty) * 0.6)) scale(0.9);
+    transform: translate(calc(var(--tx) * 0.6), calc(var(--ty) * 0.6))
+      scale(0.9);
     background-color: var(--target-color);
-    box-shadow: 0 0 3em 1em var(--target-shadow-1), 0 0 8em 2.5em var(--target-shadow-2);
+    box-shadow:
+      0 0 3em 1em var(--target-shadow-1),
+      0 0 8em 2.5em var(--target-shadow-2);
     opacity: 1;
   }
   85% {
-    transform: translate(calc(var(--tx) * 0.85), calc(var(--ty) * 0.85)) scale(0);
+    transform: translate(calc(var(--tx) * 0.85), calc(var(--ty) * 0.85))
+      scale(0);
     opacity: 0;
   }
   95% {
-    transform: translate(calc(var(--tx) * 0.95), calc(var(--ty) * 0.95)) scale(0);
+    transform: translate(calc(var(--tx) * 0.95), calc(var(--ty) * 0.95))
+      scale(0);
     opacity: 0;
   }
   100% {
@@ -93,39 +174,58 @@
 }
 
 @keyframes twinkle {
-  0% { opacity: 0.7; }
-  50% { opacity: 1; }
-  100% { opacity: 0.8; }
+  0% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.8;
+  }
 }
 
 @keyframes burst-mobile {
   0% {
     transform: translate(0, 0) scale(0);
     background-color: var(--start-color);
-    box-shadow: 0 0 3em 1em var(--start-shadow-1), 0 0 8em 2.5em var(--start-shadow-2);
+    box-shadow:
+      0 0 3em 1em var(--start-shadow-1),
+      0 0 8em 2.5em var(--start-shadow-2);
   }
   15% {
-    transform: translate(calc(var(--tx) * 0.15), calc(var(--ty) * 0.15)) scale(1.1);
+    transform: translate(calc(var(--tx) * 0.15), calc(var(--ty) * 0.15))
+      scale(1.1);
     background-color: var(--start-color);
-    box-shadow: 0 0 3em 1em var(--start-shadow-1), 0 0 8em 2.5em var(--start-shadow-2);
+    box-shadow:
+      0 0 3em 1em var(--start-shadow-1),
+      0 0 8em 2.5em var(--start-shadow-2);
   }
   25% {
-    transform: translate(calc(var(--tx) * 0.25), calc(var(--ty) * 0.25)) scale(1);
+    transform: translate(calc(var(--tx) * 0.25), calc(var(--ty) * 0.25))
+      scale(1);
     background-color: var(--target-color);
-    box-shadow: 0 0 3em 1em var(--target-shadow-1), 0 0 8em 2.5em var(--target-shadow-2);
+    box-shadow:
+      0 0 3em 1em var(--target-shadow-1),
+      0 0 8em 2.5em var(--target-shadow-2);
   }
   60% {
-    transform: translate(calc(var(--tx) * 0.6), calc(var(--ty) * 0.6)) scale(0.9);
+    transform: translate(calc(var(--tx) * 0.6), calc(var(--ty) * 0.6))
+      scale(0.9);
     background-color: var(--target-color);
-    box-shadow: 0 0 3em 1em var(--target-shadow-1), 0 0 8em 2.5em var(--target-shadow-2);
+    box-shadow:
+      0 0 3em 1em var(--target-shadow-1),
+      0 0 8em 2.5em var(--target-shadow-2);
     opacity: 1;
   }
   85% {
-    transform: translate(calc(var(--tx) * 0.85), calc(var(--ty) * 0.85)) scale(0);
+    transform: translate(calc(var(--tx) * 0.85), calc(var(--ty) * 0.85))
+      scale(0);
     opacity: 0;
   }
   95% {
-    transform: translate(calc(var(--tx) * 0.95), calc(var(--ty) * 0.95)) scale(0);
+    transform: translate(calc(var(--tx) * 0.95), calc(var(--ty) * 0.95))
+      scale(0);
     opacity: 0;
   }
   100% {

@@ -1,7 +1,7 @@
-import React, { useState } from 'react'
 import AnimatedContent from '../components/Animation/AnimatedContent'
+import Scales from '../components/Scales/Scales'
+import Highlighter from '../components/Highlighter/Highlighter'
 import resumePDF from '../assets/resume.pdf'
-// CSS is now in LandingPage.css
 
 const AboutSection = () => {
     const handleResumeDownload = () => {
@@ -14,7 +14,7 @@ const AboutSection = () => {
     };
 
     return (
-        <div className="about-page-wrapper landing-section" id="about">
+        <div className="about-page-wrapper landing-section">
             {/* Main Content */}
             <div className="about-content">
                 {/* Intro / Hero Section */}
@@ -42,8 +42,8 @@ const AboutSection = () => {
                         delay={0.4}
                     >
                         <p className="about-hero-subtitle">
-                            A passionate Computer Science Student exploring the intersection of technology and creativity.
-                            Currently focused on web development, UI/UX design, and building meaningful digital experiences.
+                            A <Highlighter delay={600}  type="underline" color="#FF7777">passionate</Highlighter> Computer Science Student exploring the <Highlighter delay={1200} type="underline" color="rgba(138, 56, 245, 0.8)">intersection of technology and creativity</Highlighter>.
+                            Currently focused on web development, UI/UX design, and building <Highlighter delay={1800} type="highlight" color="rgba(138, 56, 245, 0.4)">meaningful digital experiences</Highlighter>.
                         </p>
                     </AnimatedContent>
 
@@ -65,8 +65,14 @@ const AboutSection = () => {
 
                 {/* Bento Grid Section */}
                 <section className="about-bento-container" id="about-me">
+                    <div className="about-bento-scale about-bento-scale-left" aria-hidden="true">
+                        <Scales orientation="diagonal" size={10} color="rgba(255, 255, 255, 0.1)" />
+                    </div>
+                    <div className="about-bento-scale about-bento-scale-right" aria-hidden="true">
+                        <Scales orientation="diagonal" size={10} color="rgba(255, 255, 255, 0.1)" />
+                    </div>
                     <div className="about-bento-grid">
-                        
+
                         {/* Main Biography Card */}
                         <AnimatedContent distance={40} direction="vertical" duration={0.8} initialOpacity={0} delay={0.1}>
                             <div className="glass-card bento-card bento-main">
@@ -115,7 +121,7 @@ const AboutSection = () => {
 
                         {/* Skills Card */}
                         <AnimatedContent distance={40} direction="vertical" duration={0.8} initialOpacity={0} delay={0.3}>
-                            <div className="glass-card bento-card bento-skills">
+                            <div className="glass-card bento-card bento-skills" id="skills">
                                 <div className="bento-header">
                                     <svg className="bento-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                         <polyline points="16 18 22 12 16 6"></polyline>
@@ -140,7 +146,7 @@ const AboutSection = () => {
                                             { id: 'nextjs', name: 'Next.js' }
                                         ].map((skill, i) => (
                                             <div className="tech-pill" title={skill.name} key={`row1-${i}`}>
-                                                <img src={`https://skillicons.dev/icons?i=${skill.id}`} alt={skill.name} style={{ width: '16px', height: '16px' }} />
+                                                <img src={`https://skillicons.dev/icons?i=${skill.id}`} alt={skill.name} loading="lazy" decoding="async" style={{ width: '16px', height: '16px' }} />
                                                 <span>{skill.name}</span>
                                             </div>
                                         ))}
@@ -159,7 +165,7 @@ const AboutSection = () => {
                                             { id: 'tailwind', name: 'Tailwind' }
                                         ].map((skill, i) => (
                                             <div className="tech-pill" title={skill.name} key={`row2-${i}`}>
-                                                <img src={`https://skillicons.dev/icons?i=${skill.id}`} alt={skill.name} style={{ width: '16px', height: '16px' }} />
+                                                <img src={`https://skillicons.dev/icons?i=${skill.id}`} alt={skill.name} loading="lazy" decoding="async" style={{ width: '16px', height: '16px' }} />
                                                 <span>{skill.name}</span>
                                             </div>
                                         ))}
@@ -180,7 +186,7 @@ const AboutSection = () => {
                                             { id: 'postman', name: 'Postman' }
                                         ].map((skill, i) => (
                                             <div className="tech-pill" title={skill.name} key={`row3-${i}`}>
-                                                <img src={`https://skillicons.dev/icons?i=${skill.id}`} alt={skill.name} style={{ width: '16px', height: '16px' }} />
+                                                <img src={`https://skillicons.dev/icons?i=${skill.id}`} alt={skill.name} loading="lazy" decoding="async" style={{ width: '16px', height: '16px' }} />
                                                 <span>{skill.name}</span>
                                             </div>
                                         ))}
@@ -188,7 +194,7 @@ const AboutSection = () => {
                                 </div>
                             </div>
                         </AnimatedContent>
-                        
+
                     </div>
                 </section>
             </div>
@@ -197,5 +203,3 @@ const AboutSection = () => {
 }
 
 export default AboutSection
-
-
