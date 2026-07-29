@@ -54,7 +54,7 @@
   background-clip: text;
   -webkit-text-fill-color: transparent;
   display: inline-block;
-  animation: shine 5s linear infinite;
+  animation: staggerEntrance var(--stagger-dur) var(--stagger-ease) forwards, shine 5s linear infinite;
   max-width: 90vw;
 }
 
