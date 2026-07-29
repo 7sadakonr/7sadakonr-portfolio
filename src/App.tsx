@@ -45,30 +45,8 @@ function App() {
         })
     }, observerOptions)
 
-    // Function to find and observe sections
-    const observeSections = () => {
-        const sections = document.querySelectorAll('section[id]')
-        sections.forEach(sec => observer.observe(sec))
-        if (sections.length >= 4) {
-            return true
-        }
-        return false
-    }
-
-    // Try immediately
-    if (!observeSections()) {
-        // If not found (due to Suspense), wait for them to mount
-        const mutationObserver = new MutationObserver(() => {
-            if (observeSections()) {
-                mutationObserver.disconnect()
-            }
-        })
-        mutationObserver.observe(document.body, { childList: true, subtree: true })
-        return () => {
-            observer.disconnect()
-            mutationObserver.disconnect()
-        }
-    }
+    const sections = document.querySelectorAll('section[id]')
+    sections.forEach(sec => observer.observe(sec))
 
     return () => observer.disconnect()
   }, [])
@@ -81,7 +59,7 @@ function App() {
         
         <div className="landing-page-container">
           <div className="landing-content-flow">
-            <SpaceBackground motion="subtle" showPlanet={true}>
+            <SpaceBackground motion="none" showPlanet={true}>
               <section id="home">
                 <HeroPage />
               </section>

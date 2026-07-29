@@ -4,6 +4,7 @@ import {
   isSectionRequested,
   markSectionReady,
   requestSection,
+  ensureTargetReady,
   subscribeToSectionRequests,
   type LazySectionId,
 } from './sectionLoader'
@@ -21,8 +22,8 @@ const SectionReady = ({ id, children }: LazySectionProps) => {
   return children
 }
 
-const SectionPlaceholder = () => (
-  <div className="lazy-section-placeholder" aria-hidden="true">
+const SectionPlaceholder = ({ id }: { id?: LazySectionId }) => (
+  <div className={`lazy-section-placeholder${id ? ` lazy-section-placeholder--${id}` : ''}`} aria-hidden="true">
     <div className="lazy-section-placeholder__glow" />
   </div>
 )
@@ -43,8 +44,7 @@ const LazySection = ({ id, children }: LazySectionProps) => {
       (entries) => {
         if (!entries.some((entry) => entry.isIntersecting)) return
 
-        setShouldRender(true)
-        void requestSection(id)
+        void ensureTargetReady(id)
         observer.disconnect()
       },
       { rootMargin: '800px 0px', threshold: 0 },
@@ -78,11 +78,11 @@ const LazySection = ({ id, children }: LazySectionProps) => {
       aria-busy={shouldRender && !isReady ? true : undefined}
     >
       {shouldRender ? (
-        <Suspense fallback={<SectionPlaceholder />}>
+        <Suspense fallback={<SectionPlaceholder id={id} />}>
           <SectionReady id={id}>{children}</SectionReady>
         </Suspense>
       ) : (
-        <SectionPlaceholder />
+        <SectionPlaceholder id={id} />
       )}
     </section>
   )

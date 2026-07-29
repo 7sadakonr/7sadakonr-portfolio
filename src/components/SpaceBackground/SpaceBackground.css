@@ -161,7 +161,7 @@
     transparent 70%
   );
   animation: var(--streak-anim) var(--streak-duration) ease-in-out
-    var(--streak-delay) infinite alternate;
+    var(--streak-delay) infinite alternate both;
   clip-path: var(--streak-clip-path, none);
 }
 
@@ -285,8 +285,37 @@
 }
 
 .space-background--motion-none .space-background__aurora,
-.space-background--motion-none .space-background__streak {
+.space-background--motion-none .space-background__streak,
+.space-background--motion-none .space-background__streaks,
+.space-background--motion-none .space-background__planet::before {
   animation: none;
+}
+
+/* Freeze front aurora at its brightest/largest state */
+.space-background--motion-none .space-background__aurora--front {
+  opacity: 0.95;
+  transform: translate(1%, -1%) scale(1.01, 1.02);
+}
+
+/* Freeze back aurora at a complementary bright state */
+.space-background--motion-none .space-background__aurora--back {
+  opacity: 0.65;
+  transform: translate(1%, -1%) scale(1.01, 1.02);
+}
+
+/* Freeze streaks container and individual streaks at high visibility */
+.space-background--motion-none .space-background__streaks {
+  opacity: 1;
+}
+
+.space-background--motion-none .space-background__streak {
+  opacity: 0.85;
+  transform: scaleY(1.1) scaleX(1.1) rotate(var(--streak-rotate, 0deg));
+}
+
+/* Freeze planet glow */
+.space-background--motion-none .space-background__planet::before {
+  opacity: 1;
 }
 
 @keyframes space-aurora-glow-back {
@@ -350,22 +379,22 @@
 @keyframes space-aurora-streak-drift-a {
   0% {
     transform: translateX(-10%) translateY(2%) scaleY(0.9) scaleX(0.9)
-      skewX(-8deg) rotate(var(--base-rotate, 0deg));
+      skewX(-8deg) rotate(var(--streak-rotate, 0deg));
     opacity: 0.2;
   }
   33% {
     transform: translateX(5%) translateY(-2%) scaleY(1.1) scaleX(1.1)
-      skewX(4deg) rotate(var(--base-rotate, 0deg));
+      skewX(4deg) rotate(var(--streak-rotate, 0deg));
     opacity: 0.85;
   }
   66% {
     transform: translateX(15%) translateY(1%) scaleY(0.95) scaleX(0.95)
-      skewX(8deg) rotate(var(--base-rotate, 0deg));
+      skewX(8deg) rotate(var(--streak-rotate, 0deg));
     opacity: 0.3;
   }
   100% {
     transform: translateX(-5%) translateY(-3%) scaleY(1.05) scaleX(1.05)
-      skewX(-4deg) rotate(var(--base-rotate, 0deg));
+      skewX(-4deg) rotate(var(--streak-rotate, 0deg));
     opacity: 0.65;
   }
 }
@@ -373,22 +402,22 @@
 @keyframes space-aurora-streak-drift-b {
   0% {
     transform: translateX(10%) translateY(-2%) scaleY(1.05) scaleX(1.05)
-      skewX(7deg) rotate(var(--base-rotate, 0deg));
+      skewX(7deg) rotate(var(--streak-rotate, 0deg));
     opacity: 0.6;
   }
   33% {
     transform: translateX(-5%) translateY(3%) scaleY(0.85) scaleX(0.9)
-      skewX(-3deg) rotate(var(--base-rotate, 0deg));
+      skewX(-3deg) rotate(var(--streak-rotate, 0deg));
     opacity: 0.25;
   }
   66% {
     transform: translateX(-15%) translateY(-4%) scaleY(1.15) scaleX(1.15)
-      skewX(-9deg) rotate(var(--base-rotate, 0deg));
+      skewX(-9deg) rotate(var(--streak-rotate, 0deg));
     opacity: 0.9;
   }
   100% {
     transform: translateX(5%) translateY(1%) scaleY(0.95) scaleX(0.95)
-      skewX(5deg) rotate(var(--base-rotate, 0deg));
+      skewX(5deg) rotate(var(--streak-rotate, 0deg));
     opacity: 0.4;
   }
 }
