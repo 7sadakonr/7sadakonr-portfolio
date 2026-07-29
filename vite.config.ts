@@ -1,6 +1,5 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import tailwindcss from '@tailwindcss/vite'
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -31,7 +30,6 @@ export default defineConfig({
         manualChunks: {
           // Separate vendor chunks for better caching
           vendor: ['react', 'react-dom', 'react-router-dom'],
-          three: ['three', '@react-three/fiber', '@react-three/drei'],
           animations: ['lenis']
         }
       }
@@ -50,7 +48,6 @@ export default defineConfig({
 
   // Optimize dependencies
   optimizeDeps: {
-    include: ['react', 'react-dom', 'react-router-dom'],
-    exclude: ['three'] // Three.js is large, let it be loaded on demand
+    include: ['react', 'react-dom', 'react-router-dom']
   }
 })
