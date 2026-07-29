@@ -169,7 +169,7 @@
   z-index: -2;
   inset: auto auto 0 50%;
   left: 50%;
-  width: max(150vw, 1000px);
+  width: 150%;
   aspect-ratio: 2 / 1;
   height: auto;
   translate: -50% 74.53%;
@@ -192,7 +192,8 @@
 
 .space-background__planet::before {
   inset: -5px 0 0;
-  border-top: 4px solid rgba(255, 255, 255, 0.98);
+  border: 4px solid rgba(255, 255, 255, 0.98);
+  border-bottom: none;
   animation: space-planet-white-glow-breathe 8s ease-in-out infinite alternate;
   -webkit-mask-image: linear-gradient(
     90deg,
@@ -222,8 +223,8 @@
 
 .space-background__planet::after {
   inset: -2px 0 0;
-  border-top: 5px solid
-    color-mix(in srgb, var(--space-center-glow) 58%, transparent);
+  border: 5px solid color-mix(in srgb, var(--space-center-glow) 58%, transparent);
+  border-bottom: none;
   filter: blur(10px);
   opacity: 0.76;
   -webkit-mask-image: linear-gradient(
