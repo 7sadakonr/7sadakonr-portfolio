@@ -53,7 +53,9 @@ export const ensureTargetReady = async (targetId: string): Promise<void> => {
   if (!owner) return
 
   const ownerIndex = sectionOrder.indexOf(owner)
-  await Promise.all(sectionOrder.slice(0, ownerIndex + 1).map(requestSection))
+  for (let i = 0; i <= ownerIndex; i++) {
+    await requestSection(sectionOrder[i])
+  }
 }
 
 export const markSectionReady = (sectionId: LazySectionId) => {

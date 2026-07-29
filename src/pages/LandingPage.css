@@ -41,15 +41,25 @@
 }
 
 .lazy-section {
-  min-block-size: 100svh;
-  content-visibility: auto;
-  contain-intrinsic-size: auto 100svh;
+  position: relative;
 }
 
 .lazy-section-placeholder {
   position: relative;
   min-block-size: 100svh;
   overflow: hidden;
+}
+
+.lazy-section-placeholder--about {
+  min-block-size: clamp(800px, 120vh, 1300px);
+}
+
+.lazy-section-placeholder--projects {
+  min-block-size: clamp(900px, 180vh, 2400px);
+}
+
+.lazy-section-placeholder--contact {
+  min-block-size: clamp(800px, 130vh, 1400px);
 }
 
 .lazy-section-placeholder__glow {
@@ -1752,6 +1762,7 @@ a.contact-item-text:hover {
 .asia-map-image {
   width: 100%;
   height: auto;
+  aspect-ratio: 2 / 1;
   transform: rotateX(45deg) translateZ(0px);
   opacity: 0.5;
   /* Optional: filter to make it look identical to the preview if needed */
