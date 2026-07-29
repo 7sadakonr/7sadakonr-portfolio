@@ -2,8 +2,10 @@ import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import './Navbar.css'
 import GlassSurface from '../GlassSurface/GlassSurface'
-import CommandMenu from '../CommandMenu/CommandMenu'
-import { lenisInstance } from '../SmoothScroll/SmoothScroll'
+import { scrollToTarget } from '../SmoothScroll/scrollController'
+import { ensureTargetReady, getOwningSection } from '../LazySection/sectionLoader'
+
+const CommandMenu = React.lazy(() => import('../CommandMenu/CommandMenu'))
 
 const NAVBAR_GLASS_PRESET =
   /* NAVBAR_GLASS_PRESET_START */
@@ -32,10 +34,16 @@ const Navbar = () => {
   const indicatorRef = useRef<HTMLDivElement>(null)
   const location = useLocation()
   const [isCommandMenuOpen, setIsCommandMenuOpen] = useState(false)
+  const [hasOpenedCommandMenu, setHasOpenedCommandMenu] = useState(false)
   const [hasInitialized, setHasInitialized] = useState(false)
   const [isIPad, setIsIPad] = useState(false)
   const [isMac, setIsMac] = useState(true)
   const pillTextRef = useRef<HTMLSpanElement>(null)
+  const navigationRequestRef = useRef(0)
+
+  useEffect(() => {
+    if (isCommandMenuOpen) setHasOpenedCommandMenu(true)
+  }, [isCommandMenuOpen])
 
   // Detect iPad and Mac
   useEffect(() => {
@@ -197,7 +205,7 @@ const Navbar = () => {
     { id: 'proj-3', path: '/project', label: 'Zendix File Transfer', category: 'Projects', keywords: 'zendix file transfer share peer webrtc', targetId: 'project-2' },
   ];
 
-  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, path: string, explicitTargetId?: string) => {
+  const handleNavClick = async (e: React.MouseEvent<HTMLAnchorElement>, path: string, explicitTargetId?: string) => {
     let targetId = explicitTargetId;
     if (!targetId) {
       if (path === '/about') targetId = 'about';
@@ -206,19 +214,28 @@ const Navbar = () => {
       else targetId = 'home';
     }
 
-    const element = document.getElementById(targetId);
-    if (element) {
-      e.preventDefault();
+    e.preventDefault();
+    const navigationRequest = ++navigationRequestRef.current
 
+    if (getOwningSection(targetId)) {
+      await ensureTargetReady(targetId)
+    }
+
+    if (navigationRequest !== navigationRequestRef.current) return
+
+    const element = document.getElementById(targetId) ?? document.getElementById(
+      getOwningSection(targetId) ?? 'home',
+    );
+    if (element) {
       // Prevent scroll-spy from bouncing during smooth scroll
-      (window as any).isNavigating = true;
-      if ((window as any).navTimeoutId) clearTimeout((window as any).navTimeoutId);
-      (window as any).navTimeoutId = setTimeout(() => {
-        (window as any).isNavigating = false;
+      window.isNavigating = true;
+      if (window.navTimeoutId) clearTimeout(window.navTimeoutId);
+      window.navTimeoutId = setTimeout(() => {
+        window.isNavigating = false;
       }, 1000);
 
       const offset = explicitTargetId && (explicitTargetId.startsWith('project-') || explicitTargetId === 'skills') ? -window.innerHeight / 4 : 0;
-      lenisInstance?.scrollTo(element, { offset });
+      scrollToTarget(element, { offset });
       window.history.pushState(null, '', path);
       setActivePath(path);
       setIsCommandMenuOpen(false);
@@ -330,13 +347,17 @@ const Navbar = () => {
         </div>
       </nav>
 
-      <CommandMenu
-        isOpen={isCommandMenuOpen}
-        onClose={() => setIsCommandMenuOpen(false)}
-        menuItems={commandMenuItems}
-        activePath={activePath}
-        handleNavClick={handleNavClick}
-      />
+      {(isCommandMenuOpen || hasOpenedCommandMenu) && (
+        <React.Suspense fallback={null}>
+          <CommandMenu
+            isOpen={isCommandMenuOpen}
+            onClose={() => setIsCommandMenuOpen(false)}
+            menuItems={commandMenuItems}
+            activePath={activePath}
+            handleNavClick={handleNavClick}
+          />
+        </React.Suspense>
+      )}
 
     </>
   )

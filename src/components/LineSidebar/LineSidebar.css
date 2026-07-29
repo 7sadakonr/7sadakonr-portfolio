@@ -43,7 +43,7 @@
 
 /* Widen the pointer target so items react a touch before the cursor arrives */
 .line-sidebar__item::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: -6px -48px;
 }
@@ -54,8 +54,14 @@
   align-items: flex-start;
   font-size: var(--font-size);
   line-height: 1.2;
-  color: color-mix(in srgb, var(--accent-color) calc(var(--effect, 0) * 100%), var(--text-color));
-  transform: translateX(calc(var(--effect, 0) * var(--max-shift) * var(--shift-dir, 1)));
+  color: color-mix(
+    in srgb,
+    var(--accent-color) calc(var(--effect, 0) * 100%),
+    var(--text-color)
+  );
+  transform: translateX(
+    calc(var(--effect, 0) * var(--max-shift) * var(--shift-dir, 1))
+  );
 }
 
 .line-sidebar--align-left .line-sidebar__label {
@@ -86,9 +92,14 @@
   padding-bottom: 2px;
 }
 
-.line-sidebar__item:hover .line-sidebar__text,
 .line-sidebar__item[aria-current="true"] .line-sidebar__text {
   color: var(--accent-color);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .line-sidebar__item:hover .line-sidebar__text {
+    color: var(--accent-color);
+  }
 }
 
 .line-sidebar__description-wrapper {
@@ -97,26 +108,62 @@
   transition: grid-template-rows 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+.line-sidebar__description-inner {
+  opacity: 0;
+  transform: translateY(-5px);
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  padding-top: 0;
+  overflow: hidden;
+}
+
 .line-sidebar__description {
   font-size: 1rem;
   margin: 0;
   line-height: 1.6;
   color: color-mix(in srgb, var(--text-color) 80%, transparent);
   max-width: 320px;
-  overflow: hidden;
-  opacity: 0;
-  transform: translateY(-5px);
-  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .line-sidebar__item[aria-current="true"] .line-sidebar__description-wrapper {
   grid-template-rows: 1fr;
 }
 
-.line-sidebar__item[aria-current="true"] .line-sidebar__description {
+.line-sidebar__item[aria-current="true"] .line-sidebar__description-inner {
   opacity: 1;
   transform: translateY(0);
   padding-top: 8px;
+}
+
+.line-sidebar__tech-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+  max-width: 340px;
+}
+
+.line-sidebar__actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+  padding-bottom: 12px;
+}
+
+.line-sidebar__actions .project-btn {
+  font-size: 0.85rem;
+  padding: 6px 14px;
+  border-radius: 50px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .line-sidebar__actions .project-btn:hover {
+    transform: translateY(-2px);
+  }
+}
+
+.line-sidebar__actions svg {
+  width: 14px;
+  height: 14px;
 }
 
 .line-sidebar__marker {
@@ -125,7 +172,11 @@
   left: calc(-1 * var(--marker-length) - var(--marker-gap));
   height: 1px;
   width: var(--marker-length);
-  background-color: color-mix(in srgb, var(--accent-color) calc(var(--effect, 0) * 100%), var(--marker-color));
+  background-color: color-mix(
+    in srgb,
+    var(--accent-color) calc(var(--effect, 0) * 100%),
+    var(--marker-color)
+  );
   transform-origin: left center;
   transform: translateY(-50%) scaleX(calc(0.7 + var(--effect, 0) * 0.5));
 }
@@ -138,7 +189,7 @@
 
 /* Short static tick centered in the gap between two menu items */
 .line-sidebar--markers .line-sidebar__item:not(:last-child)::after {
-  content: '';
+  content: "";
   position: absolute;
   top: calc(100% + var(--item-gap) / 2);
   left: calc(-1 * var(--marker-length) - var(--marker-gap));
@@ -149,7 +200,8 @@
   transform: translateY(-50%);
 }
 
-.line-sidebar--align-left.line-sidebar--markers .line-sidebar__item:not(:last-child)::after {
+.line-sidebar--align-left.line-sidebar--markers
+  .line-sidebar__item:not(:last-child)::after {
   left: auto;
   right: calc(-1 * var(--marker-length) - var(--marker-gap));
 }
@@ -160,6 +212,7 @@
   transform: translateY(-50%) scaleX(calc(0.7 + var(--effect, 0) * 0.6));
 }
 
-.line-sidebar--align-left.line-sidebar--scale-tick .line-sidebar__item:not(:last-child)::after {
+.line-sidebar--align-left.line-sidebar--scale-tick
+  .line-sidebar__item:not(:last-child)::after {
   transform-origin: right center;
 }

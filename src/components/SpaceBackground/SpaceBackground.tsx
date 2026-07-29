@@ -1,6 +1,5 @@
-import { type CSSProperties, type ComponentPropsWithoutRef, useRef, useState, useEffect } from "react";
+import { type CSSProperties, type ComponentPropsWithoutRef } from "react";
 import "./SpaceBackground.css";
-import { useStarCanvas } from "./hooks/useStarCanvas";
 import { STREAK_DATA } from "./utils/streakData";
 import Fireflies from "../Animation/Fireflies";
 
@@ -16,11 +15,7 @@ export interface SpaceBackgroundColors {
 }
 
 export interface SpaceBackgroundProps extends ComponentPropsWithoutRef<"div"> {
-  /** Number of stars to render on the canvas. Limited between 0 and 2000. Default: 400 */
-  starCount?: number;
-  /** Seed for the random number generator to ensure deterministic star positions. Default: 42 */
-  seed?: number;
-  /** Controls the animation of stars, auroras, and streaks. "subtle" enables animation, "none" disables it. Default: "subtle" */
+  /** Controls aurora and streak animation. Default: "subtle" */
   motion?: SpaceMotion;
   /** Whether to show the planet silhouette at the bottom of the container. Default: true */
   showPlanet?: boolean;
@@ -38,23 +33,11 @@ export function SpaceBackground({
   children,
   className = "",
   style,
-  starCount = 400,
-  seed = 42,
   motion = "subtle",
   showPlanet = true,
   colors,
   ...rest
 }: SpaceBackgroundProps) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const rootRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    // Rely on browser's native optimization for out-of-viewport CSS animations
-    // Manually pausing/unpausing causes composite layer recreation which leads to scroll stutter
-  }, []);
-
-  useStarCanvas(canvasRef, rootRef, { starCount, seed, motion });
-
   const mergedColors = { ...DEFAULT_COLORS, ...colors };
   const cssVariables = {
     "--space-left-glow": mergedColors.leftGlow,
@@ -67,7 +50,6 @@ export function SpaceBackground({
 
   return (
     <div
-      ref={rootRef}
       className={`space-background ${motionClass} ${className}`.trim()}
       style={cssVariables}
       {...rest}
@@ -101,14 +83,7 @@ export function SpaceBackground({
           ))}
         </div>
       </div>
-      {starCount > 0 && (
-        <canvas
-          ref={canvasRef}
-          className="space-background__stars"
-          aria-hidden="true"
-        />
-      )}
-      <Fireflies count={18} />
+      <Fireflies count={10} />
       {showPlanet && (
         <div className="space-background__planet" aria-hidden="true" />
       )}

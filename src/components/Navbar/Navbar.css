@@ -5,7 +5,7 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: 'Outfit', sans-serif;
+  font-family: "Outfit", sans-serif;
 }
 
 /* ===========================================
@@ -96,14 +96,22 @@
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
 }
 
-.navbar a.nav-item:hover {
-  color: #fff;
-  transform: scale(1.05);
+@media (hover: hover) and (pointer: fine) {
+  .navbar a.nav-item:hover {
+    color: #fff;
+    transform: scale(1.05);
+  }
 }
 
 .navbar a.nav-item:active {
   transform: translateY(0) scale(0.98);
-  transition: transform 0.1s ease, background 0.1s ease, box-shadow 0.1s ease, opacity 0.1s ease, color 0.1s ease, filter 0.1s ease;
+  transition:
+    transform 0.1s ease,
+    background 0.1s ease,
+    box-shadow 0.1s ease,
+    opacity 0.1s ease,
+    color 0.1s ease,
+    filter 0.1s ease;
   box-shadow: none;
 }
 
@@ -119,9 +127,11 @@
   position: absolute;
   left: 0;
   top: 0;
-  background: linear-gradient(180deg,
-      rgba(255, 255, 255, 0.12),
-      rgba(255, 255, 255, 0.05));
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.12),
+    rgba(255, 255, 255, 0.05)
+  );
   border: 1px solid rgba(255, 255, 255, 0.02);
   border-top-color: rgba(255, 255, 255, 0.1);
   border-bottom-color: rgba(0, 0, 0, 0.1);
@@ -131,10 +141,13 @@
   border-radius: 25px;
   z-index: 0;
   transform: translateX(0) translateY(0);
-  transition: 
-    transform var(--duration-fast, 350ms) var(--ease-smooth-out, cubic-bezier(0.22, 1, 0.36, 1)),
-    width var(--duration-fast, 350ms) var(--ease-smooth-out, cubic-bezier(0.22, 1, 0.36, 1)),
-    height var(--duration-fast, 350ms) var(--ease-smooth-out, cubic-bezier(0.22, 1, 0.36, 1));
+  transition:
+    transform var(--duration-fast, 350ms)
+      var(--ease-smooth-out, cubic-bezier(0.22, 1, 0.36, 1)),
+    width var(--duration-fast, 350ms)
+      var(--ease-smooth-out, cubic-bezier(0.22, 1, 0.36, 1)),
+    height var(--duration-fast, 350ms)
+      var(--ease-smooth-out, cubic-bezier(0.22, 1, 0.36, 1));
   will-change: transform, width, height;
   pointer-events: none;
 }
@@ -163,14 +176,23 @@
   justify-content: center;
   cursor: pointer;
   color: rgba(255, 255, 255, 0.7);
-  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition:
+    transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+    background 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+    border-color 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+    opacity 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+    color 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+    filter 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
   border-radius: 50%;
 }
 
-.desktop-command-btn:hover {
-  color: white;
-  transform: scale(1.1);
-  background: rgba(255, 255, 255, 0.05);
+@media (hover: hover) and (pointer: fine) {
+  .desktop-command-btn:hover {
+    color: white;
+    transform: scale(1.1);
+    background: rgba(255, 255, 255, 0.05);
+  }
 }
 
 .desktop-command-btn:active {
@@ -203,8 +225,7 @@
 }
 
 /* Brighter Glass surface specifically for mobile command button */
-.mobile-pill-container .glass-surface--fallback,
-.mobile-pill-container .glass-surface--ios {
+.mobile-pill-container .glass-surface--fallback {
   background: rgba(255, 255, 255, 0.12) !important;
   backdrop-filter: blur(20px) saturate(2.5) brightness(1.3) !important;
   -webkit-backdrop-filter: blur(20px) saturate(2.5) brightness(1.3) !important;
@@ -212,8 +233,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  .mobile-pill-container .glass-surface--fallback,
-  .mobile-pill-container .glass-surface--ios {
+  .mobile-pill-container .glass-surface--fallback {
     background: rgba(255, 255, 255, 0.08) !important;
     backdrop-filter: blur(20px) saturate(2) brightness(1.2) !important;
     -webkit-backdrop-filter: blur(20px) saturate(2) brightness(1.2) !important;
@@ -236,11 +256,20 @@
   position: relative;
   z-index: 1;
   color: rgba(255, 255, 255, 0.85);
-  transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, color 0.2s ease, filter 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease,
+    opacity 0.2s ease,
+    color 0.2s ease,
+    filter 0.2s ease;
 }
 
-.command-pill-button:hover {
-  color: white;
+@media (hover: hover) and (pointer: fine) {
+  .command-pill-button:hover {
+    color: white;
+  }
 }
 
 .pill-search-icon {
@@ -248,8 +277,10 @@
   transition: color 0.2s ease;
 }
 
-.command-pill-button:hover .pill-search-icon {
-  color: rgba(255, 255, 255, 0.9);
+@media (hover: hover) and (pointer: fine) {
+  .command-pill-button:hover .pill-search-icon {
+    color: rgba(255, 255, 255, 0.9);
+  }
 }
 
 .pill-text {
@@ -329,7 +360,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-
   *,
   *::before,
   *::after {
