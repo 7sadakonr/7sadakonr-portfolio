@@ -727,9 +727,8 @@
   width: 100%;
   height: 45vh;
   z-index: 0;
-  -webkit-mask-image: linear-gradient(to bottom, black 0%, black 10%, transparent 90%);
-  mask-image: linear-gradient(to bottom, black 0%, black 10%, transparent 90%);
   opacity: 0.8;
+  pointer-events: auto;
 }
 
 /* --- Mobile / Desktop Toggle --- */
@@ -749,3 +748,6 @@
     display: flex !important;
   }
 }
+
+
+
