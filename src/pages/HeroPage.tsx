@@ -28,7 +28,7 @@ const HeroPage = () => {
             </span>
           </h1>
           <p className="subtitle t-stagger-line t-stagger-line--2">
-            Hi, I'm Jetsadakonr Muangwichit, a Computer Science Student.
+            Hi, I'm Jetsadakorn Muangwichit, a Computer Science Student.
           </p>
         </div>
         <img
