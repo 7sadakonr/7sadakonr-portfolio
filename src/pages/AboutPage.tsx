@@ -1,6 +1,5 @@
 import AnimatedContent from '../components/Animation/AnimatedContent'
 import Scales from '../components/Scales/Scales'
-import Highlighter from '../components/Highlighter/Highlighter'
 import resumePDF from '../assets/resume.pdf'
 
 const AboutSection = () => {
@@ -42,8 +41,8 @@ const AboutSection = () => {
                         delay={0.4}
                     >
                         <p className="about-hero-subtitle">
-                            A <Highlighter delay={600}  type="underline" color="#FF7777">passionate</Highlighter> Computer Science Student exploring the <Highlighter delay={1200} type="underline" color="rgba(138, 56, 245, 0.8)">intersection of technology and creativity</Highlighter>.
-                            Currently focused on web development, UI/UX design, and building <Highlighter delay={1800} type="highlight" color="rgba(138, 56, 245, 0.4)">meaningful digital experiences</Highlighter>.
+                            A passionate Computer Science Student exploring the intersection of technology and creativity.
+                            Currently focused on web development, UI/UX design, and building meaningful digital experiences.
                         </p>
                     </AnimatedContent>
 
@@ -75,7 +74,7 @@ const AboutSection = () => {
 
                         {/* Main Biography Card */}
                         <AnimatedContent distance={40} direction="vertical" duration={0.8} initialOpacity={0} delay={0.1}>
-                            <div className="glass-card bento-card bento-main">
+                            <div className="bento-card bento-main">
                                 <div className="bento-header">
                                     <svg className="bento-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
@@ -101,7 +100,7 @@ const AboutSection = () => {
 
                         {/* Focus Card */}
                         <AnimatedContent distance={40} direction="vertical" duration={0.8} initialOpacity={0} delay={0.2}>
-                            <div className="glass-card bento-card bento-focus">
+                            <div className="bento-card bento-focus">
                                 <div className="bento-header">
                                     <svg className="bento-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                         <circle cx="12" cy="12" r="10"></circle>
@@ -121,7 +120,7 @@ const AboutSection = () => {
 
                         {/* Skills Card */}
                         <AnimatedContent distance={40} direction="vertical" duration={0.8} initialOpacity={0} delay={0.3}>
-                            <div className="glass-card bento-card bento-skills" id="skills">
+                            <div className="bento-card bento-skills" id="skills">
                                 <div className="bento-header">
                                     <svg className="bento-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                         <polyline points="16 18 22 12 16 6"></polyline>
