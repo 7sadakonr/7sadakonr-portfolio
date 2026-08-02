@@ -7,7 +7,7 @@
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  padding-top: 15vh;
+  padding-top: 15svh;
   pointer-events: none;
   overscroll-behavior: none;
 }
@@ -327,6 +327,6 @@
 @media (max-width: 768px) {
   .command-menu-modal {
     width: 95%;
-    margin-top: -5vh; /* slightly higher on mobile */
+    margin-top: -5svh; /* slightly higher on mobile */
   }
 }

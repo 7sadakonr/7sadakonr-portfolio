@@ -36,6 +36,7 @@
 body {
   --page-gutter: clamp(24px, 4vw, 48px);
   min-height: 100vh;
+  min-height: 100svh;
   min-width: 100%;
   width: 100%;
   margin: 0;

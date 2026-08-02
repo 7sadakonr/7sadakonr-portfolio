@@ -11,13 +11,19 @@ export const setActiveLenis = (instance: Lenis | null) => {
 export const scrollToTarget = (target: HTMLElement, options: ScrollToOptions = {}) => {
   const prefersReducedMotion = window.matchMedia(REDUCED_MOTION_QUERY).matches
 
+  // Ensure scroll is active and not stopped by modals or overlays
+  document.body.style.overflow = 'unset'
+  document.documentElement.style.overflow = 'unset'
+  resumeScroll()
+
   if (activeLenis && !prefersReducedMotion) {
+    activeLenis.resize()
     activeLenis.scrollTo(target, options)
     return
   }
 
   const top = target.getBoundingClientRect().top + window.scrollY + (options.offset ?? 0)
-  window.scrollTo({ top, behavior: 'auto' })
+  window.scrollTo({ top, behavior: prefersReducedMotion ? 'auto' : 'smooth' })
 }
 
 export const pauseScroll = () => {
@@ -33,3 +39,4 @@ export const resumeScroll = () => {
 }
 
 export { REDUCED_MOTION_QUERY }
+
