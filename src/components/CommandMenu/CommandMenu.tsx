@@ -183,6 +183,9 @@ const CommandMenu: React.FC<CommandMenuProps> = ({
   const handleClose = () => {
     setIsClosing(true);
     setIsMounted(false);
+    document.body.style.overflow = 'unset';
+    document.documentElement.style.overflow = 'unset';
+    resumeScroll();
     const closeMs = parseFloat(
       getComputedStyle(document.documentElement).getPropertyValue("--modal-close-dur")
     ) || 150;
@@ -230,6 +233,15 @@ const CommandMenu: React.FC<CommandMenuProps> = ({
     }
   }, [isOpen]);
 
+  const handleItemSelect = (e: React.MouseEvent<HTMLAnchorElement> | { preventDefault: () => void }, item: CommandMenuItem) => {
+    e.preventDefault();
+    document.body.style.overflow = 'unset';
+    document.documentElement.style.overflow = 'unset';
+    resumeScroll();
+    handleNavClick(e as React.MouseEvent<HTMLAnchorElement>, item.path, item.targetId);
+    handleClose();
+  };
+
   // Handle keyboard navigation inside the menu
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -237,19 +249,20 @@ const CommandMenu: React.FC<CommandMenuProps> = ({
       
       if (e.key === 'ArrowDown') {
         e.preventDefault();
-        setSelectedIndex(prev => (prev + 1) % filteredItems.length);
+        if (filteredItems.length > 0) {
+          setSelectedIndex(prev => (prev + 1) % filteredItems.length);
+        }
       } else if (e.key === 'ArrowUp') {
         e.preventDefault();
-        setSelectedIndex(prev => (prev - 1 + filteredItems.length) % filteredItems.length);
+        if (filteredItems.length > 0) {
+          setSelectedIndex(prev => (prev - 1 + filteredItems.length) % filteredItems.length);
+        }
       } else if (e.key === 'Enter') {
         e.preventDefault();
         if (filteredItems.length > 0) {
-          // Create a synthetic event object for handleNavClick
           const item = filteredItems[selectedIndex];
           if (item) {
-             const synthEvent = { preventDefault: () => {} } as React.MouseEvent<HTMLAnchorElement>;
-             handleNavClick(synthEvent, item.path, item.targetId);
-             handleClose();
+            handleItemSelect({ preventDefault: () => {} }, item);
           }
         }
       } else if (e.key === 'Escape') {
@@ -324,10 +337,7 @@ const CommandMenu: React.FC<CommandMenuProps> = ({
                           <NavLink
                             to={item.path}
                             className={`command-item ${isSelected ? 'selected' : ''} ${isActivePath ? 'active-path' : ''}`}
-                            onClick={(e) => {
-                              handleNavClick(e, item.path, item.targetId);
-                              handleClose();
-                            }}
+                            onClick={(e) => handleItemSelect(e, item)}
                             onPointerEnter={(e) => { if (e.pointerType === 'mouse') setSelectedIndex(index); }}
                           >
                             <div className="command-item-left">
