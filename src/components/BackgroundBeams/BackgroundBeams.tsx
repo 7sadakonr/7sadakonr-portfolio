@@ -1,36 +1,60 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useEffect } from "react";
 
 export const BackgroundBeams = React.memo(
   ({ className }: { className?: string }) => {
     const containerRef = useRef<HTMLDivElement>(null);
-    const [mousePosition, setMousePosition] = useState({ x: -1000, y: -1000 });
-    const [isVisible, setIsVisible] = useState(false);
+    const glowRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-      const handleMouseMove = (e: MouseEvent) => {
-        if (containerRef.current) {
-          const rect = containerRef.current.getBoundingClientRect();
-          // Show glow if mouse is over or near the container
-          if (
-            e.clientY >= rect.top - 50 &&
-            e.clientY <= rect.bottom + 50 &&
-            e.clientX >= rect.left &&
-            e.clientX <= rect.right
-          ) {
-            setIsVisible(true);
-            setMousePosition({
-              x: e.clientX - rect.left,
-              y: e.clientY - rect.top,
-            });
-          } else {
-            setIsVisible(false);
+      // Avoid attaching mousemove listener on touch-only mobile devices
+      const isFinePointer = window.matchMedia("(pointer: fine)").matches;
+      if (!isFinePointer) return;
+
+      let rafId: number | null = null;
+      let isNear = false;
+      let mouseX = -1000;
+      let mouseY = -1000;
+
+      const updateGlow = () => {
+        if (glowRef.current) {
+          glowRef.current.style.opacity = isNear ? "1" : "0";
+          if (isNear) {
+            const mask = `radial-gradient(circle at ${mouseX}px ${mouseY}px, black 0%, transparent 350px)`;
+            glowRef.current.style.maskImage = mask;
+            glowRef.current.style.webkitMaskImage = mask;
           }
+        }
+        rafId = null;
+      };
+
+      const handleMouseMove = (e: MouseEvent) => {
+        if (!containerRef.current) return;
+        const rect = containerRef.current.getBoundingClientRect();
+        // Check if mouse is near container
+        if (
+          e.clientY >= rect.top - 50 &&
+          e.clientY <= rect.bottom + 50 &&
+          e.clientX >= rect.left &&
+          e.clientX <= rect.right
+        ) {
+          isNear = true;
+          mouseX = e.clientX - rect.left;
+          mouseY = e.clientY - rect.top;
+        } else {
+          isNear = false;
+        }
+
+        if (rafId === null) {
+          rafId = requestAnimationFrame(updateGlow);
         }
       };
 
-      window.addEventListener("mousemove", handleMouseMove);
+      window.addEventListener("mousemove", handleMouseMove, { passive: true });
       return () => {
         window.removeEventListener("mousemove", handleMouseMove);
+        if (rafId !== null) {
+          cancelAnimationFrame(rafId);
+        }
       };
     }, []);
 
@@ -51,10 +75,14 @@ export const BackgroundBeams = React.memo(
           height: "100%",
           alignItems: "center",
           justifyContent: "center",
+          contain: "strict",
+          pointerEvents: "none",
+          transform: "translateZ(0)",
         }}
       >
-        {/* Base layer: Grey lines */}
+        {/* Base layer: Subtle grey lines */}
         <svg
+          aria-hidden="true"
           style={{
             pointerEvents: "none",
             position: "absolute",
@@ -62,21 +90,22 @@ export const BackgroundBeams = React.memo(
             width: "100%",
             height: "100%",
             opacity: 1,
-            transition: "opacity 0.5s",
-            maskImage: "linear-gradient(to bottom, black 0%, black 10%, transparent 90%)",
-            WebkitMaskImage: "linear-gradient(to bottom, black 0%, black 10%, transparent 90%)",
+            maskImage:
+              "linear-gradient(to bottom, black 0%, black 10%, transparent 90%)",
+            WebkitMaskImage:
+              "linear-gradient(to bottom, black 0%, black 10%, transparent 90%)",
           }}
           viewBox="0 0 696 316"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
-          preserveAspectRatio="none"
+          preserveAspectRatio="xMidYMid slice"
         >
           <path
             d={pathData}
             stroke="url(#paint0_radial_242_278)"
             strokeOpacity="0.12"
             strokeWidth="0.5"
-          ></path>
+          />
 
           <defs>
             <radialGradient
@@ -87,45 +116,48 @@ export const BackgroundBeams = React.memo(
               gradientUnits="userSpaceOnUse"
               gradientTransform="translate(352 34) rotate(90) scale(555 1560.62)"
             >
-              <stop offset="0.0666667" stopColor="#d4d4d4"></stop>
-              <stop offset="0.243243" stopColor="#d4d4d4"></stop>
-              <stop offset="0.43594" stopColor="white" stopOpacity="0"></stop>
+              <stop offset="0.0666667" stopColor="#d4d4d4" />
+              <stop offset="0.243243" stopColor="#d4d4d4" />
+              <stop offset="0.43594" stopColor="white" stopOpacity="0" />
             </radialGradient>
           </defs>
         </svg>
 
-        {/* Hover layer: Glowing lines masked by mouse position via wrapper div */}
+        {/* Hover layer: Glowing lines directly updated via rAF without React re-renders */}
         <div
+          ref={glowRef}
+          aria-hidden="true"
           style={{
             pointerEvents: "none",
             position: "absolute",
             zIndex: 10,
             width: "100%",
             height: "100%",
-            transition: "opacity 0.5s",
-            opacity: isVisible ? 1 : 0,
-            maskImage: `radial-gradient(circle at ${mousePosition.x}px ${mousePosition.y}px, black 0%, transparent 350px)`,
-            WebkitMaskImage: `radial-gradient(circle at ${mousePosition.x}px ${mousePosition.y}px, black 0%, transparent 350px)`,
+            opacity: 0,
+            transform: "translateZ(0)",
+            transition: "opacity 0.4s ease-out",
           }}
         >
           <svg
             style={{
               width: "100%",
               height: "100%",
-              maskImage: "linear-gradient(to bottom, black 0%, black 10%, transparent 90%)",
-              WebkitMaskImage: "linear-gradient(to bottom, black 0%, black 10%, transparent 90%)",
+              maskImage:
+                "linear-gradient(to bottom, black 0%, black 10%, transparent 90%)",
+              WebkitMaskImage:
+                "linear-gradient(to bottom, black 0%, black 10%, transparent 90%)",
             }}
             viewBox="0 0 696 316"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
-            preserveAspectRatio="none"
+            preserveAspectRatio="xMidYMid slice"
           >
             <path
               d={pathData}
               stroke="url(#paint1_linear_glow)"
               strokeOpacity="1"
               strokeWidth="0.5"
-            ></path>
+            />
 
             <defs>
               <linearGradient
@@ -136,8 +168,8 @@ export const BackgroundBeams = React.memo(
                 y2="0"
                 gradientUnits="userSpaceOnUse"
               >
-                <stop offset="0%" stopColor="#ff7777"></stop>
-                <stop offset="100%" stopColor="#8a38f5"></stop>
+                <stop offset="0%" stopColor="#ff7777" />
+                <stop offset="100%" stopColor="#8a38f5" />
               </linearGradient>
             </defs>
           </svg>

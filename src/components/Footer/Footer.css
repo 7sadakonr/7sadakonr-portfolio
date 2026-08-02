@@ -54,6 +54,28 @@
     400 12px/1.45 Outfit,
     sans-serif;
 }
+.site-footer__attribution {
+  margin: 6px 0 0;
+  color: rgba(255, 255, 255, 0.34);
+  font:
+    400 11px/1.45 Outfit,
+    sans-serif;
+}
+.site-footer__attribution a {
+  color: inherit;
+  text-underline-offset: 2px;
+  transition: color 160ms ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .site-footer__attribution a:hover {
+    color: rgba(255, 255, 255, 0.82);
+  }
+}
+.site-footer__attribution a:focus-visible {
+  color: rgba(255, 255, 255, 0.95);
+  outline: 1px solid rgba(255, 255, 255, 0.75);
+  outline-offset: 3px;
+}
 .site-footer__links {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));

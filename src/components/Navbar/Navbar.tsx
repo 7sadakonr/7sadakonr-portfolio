@@ -203,6 +203,7 @@ const Navbar = () => {
     { id: 'proj-1', path: '/project', label: 'Todo-List', category: 'Projects', keywords: 'todo task list project nextjs express postgres', targetId: 'project-0' },
     { id: 'proj-2', path: '/project', label: 'Portfolio Website', category: 'Projects', keywords: 'portfolio personal project react vite framer', targetId: 'project-1' },
     { id: 'proj-3', path: '/project', label: 'Zendix File Transfer', category: 'Projects', keywords: 'zendix file transfer share peer webrtc', targetId: 'project-2' },
+    { id: 'proj-4', path: '/project', label: 'Nyeta', category: 'Projects', keywords: 'nyeta visual assistance ai webrtc llama', targetId: 'project-3' },
   ];
 
   const handleNavClick = async (e: React.MouseEvent<HTMLAnchorElement>, path: string, explicitTargetId?: string) => {
@@ -215,10 +216,13 @@ const Navbar = () => {
     }
 
     e.preventDefault();
+    setIsCommandMenuOpen(false);
     const navigationRequest = ++navigationRequestRef.current
 
     if (getOwningSection(targetId)) {
       await ensureTargetReady(targetId)
+      // Allow browser and Lenis a frame to calculate new section bounds
+      await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
     }
 
     if (navigationRequest !== navigationRequestRef.current) return
@@ -238,7 +242,6 @@ const Navbar = () => {
       scrollToTarget(element, { offset });
       window.history.pushState(null, '', path);
       setActivePath(path);
-      setIsCommandMenuOpen(false);
 
       if (explicitTargetId && explicitTargetId.startsWith('project-')) {
           const index = parseInt(explicitTargetId.replace('project-', ''), 10);

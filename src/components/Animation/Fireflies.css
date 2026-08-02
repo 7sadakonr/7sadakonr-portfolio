@@ -68,8 +68,8 @@
   top: 50%;
   left: 50%;
   /* Use viewport units so it scales beautifully: larger on desktop, smaller on mobile */
-  width: clamp(16px, calc(var(--size-scale) * (1.2vw + 1vh + 12px)), 45px);
-  height: clamp(16px, calc(var(--size-scale) * (1.2vw + 1vh + 12px)), 45px);
+  width: clamp(16px, calc(var(--size-scale) * (2vw + 12px)), 45px);
+  height: clamp(16px, calc(var(--size-scale) * (2vw + 12px)), 45px);
   background-color: #ffffff;
   
   -webkit-mask-image: url("../../assets/img/Group 6.svg");
