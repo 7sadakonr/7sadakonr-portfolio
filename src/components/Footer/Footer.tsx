@@ -12,6 +12,9 @@ const Footer = () => (
           </a>
           <p className="site-footer__intro">Computer Science student building thoughtful web experiences.</p>
           <p className="site-footer__copyright">© {new Date().getFullYear()} 7SADAKONR. All rights reserved.</p>
+          <p className="site-footer__attribution">
+            Uicons by <a href="https://www.flaticon.com/uicons" target="_blank" rel="noopener noreferrer">Flaticon</a>
+          </p>
         </div>
 
         <nav className="site-footer__links" aria-label="Footer navigation">
