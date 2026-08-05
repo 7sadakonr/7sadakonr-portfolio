@@ -180,7 +180,7 @@ const CommandMenu: React.FC<CommandMenuProps> = ({
     requestAnimationFrame(tick);
   };
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setIsClosing(true);
     setIsMounted(false);
     document.body.style.overflow = 'unset';
@@ -193,13 +193,15 @@ const CommandMenu: React.FC<CommandMenuProps> = ({
       setIsClosing(false);
       onClose();
     }, closeMs);
-  };
+  }, [onClose]);
 
   // Filter items based on search term
-  const filteredItems = menuItems.filter(item => {
+  const filteredItems = useMemo(() => {
     const term = searchTerm.toLowerCase();
-    return item.label.toLowerCase().includes(term) || item.keywords.toLowerCase().includes(term);
-  });
+    return menuItems.filter(item => {
+      return item.label.toLowerCase().includes(term) || item.keywords.toLowerCase().includes(term);
+    });
+  }, [menuItems, searchTerm]);
 
   useEffect(() => {
     if (isOpen) {
@@ -231,16 +233,16 @@ const CommandMenu: React.FC<CommandMenuProps> = ({
       setIsMounted(false);
       setIsClosing(false);
     }
-  }, [isOpen]);
+  }, [isOpen, activePath, menuItems]);
 
-  const handleItemSelect = (e: React.MouseEvent<HTMLAnchorElement> | { preventDefault: () => void }, item: CommandMenuItem) => {
+  const handleItemSelect = useCallback((e: React.MouseEvent<HTMLAnchorElement> | { preventDefault: () => void }, item: CommandMenuItem) => {
     e.preventDefault();
     document.body.style.overflow = 'unset';
     document.documentElement.style.overflow = 'unset';
     resumeScroll();
     handleNavClick(e as React.MouseEvent<HTMLAnchorElement>, item.path, item.targetId);
     handleClose();
-  };
+  }, [handleNavClick, handleClose]);
 
   // Handle keyboard navigation inside the menu
   useEffect(() => {
@@ -273,7 +275,7 @@ const CommandMenu: React.FC<CommandMenuProps> = ({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, filteredItems, selectedIndex, handleNavClick, onClose]);
+  }, [isOpen, filteredItems, selectedIndex, handleItemSelect, handleClose]);
 
   if (!isOpen && !isClosing) return null;
 

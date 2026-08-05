@@ -70,6 +70,39 @@ const SparkleStar = ({ size = 14, className = '' }: { size?: number; className?:
     </svg>
 )
 
+const CACHE_TTL_MS = 30 * 60 * 1000 // 30 minutes
+
+interface CacheEntry<T> {
+    timestamp: number
+    data: T
+}
+
+const getCachedData = <T,>(key: string): T | null => {
+    try {
+        const raw = sessionStorage.getItem(key)
+        if (!raw) return null
+        const parsed = JSON.parse(raw) as CacheEntry<T>
+        if (Date.now() - parsed.timestamp < CACHE_TTL_MS) {
+            return parsed.data
+        }
+        sessionStorage.removeItem(key)
+    } catch {
+        // Ignore storage errors (private mode, quota)
+    }
+    return null
+}
+
+const setCachedData = <T,>(key: string, data: T): void => {
+    try {
+        sessionStorage.setItem(
+            key,
+            JSON.stringify({ timestamp: Date.now(), data } as CacheEntry<T>),
+        )
+    } catch {
+        // Ignore storage errors
+    }
+}
+
 const GithubCalendar = ({
     username,
     variant = 'default',
@@ -78,13 +111,23 @@ const GithubCalendar = ({
     showTotal = true,
     colorSchema = 'green',
 }: GithubCalendarProps) => {
-    const [data, setData] = useState<GithubContributionData | null>(null)
-    const [stats, setStats] = useState<GithubStats | null>(null)
-    const [loading, setLoading] = useState(true)
+    const contribCacheKey = `gh_contrib_${username}`
+    const statsCacheKey = `gh_stats_${username}`
+
+    const [data, setData] = useState<GithubContributionData | null>(() => getCachedData<GithubContributionData>(contribCacheKey))
+    const [stats, setStats] = useState<GithubStats | null>(() => getCachedData<GithubStats>(statsCacheKey))
+    const [loading, setLoading] = useState(() => !getCachedData<GithubContributionData>(contribCacheKey))
     const [error, setError] = useState(false)
     const viewportRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
+        const cached = getCachedData<GithubContributionData>(contribCacheKey)
+        if (cached) {
+            setData(cached)
+            setLoading(false)
+            return
+        }
+
         const controller = new AbortController()
 
         const fetchContributions = async () => {
@@ -107,6 +150,7 @@ const GithubCalendar = ({
                     throw new Error('Invalid GitHub contribution data')
                 }
 
+                setCachedData(contribCacheKey, result)
                 setData(result)
             } catch (fetchError) {
                 if (fetchError instanceof DOMException && fetchError.name === 'AbortError') {
@@ -124,9 +168,15 @@ const GithubCalendar = ({
         fetchContributions()
 
         return () => controller.abort()
-    }, [username])
+    }, [username, contribCacheKey])
 
     useEffect(() => {
+        const cached = getCachedData<GithubStats>(statsCacheKey)
+        if (cached) {
+            setStats(cached)
+            return
+        }
+
         const controller = new AbortController()
 
         const fetchStats = async () => {
@@ -155,14 +205,17 @@ const GithubCalendar = ({
                     stargazers_count: number
                 }>
 
-                setStats({
+                const computedStats: GithubStats = {
                     followers: profile.followers,
                     repositories: profile.public_repos,
                     stars: repositories.reduce(
                         (total, repository) => total + repository.stargazers_count,
                         0,
                     ),
-                })
+                }
+
+                setCachedData(statsCacheKey, computedStats)
+                setStats(computedStats)
             } catch (fetchError) {
                 if (fetchError instanceof DOMException && fetchError.name === 'AbortError') {
                     return
@@ -175,7 +228,7 @@ const GithubCalendar = ({
         fetchStats()
 
         return () => controller.abort()
-    }, [username])
+    }, [username, statsCacheKey])
 
     const calendarCells = useMemo(() => {
         if (!data?.contributions.length) {
