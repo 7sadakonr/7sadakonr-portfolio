@@ -25,7 +25,7 @@ const AsiaMap = () => (
             </div>
         </div>
 
-        <img src="/aceternity-world.svg" alt="world map" className="asia-map-image" loading="lazy" decoding="async" />
+        <img src="/aceternity-world.svg" alt="world map" width="1038" height="576" className="asia-map-image" loading="lazy" decoding="async" fetchPriority="low" />
     </div>
 )
 

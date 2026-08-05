@@ -30,6 +30,28 @@ const NAVBAR_GLASS_PRESET =
   } as const
   /* NAVBAR_GLASS_PRESET_END */
 
+const NAV_ITEMS = [
+  { path: '/', label: 'HOME' },
+  { path: '/about', label: 'ABOUT' },
+  { path: '/project', label: 'PROJECT' },
+  { path: '/contact', label: 'CONTACT' },
+] as const
+
+const COMMAND_MENU_ITEMS = [
+  { id: 'nav-home', path: '/', label: 'HOME', category: 'Navigation', keywords: 'home landing start', targetId: 'home' },
+  { id: 'nav-about', path: '/about', label: 'ABOUT', category: 'Navigation', keywords: 'about profile me', targetId: 'about' },
+  { id: 'nav-project', path: '/project', label: 'PROJECTS', category: 'Navigation', keywords: 'projects work portfolio', targetId: 'projects' },
+  { id: 'nav-contact', path: '/contact', label: 'CONTACT', category: 'Navigation', keywords: 'contact email hire social', targetId: 'contact' },
+
+  { id: 'sec-about', path: '/about', label: 'About Me', category: 'Content', keywords: 'about me background story', targetId: 'about-me' },
+  { id: 'sec-skills', path: '/about', label: 'My Skills', category: 'Content', keywords: 'skills html css javascript react figma tech', targetId: 'skills' },
+
+  { id: 'proj-1', path: '/project', label: 'Todo-List', category: 'Projects', keywords: 'todo task list project nextjs express postgres', targetId: 'project-0' },
+  { id: 'proj-2', path: '/project', label: 'Portfolio Website', category: 'Projects', keywords: 'portfolio personal project react vite framer', targetId: 'project-1' },
+  { id: 'proj-3', path: '/project', label: 'Zendix File Transfer', category: 'Projects', keywords: 'zendix file transfer share peer webrtc', targetId: 'project-2' },
+  { id: 'proj-4', path: '/project', label: 'Nyeta', category: 'Projects', keywords: 'nyeta visual assistance ai webrtc llama', targetId: 'project-3' },
+] as const
+
 const Navbar = () => {
   const indicatorRef = useRef<HTMLDivElement>(null)
   const location = useLocation()
@@ -184,28 +206,6 @@ const Navbar = () => {
     }
   }, [activePath, hasInitialized, updateIndicatorPosition, isIPad])
 
-  const navItems = [
-    { path: '/', label: 'HOME' },
-    { path: '/about', label: 'ABOUT' },
-    { path: '/project', label: 'PROJECT' },
-    { path: '/contact', label: 'CONTACT' },
-  ]
-
-  const commandMenuItems = [
-    { id: 'nav-home', path: '/', label: 'HOME', category: 'Navigation', keywords: 'home landing start', targetId: 'home' },
-    { id: 'nav-about', path: '/about', label: 'ABOUT', category: 'Navigation', keywords: 'about profile me', targetId: 'about' },
-    { id: 'nav-project', path: '/project', label: 'PROJECTS', category: 'Navigation', keywords: 'projects work portfolio', targetId: 'projects' },
-    { id: 'nav-contact', path: '/contact', label: 'CONTACT', category: 'Navigation', keywords: 'contact email hire social', targetId: 'contact' },
-
-    { id: 'sec-about', path: '/about', label: 'About Me', category: 'Content', keywords: 'about me background story', targetId: 'about-me' },
-    { id: 'sec-skills', path: '/about', label: 'My Skills', category: 'Content', keywords: 'skills html css javascript react figma tech', targetId: 'skills' },
-
-    { id: 'proj-1', path: '/project', label: 'Todo-List', category: 'Projects', keywords: 'todo task list project nextjs express postgres', targetId: 'project-0' },
-    { id: 'proj-2', path: '/project', label: 'Portfolio Website', category: 'Projects', keywords: 'portfolio personal project react vite framer', targetId: 'project-1' },
-    { id: 'proj-3', path: '/project', label: 'Zendix File Transfer', category: 'Projects', keywords: 'zendix file transfer share peer webrtc', targetId: 'project-2' },
-    { id: 'proj-4', path: '/project', label: 'Nyeta', category: 'Projects', keywords: 'nyeta visual assistance ai webrtc llama', targetId: 'project-3' },
-  ];
-
   const handleNavClick = async (e: React.MouseEvent<HTMLAnchorElement>, path: string, explicitTargetId?: string) => {
     let targetId = explicitTargetId;
     if (!targetId) {
@@ -250,7 +250,7 @@ const Navbar = () => {
     }
   };
 
-  const currentLabel = navItems.find(item => item.path === activePath)?.label || 'Home';
+  const currentLabel = NAV_ITEMS.find(item => item.path === activePath)?.label || 'Home';
 
   useEffect(() => {
     const el = pillTextRef.current;
@@ -293,7 +293,7 @@ const Navbar = () => {
                 className="nav-indicator t-tabs-pill"
                 aria-hidden="true"
               />
-              {navItems.map(({ path, label }) => (
+              {NAV_ITEMS.map(({ path, label }) => (
                 <li key={path}>
                   <a
                     href={path}
@@ -355,7 +355,7 @@ const Navbar = () => {
           <CommandMenu
             isOpen={isCommandMenuOpen}
             onClose={() => setIsCommandMenuOpen(false)}
-            menuItems={commandMenuItems}
+            menuItems={COMMAND_MENU_ITEMS}
             activePath={activePath}
             handleNavClick={handleNavClick}
           />
