@@ -38,6 +38,38 @@ const GithubIcon = () => (
     </svg>
 )
 
+const FollowersIcon = () => (
+    <svg aria-hidden="true" viewBox="0 0 640 512" fill="currentColor">
+        <path d="M96 224c35.3 0 64-28.7 64-64s-28.7-64-64-64-64 28.7-64 64 28.7 64 64 64zm448 0c35.3 0 64-28.7 64-64s-28.7-64-64-64-64 28.7-64 64 28.7 64 64 64zm32 32h-64c-17.6 0-33.5 7.1-45.1 18.6 40.3 22.1 68.9 62 75.1 109.4h66c17.7 0 32-14.3 32-32v-32c0-35.3-28.7-64-64-64zm-256 0c61.9 0 112-50.1 112-112S381.9 32 320 32 208 82.1 208 144s50.1 112 112 112zm76.8 32h-8.3c-20.8 10-43.9 16-68.5 16s-47.6-6-68.5-16h-8.3C179.6 288 128 339.6 128 403.2V432c0 26.5 21.5 48 48 48h288c26.5 0 48-21.5 48-48v-28.8c0-63.6-51.6-115.2-115.2-115.2zm-223.7-13.4C161.5 263.1 145.6 256 128 256H64c-35.3 0-64 28.7-64 64v32c0 17.7 14.3 32 32 32h65.9c6.3-47.4 34.9-87.3 75.2-109.4z" />
+    </svg>
+)
+
+const RepositoriesIcon = () => (
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M3 2.75A2.75 2.75 0 0 1 5.75 0h14.5a.75.75 0 0 1 .75.75v20.5a.75.75 0 0 1-.75.75h-6a.75.75 0 0 1 0-1.5h5.25v-4H6A1.5 1.5 0 0 0 4.5 18v.75c0 .716.43 1.334 1.05 1.605a.75.75 0 0 1-.6 1.374A3.251 3.251 0 0 1 3 18.75ZM19.5 1.5H5.75c-.69 0-1.25.56-1.25 1.25v12.651A2.989 2.989 0 0 1 6 15h13.5Z" />
+        <path d="M7 18.25a.25.25 0 0 1 .25-.25h5a.25.25 0 0 1 .25.25v5.01a.25.25 0 0 1-.397.201l-2.206-1.604a.25.25 0 0 0-.294 0L7.397 23.46a.25.25 0 0 1-.397-.2v-5.01Z" />
+    </svg>
+)
+
+const StarsIcon = () => (
+    <svg aria-hidden="true" viewBox="0 0 576 512" fill="currentColor">
+        <path d="M259.3 17.8L194 150.2 47.9 171.5c-26.2 3.8-36.7 36.1-17.7 54.6l105.7 103-25 145.5c-4.5 26.3 23.2 46 46.4 33.7L288 439.6l130.7 68.7c23.2 12.2 50.9-7.4 46.4-33.7l-25-145.5 105.7-103c19-18.5 8.5-50.8-17.7-54.6L382 150.2 316.7 17.8c-11.7-23.6-45.6-23.9-57.4 0z" />
+    </svg>
+)
+
+const SparkleStar = ({ size = 14, className = '' }: { size?: number; className?: string }) => (
+    <svg
+        width={size}
+        height={size}
+        viewBox="0 0 24 24"
+        fill="currentColor"
+        className={className}
+        aria-hidden="true"
+    >
+        <path d="M12 0C12 6.627 17.373 12 24 12C17.373 12 12 17.373 12 24C12 17.373 6.627 12 0 12C6.627 12 12 6.627 12 0Z" />
+    </svg>
+)
+
 const GithubCalendar = ({
     username,
     variant = 'default',
@@ -216,22 +248,19 @@ const GithubCalendar = ({
             label: 'Followers',
             value: stats?.followers,
             tone: 'followers',
-            iconClass: 'fi fi-rr-users',
-            pattern: { width: 16, height: 16, cx: 1, cy: 1, cr: 1 },
+            icon: <FollowersIcon />,
         },
         {
-            label: 'Repositories',
+            label: 'Public Repos',
             value: stats?.repositories,
             tone: 'repositories',
-            iconClass: 'fi fi-rr-folder',
-            pattern: { width: 20, height: 20, cx: 1.25, cy: 1.25, cr: 1.25 },
+            icon: <RepositoriesIcon />,
         },
         {
-            label: 'Stars',
+            label: 'GitHub Stars',
             value: stats?.stars,
             tone: 'stars',
-            iconClass: 'fi fi-rr-star',
-            pattern: { width: 12, height: 12, cx: 0.8, cy: 0.8, cr: 0.8 },
+            icon: <StarsIcon />,
         },
     ]
 
@@ -351,14 +380,56 @@ const GithubCalendar = ({
                         key={item.label}
                     >
                         <DotPattern
-                            className="github-calendar-stat-pattern"
-                            {...item.pattern}
+                            className="github-calendar-stat-dot-pattern"
+                            width={14}
+                            height={14}
+                            cx={1.25}
+                            cy={1.25}
+                            cr={1.25}
                         />
-                        <div className="github-calendar-stat-header">
-                            <span>{item.label}</span>
-                            <i className={`${item.iconClass} github-calendar-stat-icon`} aria-hidden="true" />
+                        <div className="github-calendar-stat-content">
+                            <span className="github-calendar-stat-label">{item.label}</span>
+                            <strong className="github-calendar-stat-value">{item.value?.toLocaleString() ?? '0'}</strong>
                         </div>
-                        <strong>{item.value?.toLocaleString() ?? '—'}</strong>
+                        <div className="github-calendar-stat-watermark" aria-hidden="true">
+                            {item.icon}
+                            {item.tone === 'followers' && (
+                                <>
+                                    <span className="github-calendar-stat-sparkle github-calendar-stat-sparkle--followers-1">
+                                        <SparkleStar size={13} />
+                                    </span>
+                                    <span className="github-calendar-stat-sparkle github-calendar-stat-sparkle--followers-2">
+                                        <SparkleStar size={9} />
+                                    </span>
+                                    <span className="github-calendar-stat-sparkle-dot github-calendar-stat-sparkle-dot--followers-1" />
+                                </>
+                            )}
+                            {item.tone === 'repositories' && (
+                                <>
+                                    <span className="github-calendar-stat-sparkle github-calendar-stat-sparkle--repos-1">
+                                        <SparkleStar size={11} />
+                                    </span>
+                                    <span className="github-calendar-stat-sparkle github-calendar-stat-sparkle--repos-2">
+                                        <SparkleStar size={14} />
+                                    </span>
+                                    <span className="github-calendar-stat-sparkle-dot github-calendar-stat-sparkle-dot--repos-1" />
+                                </>
+                            )}
+                            {item.tone === 'stars' && (
+                                <>
+                                    <span className="github-calendar-stat-sparkle github-calendar-stat-sparkle--stars-1">
+                                        <SparkleStar size={15} />
+                                    </span>
+                                    <span className="github-calendar-stat-sparkle github-calendar-stat-sparkle--stars-2">
+                                        <SparkleStar size={10} />
+                                    </span>
+                                    <span className="github-calendar-stat-sparkle github-calendar-stat-sparkle--stars-3">
+                                        <SparkleStar size={8} />
+                                    </span>
+                                    <span className="github-calendar-stat-sparkle-dot github-calendar-stat-sparkle-dot--stars-1" />
+                                </>
+                            )}
+                        </div>
                     </div>
                 ))}
             </aside>
