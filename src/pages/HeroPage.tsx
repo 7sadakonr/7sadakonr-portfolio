@@ -1,10 +1,10 @@
 import './HeroPage.css'
-import heroPng from '../assets/img/logo-7m.png';
+import heroWebp from '../assets/img/logo-7m.webp';
 import { scrollToTarget } from '../components/SmoothScroll/scrollController';
 import BackgroundBeams from '../components/BackgroundBeams/BackgroundBeams';
 
 const HeroPage = () => {
-  const heroImg = heroPng;
+  const heroImg = heroWebp;
 
   const handleExploreClick = () => {
     const aboutSection = document.getElementById('about');
