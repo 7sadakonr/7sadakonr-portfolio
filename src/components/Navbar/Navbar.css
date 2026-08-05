@@ -72,13 +72,8 @@
   padding: 10px 20px;
   border-radius: 25px;
   transition:
-    transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
-    background 0.3s ease-in-out,
-    box-shadow 0.3s ease-in-out,
-    border-color 0.3s ease-in-out,
-    backdrop-filter 0.3s ease-in-out,
-    -webkit-backdrop-filter 0.3s ease-in-out,
-    color 0.3s ease-in-out;
+    transform var(--duration-fast) var(--ease-smooth-out),
+    color var(--duration-fast) var(--ease-smooth-out);
   font-size: 15px;
   font-weight: 600;
   letter-spacing: 1px;
@@ -99,28 +94,21 @@
 @media (hover: hover) and (pointer: fine) {
   .navbar a.nav-item:hover {
     color: #fff;
-    transform: scale(1.05);
+    transform: scale(1.03);
   }
 }
 
 .navbar a.nav-item:active {
-  transform: translateY(0) scale(0.98);
-  transition:
-    transform 0.1s ease,
-    background 0.1s ease,
-    box-shadow 0.1s ease,
-    opacity 0.1s ease,
-    color 0.1s ease,
-    filter 0.1s ease;
-  box-shadow: none;
+  transform: scale(var(--scale-active));
+  transition: transform var(--duration-quick) var(--ease-smooth-out);
 }
 
 .navbar a.nav-item.active {
   color: #fff;
   font-weight: 600;
   transition:
-    transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
-    color 0.15s ease-out 0.3s;
+    transform var(--duration-fast) var(--ease-smooth-out),
+    color var(--duration-quick) var(--ease-smooth-out);
 }
 
 .nav-indicator {
@@ -142,11 +130,11 @@
   z-index: 0;
   transform: translateX(0) translateY(0);
   transition:
-    transform var(--duration-fast, 350ms)
+    transform var(--duration-fast, 300ms)
       var(--ease-smooth-out, cubic-bezier(0.22, 1, 0.36, 1)),
-    width var(--duration-fast, 350ms)
+    width var(--duration-fast, 300ms)
       var(--ease-smooth-out, cubic-bezier(0.22, 1, 0.36, 1)),
-    height var(--duration-fast, 350ms)
+    height var(--duration-fast, 300ms)
       var(--ease-smooth-out, cubic-bezier(0.22, 1, 0.36, 1));
   will-change: transform, width, height;
   pointer-events: none;
@@ -177,26 +165,23 @@
   cursor: pointer;
   color: rgba(255, 255, 255, 0.7);
   transition:
-    transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
-    background 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
-    box-shadow 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
-    border-color 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
-    opacity 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
-    color 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
-    filter 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transform var(--duration-fast) var(--ease-smooth-out),
+    color var(--duration-fast) var(--ease-smooth-out),
+    background var(--duration-fast) var(--ease-smooth-out);
   border-radius: 50%;
 }
 
 @media (hover: hover) and (pointer: fine) {
   .desktop-command-btn:hover {
     color: white;
-    transform: scale(1.1);
+    transform: scale(1.08);
     background: rgba(255, 255, 255, 0.05);
   }
 }
 
 .desktop-command-btn:active {
-  transform: scale(0.95);
+  transform: scale(var(--scale-active));
+  transition: transform var(--duration-quick) var(--ease-smooth-out);
 }
 
 /* ===========================================
@@ -257,13 +242,8 @@
   z-index: 1;
   color: rgba(255, 255, 255, 0.85);
   transition:
-    transform 0.2s ease,
-    background 0.2s ease,
-    box-shadow 0.2s ease,
-    border-color 0.2s ease,
-    opacity 0.2s ease,
-    color 0.2s ease,
-    filter 0.2s ease;
+    transform var(--duration-fast) var(--ease-smooth-out),
+    color var(--duration-fast) var(--ease-smooth-out);
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -272,9 +252,14 @@
   }
 }
 
+.command-pill-button:active {
+  transform: scale(var(--scale-active));
+  transition: transform var(--duration-quick) var(--ease-smooth-out);
+}
+
 .pill-search-icon {
   color: rgba(255, 255, 255, 0.6);
-  transition: color 0.2s ease;
+  transition: color var(--duration-fast) var(--ease-smooth-out);
 }
 
 @media (hover: hover) and (pointer: fine) {
