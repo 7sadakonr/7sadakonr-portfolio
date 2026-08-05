@@ -1760,86 +1760,13 @@ a.contact-item-text:hover {
 }
 
 @media (hover: hover) and (pointer: fine) {
-
-.tech-pill:hover {
-  background-color: #222228;
-  border-color: var(--about-outline-color);
-  color: #fff;
-}
+  .tech-pill:hover {
+    background-color: #222228;
+    border-color: var(--about-outline-color);
+    color: #fff;
+  }
 }
 .tech-wrap-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  width: 100%;
-  margin-top: 16px;
-}
-
-.contact-info-panel {
-  padding-top: clamp(8px, 1.5vw, 16px);
-}
-
-.contact-info-kicker {
-  display: inline-block;
-  margin-bottom: 16px;
-  background: linear-gradient(90deg, #8a38f5 0%, #ff7777 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  font-family: "Outfit", sans-serif;
-  font-size: 14px;
-  font-weight: 700;
-  letter-spacing: 1.4px;
-  text-transform: uppercase;
-}
-
-.contact-info-panel h2 {
-  margin: 0;
-  color: #fff;
-  font-family: "Outfit", sans-serif;
-  font-size: clamp(36px, 5vw, 56px);
-  font-weight: 700;
-  letter-spacing: -0.03em;
-  line-height: 1.1;
-}
-
-.contact-info-panel p {
-  max-width: 500px;
-  margin: 24px 0 0;
-  color: rgba(255, 255, 255, 0.6);
-  font-family: "Outfit", sans-serif;
-  font-size: clamp(16px, 1.8vw, 20px);
-  line-height: 1.6;
-}
-
-.contact-info-links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-  margin-top: 32px;
-  color: rgba(255, 255, 255, 0.4);
-  font-family: "Outfit", sans-serif;
-  font-size: 16px;
-}
-
-.contact-info-links a {
-  color: rgba(255, 255, 255, 0.9);
-  text-decoration: none;
-  font-weight: 500;
-  transition: color 0.25s ease;
-}
-
-@media (hover: hover) and (pointer: fine) {
-
-.contact-info-links a:hover {
-  color: #8a38f5;
-}
-}
-
-.tech-wrap-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
   width: 100%;
   margin-top: 16px;
 }

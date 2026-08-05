@@ -10,7 +10,7 @@
   grid-template-columns: minmax(0, 3fr) minmax(190px, 1fr);
   min-width: 0;
   width: 100%;
-  gap: 8px;
+  gap: var(--bento-grid-gap, clamp(16px, 1.6vw, 20px));
   color: #fff;
   font-family: "Outfit", sans-serif;
 }
@@ -302,78 +302,291 @@
 
 .github-calendar-stat {
   --github-stat-accent: 244 114 182;
-  --github-stat-dot-opacity: 0.3;
-  display: flex;
   position: relative;
+  display: flex;
   min-height: 0;
   flex: 1;
   flex-direction: column;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 14px 16px;
+  justify-content: center;
+  padding: 16px 20px;
   overflow: hidden;
-  isolation: isolate;
   border: 1px solid var(--about-outline-color);
-  border-radius: 14px;
-  background: rgba(18, 18, 22, 0.72);
+  border-radius: 16px;
+  background: rgba(15, 15, 18, 0.4);
+  transition: border-color 0.3s ease;
+}
+
+.github-calendar-stat:hover {
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.github-calendar-stat--followers {
+  --github-stat-accent: 244 114 182;
 }
 
 .github-calendar-stat--repositories {
   --github-stat-accent: 74 222 128;
-  --github-stat-dot-opacity: 0.28;
 }
 
 .github-calendar-stat--stars {
   --github-stat-accent: 250 204 21;
-  --github-stat-dot-opacity: 0.28;
 }
 
-.github-calendar-stat > :not(.github-calendar-stat-pattern) {
+.github-calendar-stat-content {
   position: relative;
-  z-index: 1;
-}
-
-.github-calendar-stat-pattern {
-  position: absolute;
-  inset: 0 auto 0 0;
-  z-index: 0;
-  width: 72%;
-  height: 100%;
-  pointer-events: none;
-  fill: rgb(var(--github-stat-accent) / var(--github-stat-dot-opacity));
-  -webkit-mask-image: linear-gradient(to right, #000 0%, rgba(0, 0, 0, 0.76) 40%, transparent 100%);
-  mask-image: linear-gradient(to right, #000 0%, rgba(0, 0, 0, 0.76) 40%, transparent 100%);
-}
-
-.github-calendar-stat-header {
+  z-index: 3;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
+  flex-direction: column;
+  gap: 4px;
 }
 
-.github-calendar-stat-header > span {
-  color: rgba(255, 255, 255, 0.52);
-  font-size: 12px;
+.github-calendar-stat-label {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 13px;
   font-weight: 500;
-}
-
-.github-calendar-stat-icon {
-  display: inline-flex;
-  flex: 0 0 auto;
-  align-items: center;
-  justify-content: center;
-  color: rgb(var(--github-stat-accent));
-  font-size: 18px;
+  letter-spacing: 0.02em;
   line-height: 1;
 }
 
-.github-calendar-stat > strong {
+.github-calendar-stat-value {
   color: rgb(var(--github-stat-accent));
-  font-size: clamp(24px, 2.4vw, 32px);
+  font-size: clamp(28px, 2.5vw, 36px);
   font-variant-numeric: tabular-nums;
+  font-weight: 700;
   letter-spacing: -0.02em;
   line-height: 1;
+  margin-top: 2px;
+}
+
+/* Watermark SVG icon inside the card, shifted left so it doesn't clip */
+.github-calendar-stat-watermark {
+  position: absolute;
+  top: 50%;
+  right: 20px;
+  transform: translateY(-50%);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  color: rgb(var(--github-stat-accent) / 0.14);
+  pointer-events: none;
+  transition: color 0.3s ease;
+}
+
+.github-calendar-stat-watermark > svg {
+  width: 72px;
+  height: 72px;
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+}
+
+.github-calendar-stat:hover .github-calendar-stat-watermark {
+  color: rgb(var(--github-stat-accent) / 0.22);
+}
+
+.github-calendar-stat:hover .github-calendar-stat-watermark > svg {
+  transform: scale(1.05);
+}
+
+/* Decorative stars and sparkles around the logo - unique per card, individual hover pop */
+.github-calendar-stat-sparkle {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: rgb(var(--github-stat-accent) / 0.55);
+  pointer-events: none;
+  transform-origin: center center;
+  transition:
+    transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1),
+    color 0.3s ease,
+    opacity 0.3s ease;
+}
+
+.github-calendar-stat-sparkle svg {
+  width: auto;
+  height: auto;
+}
+
+.github-calendar-stat-sparkle-dot {
+  position: absolute;
+  border-radius: 50%;
+  background-color: rgb(var(--github-stat-accent));
+  pointer-events: none;
+  transform-origin: center center;
+  transition:
+    transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+    opacity 0.3s ease;
+}
+
+/* Card 1: Followers unique arrangement */
+.github-calendar-stat-sparkle--followers-1 {
+  top: -6px;
+  left: -10px;
+  animation: statSparkleTwinkle 4s ease-in-out infinite;
+}
+
+.github-calendar-stat-sparkle--followers-2 {
+  bottom: 0px;
+  right: -8px;
+  animation: statSparkleTwinkle 4.5s ease-in-out 1.8s infinite;
+}
+
+.github-calendar-stat-sparkle-dot--followers-1 {
+  top: 8px;
+  right: -6px;
+  width: 4px;
+  height: 4px;
+  opacity: 0.45;
+  animation: statDotPulse 3.2s ease-in-out 0.6s infinite;
+}
+
+/* Card 2: Repositories unique arrangement */
+.github-calendar-stat-sparkle--repos-1 {
+  top: -8px;
+  right: 10px;
+  animation: statSparkleTwinkle 3.8s ease-in-out 0.8s infinite;
+}
+
+.github-calendar-stat-sparkle--repos-2 {
+  bottom: -4px;
+  left: -12px;
+  animation: statSparkleTwinkle 4.2s ease-in-out 2s infinite;
+}
+
+.github-calendar-stat-sparkle-dot--repos-1 {
+  top: 16px;
+  left: -12px;
+  width: 4.5px;
+  height: 4.5px;
+  opacity: 0.45;
+  animation: statDotPulse 3s ease-in-out 0.3s infinite;
+}
+
+/* Card 3: Stars unique constellation arrangement */
+.github-calendar-stat-sparkle--stars-1 {
+  top: -10px;
+  left: -8px;
+  animation: statSparkleTwinkle 3.5s ease-in-out infinite;
+}
+
+.github-calendar-stat-sparkle--stars-2 {
+  top: 6px;
+  right: -12px;
+  animation: statSparkleTwinkle 4s ease-in-out 1.2s infinite;
+}
+
+.github-calendar-stat-sparkle--stars-3 {
+  bottom: -4px;
+  right: 12px;
+  animation: statSparkleTwinkle 4.6s ease-in-out 2.4s infinite;
+}
+
+.github-calendar-stat-sparkle-dot--stars-1 {
+  bottom: 6px;
+  left: -14px;
+  width: 4px;
+  height: 4px;
+  opacity: 0.45;
+  animation: statDotPulse 3.3s ease-in-out 0.9s infinite;
+}
+
+/* Individual star hover animations: spring pop, scale up and subtle shift */
+.github-calendar-stat:hover .github-calendar-stat-sparkle--followers-1 {
+  transform: scale(1.4) rotate(18deg) translate(-2px, -2px);
+  color: rgb(var(--github-stat-accent) / 0.95);
+}
+
+.github-calendar-stat:hover .github-calendar-stat-sparkle--followers-2 {
+  transform: scale(1.5) rotate(-15deg) translate(2px, 2px);
+  color: rgb(var(--github-stat-accent) / 0.95);
+  transition-delay: 40ms;
+}
+
+.github-calendar-stat:hover .github-calendar-stat-sparkle-dot--followers-1 {
+  transform: scale(1.5);
+  opacity: 0.85;
+}
+
+.github-calendar-stat:hover .github-calendar-stat-sparkle--repos-1 {
+  transform: scale(1.45) rotate(20deg) translate(2px, -2px);
+  color: rgb(var(--github-stat-accent) / 0.95);
+}
+
+.github-calendar-stat:hover .github-calendar-stat-sparkle--repos-2 {
+  transform: scale(1.35) rotate(-22deg) translate(-2px, 2px);
+  color: rgb(var(--github-stat-accent) / 0.95);
+  transition-delay: 60ms;
+}
+
+.github-calendar-stat:hover .github-calendar-stat-sparkle-dot--repos-1 {
+  transform: scale(1.4);
+  opacity: 0.85;
+}
+
+.github-calendar-stat:hover .github-calendar-stat-sparkle--stars-1 {
+  transform: scale(1.4) rotate(15deg) translate(-3px, -2px);
+  color: rgb(var(--github-stat-accent) / 0.98);
+}
+
+.github-calendar-stat:hover .github-calendar-stat-sparkle--stars-2 {
+  transform: scale(1.5) rotate(-20deg) translate(3px, -1px);
+  color: rgb(var(--github-stat-accent) / 0.98);
+  transition-delay: 40ms;
+}
+
+.github-calendar-stat:hover .github-calendar-stat-sparkle--stars-3 {
+  transform: scale(1.55) rotate(25deg) translate(2px, 2px);
+  color: rgb(var(--github-stat-accent) / 0.98);
+  transition-delay: 80ms;
+}
+
+.github-calendar-stat:hover .github-calendar-stat-sparkle-dot--stars-1 {
+  transform: scale(1.5);
+  opacity: 0.85;
+}
+
+/* Stationary twinkle animations without translation/shifting */
+@keyframes statSparkleTwinkle {
+  0%, 100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+
+@keyframes statDotPulse {
+  0%, 100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Dot pattern on the left side with the card's accent color */
+.github-calendar-stat-dot-pattern {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  fill: rgb(var(--github-stat-accent) / 0.24);
+  -webkit-mask-image: radial-gradient(
+    ellipse 85% 95% at 10% 50%,
+    #000 0%,
+    rgba(0, 0, 0, 0.8) 45%,
+    transparent 80%
+  );
+  mask-image: radial-gradient(
+    ellipse 85% 95% at 10% 50%,
+    #000 0%,
+    rgba(0, 0, 0, 0.8) 45%,
+    transparent 80%
+  );
 }
 
 .github-calendar-loading {
@@ -466,27 +679,37 @@
   }
 
   .github-calendar-stat {
-    min-height: 82px;
-    padding: 12px;
+    min-height: 85px;
+    padding: 12px 14px;
   }
 
-  .github-calendar-stat-header > span {
+  .github-calendar-stat-label {
     font-size: 11px;
   }
 
-  .github-calendar-stat-icon {
-    font-size: 16px;
+  .github-calendar-stat-value {
+    font-size: 24px;
   }
 
-  .github-calendar-stat > strong {
-    font-size: 24px;
+  .github-calendar-stat-watermark {
+    width: 52px;
+    height: 52px;
+    right: 12px;
+  }
+
+  .github-calendar-stat-watermark > svg {
+    width: 52px;
+    height: 52px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .github-calendar-cell,
-  .github-calendar-profile {
+  .github-calendar-profile,
+  .github-calendar-stat-sparkle,
+  .github-calendar-stat-sparkle-dot {
     transition: none;
+    animation: none;
   }
 
   .github-calendar-loading-header,

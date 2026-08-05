@@ -109,7 +109,26 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
     feImageRef.current?.setAttribute('href', generateDisplacementMap());
   };
 
+  const isSVGSupported = useMemo(() => {
+    if (typeof window === 'undefined') return false;
+    const isTouchOrSmall = window.matchMedia('(max-width: 768px), (pointer: coarse)').matches;
+    if (isTouchOrSmall) return false;
+
+    const isWebkit = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
+    const isFirefox = /Firefox/.test(navigator.userAgent);
+
+    if (isWebkit || isFirefox) {
+      return false;
+    }
+
+    const div = document.createElement('div');
+    div.style.backdropFilter = `url(#${filterId})`;
+    return div.style.backdropFilter !== '';
+  }, [filterId]);
+
   useEffect(() => {
+    if (!isSVGSupported) return;
+
     updateDisplacementMap();
     [
       { ref: redChannelRef, offset: redOffset },
@@ -126,6 +145,7 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
     gaussianBlurRef.current?.setAttribute('stdDeviation', displace.toString());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
+    isSVGSupported,
     borderRadius,
     borderWidth,
     brightness,
@@ -141,19 +161,6 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
     mixBlendMode
   ]);
 
-  const supportsSVGFilters = () => {
-    const isWebkit = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
-    const isFirefox = /Firefox/.test(navigator.userAgent);
-
-    if (isWebkit || isFirefox) {
-      return false;
-    }
-
-    const div = document.createElement('div');
-    div.style.backdropFilter = `url(#${filterId})`;
-    return div.style.backdropFilter !== '';
-  };
-
   const containerStyle = {
     ...style,
     width: typeof width === 'number' ? `${width}px` : width,
@@ -168,14 +175,14 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
   return (
     <div
       ref={containerRef}
-      className={`glass-surface ${supportsSVGFilters() ? 'glass-surface--svg' : 'glass-surface--fallback'} ${className}`}
+      className={`glass-surface ${isSVGSupported ? 'glass-surface--svg' : 'glass-surface--fallback'} ${className}`}
       style={containerStyle}
       role={onClick ? 'button' : undefined}
       onClick={onClick}
       tabIndex={onClick ? 0 : undefined}
     >
       {/* Layer 1: Native CSS for saturation */}
-      {supportsSVGFilters() && (
+      {isSVGSupported && (
         <div 
           className="glass-surface__layer-blur"
           style={{
@@ -188,7 +195,7 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
       )}
 
       {/* Layer 2: SVG Chromatic Aberration Filter layered ON TOP of the blur */}
-      {supportsSVGFilters() && (
+      {isSVGSupported && (
         <div 
           className="glass-surface__layer-svg"
           style={{
@@ -219,48 +226,50 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
         />
       )}
 
-      <svg className="glass-surface__filter" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <filter 
-            id={filterId} 
-            colorInterpolationFilters="sRGB" 
-            x={`-${filterPadding.xPad}%`} 
-            y={`-${filterPadding.yPad}%`} 
-            width={`${100 + filterPadding.xPad * 2}%`} 
-            height={`${100 + filterPadding.yPad * 2}%`}
-          >
-            <feImage ref={feImageRef} x="0" y="0" width="100%" height="100%" preserveAspectRatio="none" result="map" />
+      {isSVGSupported && (
+        <svg className="glass-surface__filter" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <filter 
+              id={filterId} 
+              colorInterpolationFilters="sRGB" 
+              x={`-${filterPadding.xPad}%`} 
+              y={`-${filterPadding.yPad}%`} 
+              width={`${100 + filterPadding.xPad * 2}%`} 
+              height={`${100 + filterPadding.yPad * 2}%`}
+            >
+              <feImage ref={feImageRef} x="0" y="0" width="100%" height="100%" preserveAspectRatio="none" result="map" />
 
-            <feDisplacementMap ref={redChannelRef} in="SourceGraphic" in2="map" id="redchannel" result="dispRed" />
-            <feColorMatrix
-              in="dispRed"
-              type="matrix"
-              values="1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0"
-              result="red"
-            />
+              <feDisplacementMap ref={redChannelRef} in="SourceGraphic" in2="map" id="redchannel" result="dispRed" />
+              <feColorMatrix
+                in="dispRed"
+                type="matrix"
+                values="1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0"
+                result="red"
+              />
 
-            <feDisplacementMap ref={greenChannelRef} in="SourceGraphic" in2="map" id="greenchannel" result="dispGreen" />
-            <feColorMatrix
-              in="dispGreen"
-              type="matrix"
-              values="0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 1 0"
-              result="green"
-            />
+              <feDisplacementMap ref={greenChannelRef} in="SourceGraphic" in2="map" id="greenchannel" result="dispGreen" />
+              <feColorMatrix
+                in="dispGreen"
+                type="matrix"
+                values="0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 1 0"
+                result="green"
+              />
 
-            <feDisplacementMap ref={blueChannelRef} in="SourceGraphic" in2="map" id="bluechannel" result="dispBlue" />
-            <feColorMatrix
-              in="dispBlue"
-              type="matrix"
-              values="0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0"
-              result="blue"
-            />
+              <feDisplacementMap ref={blueChannelRef} in="SourceGraphic" in2="map" id="bluechannel" result="dispBlue" />
+              <feColorMatrix
+                in="dispBlue"
+                type="matrix"
+                values="0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0"
+                result="blue"
+              />
 
-            <feBlend in="red" in2="green" mode="screen" result="rg" />
-            <feBlend in="rg" in2="blue" mode="screen" result="output" />
-            <feGaussianBlur ref={gaussianBlurRef} in="output" stdDeviation="0.7" />
-          </filter>
-        </defs>
-      </svg>
+              <feBlend in="red" in2="green" mode="screen" result="rg" />
+              <feBlend in="rg" in2="blue" mode="screen" result="output" />
+              <feGaussianBlur ref={gaussianBlurRef} in="output" stdDeviation="0.7" />
+            </filter>
+          </defs>
+        </svg>
+      )}
 
       <div className="glass-surface__content">{children}</div>
     </div>
