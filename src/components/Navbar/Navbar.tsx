@@ -4,8 +4,7 @@ import './Navbar.css'
 import GlassSurface from '../GlassSurface/GlassSurface'
 import { scrollToTarget } from '../SmoothScroll/scrollController'
 import { ensureTargetReady, getOwningSection } from '../LazySection/sectionLoader'
-
-const CommandMenu = React.lazy(() => import('../CommandMenu/CommandMenu'))
+import CommandMenu, { type CommandMenuItem } from '../CommandMenu/CommandMenu'
 
 const NAVBAR_GLASS_PRESET =
   /* NAVBAR_GLASS_PRESET_START */
@@ -37,7 +36,7 @@ const NAV_ITEMS = [
   { path: '/contact', label: 'CONTACT' },
 ] as const
 
-const COMMAND_MENU_ITEMS = [
+const COMMAND_MENU_ITEMS: CommandMenuItem[] = [
   { id: 'nav-home', path: '/', label: 'HOME', category: 'Navigation', keywords: 'home landing start', targetId: 'home' },
   { id: 'nav-about', path: '/about', label: 'ABOUT', category: 'Navigation', keywords: 'about profile me', targetId: 'about' },
   { id: 'nav-project', path: '/project', label: 'PROJECTS', category: 'Navigation', keywords: 'projects work portfolio', targetId: 'projects' },
@@ -56,16 +55,12 @@ const Navbar = () => {
   const indicatorRef = useRef<HTMLDivElement>(null)
   const location = useLocation()
   const [isCommandMenuOpen, setIsCommandMenuOpen] = useState(false)
-  const [hasOpenedCommandMenu, setHasOpenedCommandMenu] = useState(false)
   const [hasInitialized, setHasInitialized] = useState(false)
   const [isIPad, setIsIPad] = useState(false)
   const [isMac, setIsMac] = useState(true)
   const pillTextRef = useRef<HTMLSpanElement>(null)
   const navigationRequestRef = useRef(0)
 
-  useEffect(() => {
-    if (isCommandMenuOpen) setHasOpenedCommandMenu(true)
-  }, [isCommandMenuOpen])
 
   // Detect iPad and Mac
   useEffect(() => {
@@ -165,13 +160,13 @@ const Navbar = () => {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+      if ((e.metaKey || e.ctrlKey) && (e.key.toLowerCase() === 'k' || e.code === 'KeyK')) {
         e.preventDefault()
         setIsCommandMenuOpen(prev => !prev)
       }
     }
 
-    window.addEventListener('keydown', handleKeyDown, { passive: true })
+    window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [])
 
@@ -350,17 +345,13 @@ const Navbar = () => {
         </div>
       </nav>
 
-      {(isCommandMenuOpen || hasOpenedCommandMenu) && (
-        <React.Suspense fallback={null}>
-          <CommandMenu
-            isOpen={isCommandMenuOpen}
-            onClose={() => setIsCommandMenuOpen(false)}
-            menuItems={COMMAND_MENU_ITEMS}
-            activePath={activePath}
-            handleNavClick={handleNavClick}
-          />
-        </React.Suspense>
-      )}
+      <CommandMenu
+        isOpen={isCommandMenuOpen}
+        onClose={() => setIsCommandMenuOpen(false)}
+        menuItems={COMMAND_MENU_ITEMS}
+        activePath={activePath}
+        handleNavClick={handleNavClick}
+      />
 
     </>
   )

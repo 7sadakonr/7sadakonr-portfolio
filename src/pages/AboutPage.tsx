@@ -1,4 +1,5 @@
 import AnimatedContent from '../components/Animation/AnimatedContent'
+import TextReveal from '../components/Animation/TextReveal'
 import DotPattern from '../components/DotPattern/DotPattern'
 import GithubCalendar from '../components/GithubCalendar/GithubCalendar'
 import Scales from '../components/Scales/Scales'
@@ -20,33 +21,27 @@ const AboutSection = () => {
             <div className="about-content">
                 {/* Intro / Hero Section */}
                 <section className="about-hero">
-                    <AnimatedContent
-                        distance={80}
-                        direction="vertical"
-                        duration={1}
-                        initialOpacity={0}
-                        delay={0.25}
+                    <TextReveal
+                        as="h1"
+                        className="about-hero-title"
+                        delay={0.1}
+                        stagger={0.07}
                     >
-                        <h1 className="about-hero-title">
-                            Hi, I'm <span className="gradient-text">
-                                <span className="gradient-text-glow">Jetsadakorn</span>
-                                <span className="gradient-text-content">Jetsadakorn</span>
-                            </span>
-                        </h1>
-                    </AnimatedContent>
+                        <span>Hi,</span>
+                        <span>I'm</span>
+                        <span className="gradient-text">
+                            <span className="gradient-text-glow">Jetsadakorn</span>
+                            <span className="gradient-text-content">Jetsadakorn</span>
+                        </span>
+                    </TextReveal>
 
-                    <AnimatedContent
-                        distance={60}
-                        direction="vertical"
-                        duration={1}
-                        initialOpacity={0}
-                        delay={0.4}
-                    >
-                        <p className="about-hero-subtitle">
-                            A passionate Computer Science Student exploring the intersection of technology and creativity.
-                            Currently focused on web development, UI/UX design, and building meaningful digital experiences.
-                        </p>
-                    </AnimatedContent>
+                    <TextReveal
+                        as="p"
+                        className="about-hero-subtitle"
+                        text="A passionate Computer Science Student exploring the intersection of technology and creativity. Currently focused on web development, UI/UX design, and building meaningful digital experiences."
+                        delay={0.25}
+                        stagger={0.025}
+                    />
 
                     <AnimatedContent
                         distance={40}
