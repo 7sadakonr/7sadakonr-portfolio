@@ -26,7 +26,7 @@ const Highlighter: React.FC<HighlighterProps> = ({
 
         const observer = new IntersectionObserver(
             ([entry]) => {
-                if (entry.isIntersecting) {
+                if (entry?.isIntersecting) {
                     const timer = setTimeout(() => {
                         setIsShowing(true);
                     }, delay);

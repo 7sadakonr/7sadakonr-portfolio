@@ -1,0 +1,65 @@
+.text-reveal-container {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: center;
+  text-align: center;
+  width: 100%;
+  max-width: 100%;
+  overflow: visible;
+}
+
+.text-reveal-mask {
+  display: inline-flex;
+  align-items: baseline;
+  vertical-align: baseline;
+  overflow: visible;
+  line-height: inherit;
+  clip-path: inset(-50px -40px -40px -40px);
+}
+
+/* Gradient word mask: ample margin for glow (20px blur) and star icon on the right */
+.text-reveal-mask.has-gradient,
+.text-reveal-mask:has(.gradient-text) {
+  overflow: visible;
+  clip-path: inset(-60px -80px -50px -50px);
+}
+
+.text-reveal-mask.is-revealed,
+.text-reveal-mask:has(.is-revealed) {
+  clip-path: none !important;
+  overflow: visible !important;
+}
+
+.text-reveal-word {
+  display: inline-flex;
+  align-items: baseline;
+  transform: translateY(125%);
+  opacity: 0;
+  will-change: transform, opacity;
+  line-height: inherit;
+}
+
+.text-reveal-word.is-revealed {
+  transform: translateY(0%);
+  opacity: 1;
+}
+
+.text-reveal-word.is-gradient-word {
+  overflow: visible;
+}
+
+.text-reveal-space {
+  display: inline;
+  white-space: pre;
+  user-select: none;
+  font-size: inherit;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .text-reveal-word {
+    transform: none !important;
+    opacity: 1 !important;
+    transition: none !important;
+  }
+}

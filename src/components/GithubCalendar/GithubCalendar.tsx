@@ -235,7 +235,8 @@ const GithubCalendar = ({
             return []
         }
 
-        const firstDay = new Date(`${data.contributions[0].date}T00:00:00Z`).getUTCDay()
+        const firstContribution = data.contributions[0]
+        const firstDay = firstContribution ? new Date(`${firstContribution.date}T00:00:00Z`).getUTCDay() : 0
         const cells: Array<Contribution | null> = [
             ...Array<null>(firstDay).fill(null),
             ...data.contributions,
@@ -253,7 +254,8 @@ const GithubCalendar = ({
             return []
         }
 
-        const firstDay = new Date(`${data.contributions[0].date}T00:00:00Z`).getUTCDay()
+        const firstContribution = data.contributions[0]
+        const firstDay = firstContribution ? new Date(`${firstContribution.date}T00:00:00Z`).getUTCDay() : 0
         const seenMonths = new Set<string>()
 
         return data.contributions.flatMap((contribution, index) => {

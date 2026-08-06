@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { NavLink } from 'react-router-dom';
 import { pauseScroll, resumeScroll } from '../SmoothScroll/scrollController';
 import './CommandMenu.css';
@@ -15,7 +15,7 @@ export interface CommandMenuItem {
 interface CommandMenuProps {
   isOpen: boolean;
   onClose: () => void;
-  menuItems: CommandMenuItem[];
+  menuItems: readonly CommandMenuItem[] | CommandMenuItem[];
   activePath: string;
   handleNavClick: (e: React.MouseEvent<HTMLAnchorElement>, path: string, targetId?: string) => void;
 }
@@ -57,7 +57,7 @@ const CommandMenu: React.FC<CommandMenuProps> = ({
   const bezier = (str: string) => {
     const m = String(str).match(/cubic-bezier\(([-\d.]+),\s*([-\d.]+),\s*([-\d.]+),\s*([-\d.]+)\)/);
     if (!m) return (t: number) => t;
-    const [x1, y1, x2, y2] = m.slice(1).map(parseFloat);
+    const [x1 = 0, y1 = 0, x2 = 1, y2 = 1] = m.slice(1).map(parseFloat);
     const cx = 3 * x1, bx = 3 * (x2 - x1) - cx, ax = 1 - cx - bx;
     const cy = 3 * y1, by = 3 * (y2 - y1) - cy, ay = 1 - cy - by;
     return (t: number) => {
@@ -88,19 +88,25 @@ const CommandMenu: React.FC<CommandMenuProps> = ({
     const layers: string[] = [];
     let x = 0;
     
+    const offsets: [number, number, number, number][] = [
+      [0, 0.8, 7, 0.22],
+      [1, 0.55, 8, 0.18],
+      [-1, 0.65, 6, 0.16],
+      [0.35, 0.9, 5, 0.14]
+    ];
+    
     text.split(/(\s+)/).forEach((seg) => {
       const segW = ctx.measureText(seg).width;
       if (seg.trim()) {
         const cx = padLeft + x + segW / 2;
         const hw = Math.max(segW * 0.45, 8) * spread;
-        [[0, 0.8, 7, 0.22], [hw * 0.45, 0.55, 8, 0.18],
-         [-hw * 0.4, 0.65, 6, 0.16], [hw * 0.15, 0.9, 5, 0.14]]
-          .forEach(([dx, rwm, rh, a]) => {
-            const lx = (((cx + dx) / w) * 100).toFixed(2);
-            layers.push(
-              `radial-gradient(ellipse ${Math.max(hw * rwm, 2).toFixed(1)}px ${rh}px at ${lx}% 100%, rgba(${rgb},${a}), transparent)`
-            );
-          });
+        offsets.forEach(([mult, rwm, rh, a]) => {
+          const dx = mult === 0 ? 0 : mult === 1 ? hw * 0.45 : mult === -1 ? -hw * 0.4 : hw * 0.15;
+          const lx = (((cx + dx) / w) * 100).toFixed(2);
+          layers.push(
+            `radial-gradient(ellipse ${Math.max(hw * rwm, 2).toFixed(1)}px ${rh}px at ${lx}% 100%, rgba(${rgb},${a}), transparent)`
+          );
+        });
       }
       x += segW;
     });
@@ -198,7 +204,7 @@ const CommandMenu: React.FC<CommandMenuProps> = ({
   // Filter items based on search term
   const filteredItems = useMemo(() => {
     const term = searchTerm.toLowerCase();
-    return menuItems.filter(item => {
+    return menuItems.filter((item: CommandMenuItem) => {
       return item.label.toLowerCase().includes(term) || item.keywords.toLowerCase().includes(term);
     });
   }, [menuItems, searchTerm]);
@@ -209,7 +215,7 @@ const CommandMenu: React.FC<CommandMenuProps> = ({
       document.documentElement.style.overflow = 'hidden';
       pauseScroll();
       setSearchTerm('');
-      const currentIdx = menuItems.findIndex(item => item.path === activePath && item.category === 'Navigation');
+      const currentIdx = menuItems.findIndex((item: CommandMenuItem) => item.path === activePath && item.category === 'Navigation');
       setSelectedIndex(currentIdx !== -1 ? currentIdx : 0);
       
       setTimeout(() => {
@@ -322,16 +328,16 @@ const CommandMenu: React.FC<CommandMenuProps> = ({
         <div className={`command-menu-content t-modal ${stateClass}`}>
           <div className="command-menu-content-inner">
             {filteredItems.length > 0 ? (
-            ['Navigation', 'Content', 'Projects'].map(cat => {
-              const catItems = filteredItems.filter(i => i.category === cat);
+            (['Navigation', 'Content', 'Projects'] as const).map((cat: string) => {
+              const catItems = filteredItems.filter((i: CommandMenuItem) => i.category === cat);
               if (catItems.length === 0) return null;
 
               return (
                 <div className="command-group" key={cat}>
                   <div className="command-group-heading">{cat}</div>
                   <ul className="command-list">
-                    {catItems.map((item) => {
-                      const index = filteredItems.findIndex(fi => fi.id === item.id);
+                    {catItems.map((item: CommandMenuItem) => {
+                      const index = filteredItems.findIndex((fi: CommandMenuItem) => fi.id === item.id);
                       const isActivePath = activePath === item.path && item.category === 'Navigation';
                       const isSelected = index === selectedIndex;
                       return (
@@ -373,3 +379,4 @@ const CommandMenu: React.FC<CommandMenuProps> = ({
 };
 
 export default CommandMenu;
+

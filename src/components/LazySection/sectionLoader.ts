@@ -54,7 +54,10 @@ export const ensureTargetReady = async (targetId: string): Promise<void> => {
 
   const ownerIndex = sectionOrder.indexOf(owner)
   for (let i = 0; i <= ownerIndex; i++) {
-    await requestSection(sectionOrder[i])
+    const sec = sectionOrder[i]
+    if (sec) {
+      await requestSection(sec)
+    }
   }
 }
 
