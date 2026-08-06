@@ -1,0 +1,305 @@
+:root {
+  --preloader-accent-pink: #ff7777;
+  --preloader-accent-purple: #8a38f5;
+  --preloader-bg: #0d0d0f;
+  --preloader-text: #f8fafc;
+  --preloader-dim: rgba(226, 232, 240, 0.45);
+}
+
+.preloader-container {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100svh;
+  z-index: 99999;
+  pointer-events: all;
+  overflow: hidden;
+  user-select: none;
+}
+
+/* Layer Base */
+.preloader-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  will-change: transform;
+}
+
+/* Accent Layer (Underneath Curtain - Rich #FF7777 to #8A38F5 gradient) */
+.preloader-accent-layer {
+  background: linear-gradient(135deg, #ff7777 0%, #c05df5 50%, #8a38f5 100%);
+  box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.4);
+  z-index: 1;
+}
+
+/* Main Ink Layer (Top Curtain) */
+.preloader-main-layer {
+  background: var(--preloader-bg);
+  z-index: 2;
+  overflow: hidden;
+}
+
+/* Curtain Slide-Up Exits */
+.exit-slide-main {
+  transform: translateY(-100%);
+  transition: transform 0.75s cubic-bezier(0.76, 0, 0.24, 1);
+}
+
+.exit-slide-accent {
+  transform: translateY(-100%);
+  transition: transform 0.75s cubic-bezier(0.76, 0, 0.24, 1) 0.1s;
+}
+
+/* Giant Watermark Logo in Center */
+.preloader-watermark {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 0;
+  transform: scale(1.05);
+  transition: transform 2.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.preloader-watermark-svg {
+  width: clamp(260px, 44vw, 560px);
+  height: auto;
+  filter: drop-shadow(0 0 50px rgba(255, 119, 119, 0.2)) drop-shadow(0 0 50px rgba(138, 56, 245, 0.2));
+}
+
+.watermark-scale-down {
+  transform: scale(1);
+}
+
+/* Corner Metadata Labels */
+.preloader-meta {
+  position: absolute;
+  font-family: 'IBM Plex Mono', 'Space Mono', monospace;
+  font-size: clamp(10px, 0.8vw, 12px);
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--preloader-dim);
+  z-index: 10;
+  pointer-events: none;
+}
+
+.preloader-meta-tl {
+  top: clamp(18px, 3vh, 36px);
+  left: clamp(18px, 3.5vw, 48px);
+}
+
+.preloader-meta-tr {
+  top: clamp(18px, 3vh, 36px);
+  right: clamp(18px, 3.5vw, 48px);
+  text-align: right;
+}
+
+.preloader-meta-bl {
+  bottom: clamp(22px, 3.5vh, 42px);
+  left: clamp(18px, 3.5vw, 48px);
+}
+
+/* Large Bottom-Right Counter (Gradient #FF7777 to #8A38F5) */
+.preloader-counter {
+  position: absolute;
+  bottom: clamp(16px, 2.5vh, 36px);
+  right: clamp(18px, 3.5vw, 48px);
+  font-family: 'Space Grotesk', 'Outfit', sans-serif;
+  font-size: clamp(3.2rem, 6.5vw, 6.5rem);
+  font-weight: 700;
+  line-height: 1;
+  background: linear-gradient(135deg, #ff7777 0%, #d87df8 50%, #8a38f5 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 24px rgba(255, 119, 119, 0.5));
+  font-variant-numeric: tabular-nums;
+  z-index: 10;
+  pointer-events: none;
+  letter-spacing: -0.02em;
+}
+
+/* Center Content: Rotating Asterisk + Greeting Mask */
+.preloader-center-content {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(12px, 2vw, 24px);
+  z-index: 10;
+  padding: 0 20px;
+}
+
+/* Spinning Asterisk with Gradient */
+.preloader-asterisk {
+  font-family: 'Space Grotesk', 'Outfit', sans-serif;
+  font-size: clamp(2rem, 4vw, 3.5rem);
+  background: linear-gradient(135deg, #ff7777 0%, #8a38f5 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 12px rgba(255, 119, 119, 0.8));
+  line-height: 1;
+  animation: preloaderSpin 6s linear infinite;
+  transform-origin: center;
+  flex-shrink: 0;
+}
+
+@keyframes preloaderSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Text Mask - Generous height & padding so Thai tone marks and Latin descenders are never clipped */
+.preloader-text-mask {
+  position: relative;
+  height: clamp(80px, 12vw, 130px);
+  width: clamp(280px, 65vw, 750px);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 10px 0;
+}
+
+/* Greeting Track & Words */
+.preloader-greeting-track {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.preloader-greeting-word {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  font-family: 'Space Grotesk', 'Outfit', 'Prompt', 'Noto Sans Thai', sans-serif;
+  font-size: clamp(2.2rem, 5.5vw, 4.5rem);
+  font-weight: 600;
+  line-height: 1.35;
+  padding: 0.15em 0;
+  color: var(--preloader-text);
+  white-space: nowrap;
+  pointer-events: none;
+  transform: translateY(140%);
+  opacity: 0;
+}
+
+.preloader-greeting-word.is-active {
+  transform: translateY(0%);
+  opacity: 1;
+  transition:
+    transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.28s ease-out;
+}
+
+.preloader-greeting-word.is-passed {
+  transform: translateY(-140%);
+  opacity: 0;
+  transition:
+    transform 0.28s cubic-bezier(0.32, 0, 0.67, 0),
+    opacity 0.22s ease-in;
+}
+
+.preloader-greeting-word.is-upcoming {
+  transform: translateY(140%);
+  opacity: 0;
+}
+
+/* Final Name Split-Character Animation */
+.preloader-name-container {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  font-family: 'Space Grotesk', 'Outfit', 'Prompt', 'Noto Sans Thai', sans-serif;
+  font-size: clamp(2.2rem, 5.5vw, 4.5rem);
+  font-weight: 600;
+  line-height: 1.35;
+  padding: 0.15em 0;
+  color: var(--preloader-text);
+  white-space: nowrap;
+}
+
+.preloader-name-char {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(130%);
+  animation: preloaderCharUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.preloader-name-dot {
+  background: linear-gradient(135deg, #ff7777 0%, #8a38f5 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-left: 2px;
+  opacity: 0;
+  transform: translateY(130%);
+  animation: preloaderCharUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards;
+  filter: drop-shadow(0 0 10px rgba(255, 119, 119, 0.9));
+}
+
+@keyframes preloaderCharUp {
+  from {
+    opacity: 0;
+    transform: translateY(130%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0%);
+  }
+}
+
+/* Bottom Progress Bar with vibrant #FF7777 to #8A38F5 gradient */
+.preloader-progress-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2.5px;
+  background: linear-gradient(90deg, #ff7777 0%, #d87df8 50%, #8a38f5 100%);
+  box-shadow: 0 0 14px rgba(255, 119, 119, 0.85);
+  transform-origin: left;
+  will-change: transform;
+  z-index: 10;
+  transition: transform 0.05s linear;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .preloader-meta-tl,
+  .preloader-meta-tr {
+    font-size: 9px;
+  }
+
+  .preloader-meta-bl {
+    display: none; /* Hide bottom left meta on mobile */
+  }
+
+  .preloader-text-mask {
+    justify-content: center;
+    width: 80vw;
+  }
+
+  .preloader-greeting-word,
+  .preloader-name-container {
+    justify-content: center;
+  }
+
+  .preloader-watermark-svg {
+    width: 70vw;
+  }
+}

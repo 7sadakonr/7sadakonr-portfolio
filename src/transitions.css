@@ -86,11 +86,11 @@
   --glow-spread: 1.5;
 
   /* Texts reveal */
-  --stagger-dur: 500ms;
-  --stagger-distance: 12px;
-  --stagger-stagger: 40ms;
+  --stagger-dur: 850ms;
+  --stagger-distance: 24px;
+  --stagger-stagger: 80ms;
   --stagger-blur: 3px;
-  --stagger-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --stagger-ease: cubic-bezier(0.16, 1, 0.3, 1);
 
   /* Text states swap */
   --text-swap-dur: 150ms;
@@ -233,22 +233,32 @@
   }
 }
 
+.t-stagger.is-hidden .t-stagger-line {
+  opacity: 0;
+  animation: none !important;
+}
+
 .t-stagger-line {
   display: block;
   opacity: 0;
+}
+
+.t-stagger:not(.is-hidden) .t-stagger-line,
+.t-stagger.is-revealed .t-stagger-line {
   animation: staggerEntrance var(--stagger-dur) var(--stagger-ease) forwards;
 }
+
 .t-stagger-line--1 {
-  animation-delay: 0s;
+  animation-delay: 0.05s;
 }
 .t-stagger-line--2 {
-  animation-delay: var(--stagger-stagger);
+  animation-delay: calc(0.05s + var(--stagger-stagger));
 }
 .t-stagger-line--3 {
-  animation-delay: calc(var(--stagger-stagger) * 2);
+  animation-delay: calc(0.05s + var(--stagger-stagger) * 2);
 }
 .t-stagger-line--4 {
-  animation-delay: calc(var(--stagger-stagger) * 3);
+  animation-delay: calc(0.05s + var(--stagger-stagger) * 3);
 }
 
 @media (prefers-reduced-motion: reduce) {

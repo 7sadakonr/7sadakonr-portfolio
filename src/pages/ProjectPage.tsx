@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import AnimatedContent from '../components/Animation/AnimatedContent'
+import TextReveal from '../components/Animation/TextReveal'
 import LineSidebar from '../components/LineSidebar/LineSidebar'
 import todoListImg from '../assets/img/todo_list_real.webp'
 import portfolioImg from '../assets/img/portfolio_real_new.webp'
@@ -108,7 +109,7 @@ const ImageMagnifier = React.memo(({ src, alt }: ImageMagnifierProps) => {
     const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
         const touch = e.touches[0];
         const elem = containerRef.current;
-        if (!elem) return;
+        if (!elem || !touch) return;
 
         const { top, left, width, height } = elem.getBoundingClientRect();
         cachedRect.current = { top, left, width, height };
@@ -128,7 +129,7 @@ const ImageMagnifier = React.memo(({ src, alt }: ImageMagnifierProps) => {
     const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
         const touch = e.touches[0];
         const elem = containerRef.current;
-        if (!elem) return;
+        if (!elem || !touch) return;
 
         const { top, left, width, height } = cachedRect.current;
         const x = touch.clientX - left;
@@ -311,32 +312,26 @@ const ProjectSection = () => {
 
                 {/* Hero Section */}
                 <section className="project-hero">
-                    <AnimatedContent
-                        distance={60}
-                        direction="vertical"
-                        duration={1}
-                        initialOpacity={0}
-                        delay={0.25}
+                    <TextReveal
+                        as="h1"
+                        className="project-hero-title"
+                        delay={0.1}
+                        stagger={0.07}
                     >
-                        <h1 className="project-hero-title">
-                            My <span className="gradient-text">
-                                <span className="gradient-text-glow">Projects</span>
-                                <span className="gradient-text-content">Projects</span>
-                            </span>
-                        </h1>
-                    </AnimatedContent>
+                        <span>My</span>
+                        <span className="gradient-text">
+                            <span className="gradient-text-glow">Projects</span>
+                            <span className="gradient-text-content">Projects</span>
+                        </span>
+                    </TextReveal>
 
-                    <AnimatedContent
-                        distance={50}
-                        direction="vertical"
-                        duration={1}
-                        initialOpacity={0}
-                        delay={0.4}
-                    >
-                        <p className="project-hero-subtitle">
-                            Explore my latest work showcasing creativity, technical skills, and passion for building meaningful digital experiences.
-                        </p>
-                    </AnimatedContent>
+                    <TextReveal
+                        as="p"
+                        className="project-hero-subtitle"
+                        text="Explore my latest work showcasing creativity, technical skills, and passion for building meaningful digital experiences."
+                        delay={0.25}
+                        stagger={0.025}
+                    />
                 </section>
 
                 {/* Projects Grid with Sidebar */}

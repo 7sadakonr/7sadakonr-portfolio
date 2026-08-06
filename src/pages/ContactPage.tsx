@@ -1,5 +1,6 @@
 import { useRef, useState, type FormEvent } from 'react'
 import AnimatedContent from '../components/Animation/AnimatedContent'
+import TextReveal from '../components/Animation/TextReveal'
 import AsiaMap from '../components/AsiaMap/AsiaMap'
 // CSS is now in LandingPage.css
 
@@ -52,32 +53,26 @@ const ContactSection = () => {
 
                 {/* Hero Section */}
                 <section className="contact-hero">
-                    <AnimatedContent
-                        distance={60}
-                        direction="vertical"
-                        duration={1}
-                        initialOpacity={0}
-                        delay={0.25}
+                    <TextReveal
+                        as="h1"
+                        className="contact-hero-title"
+                        delay={0.1}
+                        stagger={0.07}
                     >
-                        <h1 className="contact-hero-title">
-                            Let's <span className="gradient-text">
-                                <span className="gradient-text-glow">Connect</span>
-                                <span className="gradient-text-content">Connect</span>
-                            </span>
-                        </h1>
-                    </AnimatedContent>
+                        <span>Let's</span>
+                        <span className="gradient-text">
+                            <span className="gradient-text-glow">Connect</span>
+                            <span className="gradient-text-content">Connect</span>
+                        </span>
+                    </TextReveal>
 
-                    <AnimatedContent
-                        distance={50}
-                        direction="vertical"
-                        duration={1}
-                        initialOpacity={0}
-                        delay={0.4}
-                    >
-                        <p className="contact-hero-subtitle">
-                            Have a project in mind or just want to chat? I'm always open to new opportunities and collaborations.
-                        </p>
-                    </AnimatedContent>
+                    <TextReveal
+                        as="p"
+                        className="contact-hero-subtitle"
+                        text="Have a project in mind, a question, or just want to say hi? Feel free to reach out!"
+                        delay={0.25}
+                        stagger={0.025}
+                    />
                 </section>
 
                 {/* Contact Section */}

@@ -1,7 +1,8 @@
-import { useEffect, lazy } from 'react'
+import { useEffect, useState, lazy } from 'react'
 import { BrowserRouter as Router } from 'react-router-dom'
 import { Analytics } from "@vercel/analytics/react"
 import Navbar from './components/Navbar/Navbar'
+import Preloader from './components/Preloader/Preloader'
 import { SpaceBackground } from './components/SpaceBackground/SpaceBackground'
 import SmoothScroll from './components/SmoothScroll/SmoothScroll'
 import LazySection from './components/LazySection/LazySection'
@@ -16,6 +17,8 @@ const ContactPage = lazy(() => import('./pages/ContactPage'))
 const PageEnd = lazy(() => import('./components/PageEnd/PageEnd'))
 
 function App() {
+  const [isPreloaderVisible, setIsPreloaderVisible] = useState(true)
+  const [isHeroRevealed, setIsHeroRevealed] = useState(false)
   // Set up IntersectionObserver to update Navbar based on scroll position
   useEffect(() => {
     const observerOptions = {
@@ -55,13 +58,19 @@ function App() {
     <Router>
       <SmoothScroll>
         <Analytics />
+        {isPreloaderVisible && (
+          <Preloader
+            onReveal={() => setIsHeroRevealed(true)}
+            onComplete={() => setIsPreloaderVisible(false)}
+          />
+        )}
         <Navbar />
         
         <div className="landing-page-container">
           <div className="landing-content-flow">
             <SpaceBackground motion="none" showPlanet={true}>
               <section id="home">
-                <HeroPage />
+                <HeroPage isRevealed={isHeroRevealed} />
               </section>
             </SpaceBackground>
             <LazySection id="about">
