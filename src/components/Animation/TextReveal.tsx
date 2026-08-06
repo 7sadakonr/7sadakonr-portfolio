@@ -75,7 +75,7 @@ export const TextReveal: React.FC<TextRevealProps> = ({
     const words = rawText.trim().split(/\s+/);
     contentNodes = words.map((word, idx) => (
       <React.Fragment key={`${word}-${idx}`}>
-        <span className="text-reveal-mask">
+        <span className={`text-reveal-mask ${active ? 'is-revealed' : ''}`}>
           <span
             className={`text-reveal-word ${active ? 'is-revealed' : ''}`}
             style={{
@@ -100,7 +100,7 @@ export const TextReveal: React.FC<TextRevealProps> = ({
 
       return (
         <React.Fragment key={idx}>
-          <span className={`text-reveal-mask ${isGradient ? 'has-gradient' : ''}`}>
+          <span className={`text-reveal-mask ${isGradient ? 'has-gradient' : ''} ${active ? 'is-revealed' : ''}`}>
             <span
               className={`text-reveal-word ${isGradient ? 'is-gradient-word' : ''} ${active ? 'is-revealed' : ''}`}
               style={{
