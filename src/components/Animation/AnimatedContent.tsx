@@ -21,16 +21,17 @@ export interface AnimatedContentProps {
   threshold?: number;
   delay?: number;
   blur?: number;
+  mask?: boolean;
   onComplete?: () => void;
   triggerOnce?: boolean;
   className?: string;
 }
 
-const DEFAULT_EASING = 'cubic-bezier(0.22, 1, 0.36, 1)'; // --ease-out-quint
+const DEFAULT_EASING = 'cubic-bezier(0.16, 1, 0.3, 1)'; // Silk physics curve (osamaislam.vercel.app)
 
 const getInitialTransform = (
   direction: AnimationDirection = 'vertical',
-  distance = 30,
+  distance = 35,
   reverse = false,
   scale = 1
 ): string => {
@@ -60,10 +61,10 @@ const getInitialTransform = (
 
 const AnimatedContent: React.FC<AnimatedContentProps> = ({
   children,
-  distance = 30,
+  distance = 35,
   direction = 'vertical',
   reverse = false,
-  duration = 0.6,
+  duration = 0.9,
   ease = DEFAULT_EASING,
   initialOpacity = 0,
   animateOpacity = true,
@@ -71,6 +72,7 @@ const AnimatedContent: React.FC<AnimatedContentProps> = ({
   threshold = 0.1,
   delay = 0,
   blur,
+  mask = false,
   onComplete,
   triggerOnce = true,
   className = ''
@@ -82,7 +84,7 @@ const AnimatedContent: React.FC<AnimatedContentProps> = ({
     const el = elementRef.current;
     if (!el) return;
 
-    // Respect user's motion preferences or SSR/fallback
+    // Respect user's motion preferences
     const prefersReducedMotion =
       typeof window !== 'undefined' &&
       window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -110,7 +112,7 @@ const AnimatedContent: React.FC<AnimatedContentProps> = ({
           if (triggerOnce && hasAnimatedRef.current) return;
           hasAnimatedRef.current = true;
 
-          const animDuration = Math.min(Math.max(duration * 1000, 150), 1000);
+          const animDuration = Math.min(Math.max(duration * 1000, 150), 1400);
           const animDelay = Math.max(delay * 1000, 0);
 
           try {
@@ -123,7 +125,7 @@ const AnimatedContent: React.FC<AnimatedContentProps> = ({
                 },
                 {
                   opacity: 1,
-                  transform: 'translate3d(0, 0, 0)',
+                  transform: 'translate3d(0, 0, 0) scale(1)',
                   filter: 'none'
                 }
               ],
@@ -169,7 +171,7 @@ const AnimatedContent: React.FC<AnimatedContentProps> = ({
       },
       {
         threshold,
-        rootMargin: '0px 0px -40px 0px'
+        rootMargin: '0px 0px -50px 0px'
       }
     );
 
@@ -194,12 +196,22 @@ const AnimatedContent: React.FC<AnimatedContentProps> = ({
     triggerOnce
   ]);
 
+  if (mask) {
+    return (
+      <div style={{ overflow: 'hidden', display: 'block' }}>
+        <div ref={(node) => { elementRef.current = node; }} className={className}>
+          {children}
+        </div>
+      </div>
+    );
+  }
+
   if (React.isValidElement(children)) {
     const child = children as React.ReactElement<{
       ref?: React.Ref<HTMLElement>;
       className?: string;
     }>;
-    const existingRef = (child as unknown as { ref?: React.Ref<HTMLElement> }).ref;
+    const existingRef = child.props?.ref;
 
     return React.cloneElement(child, {
       ref: (node: HTMLElement | null) => {
