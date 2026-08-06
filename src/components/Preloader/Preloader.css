@@ -103,7 +103,7 @@
   left: clamp(18px, 3.5vw, 48px);
 }
 
-/* Large Bottom-Right Counter (Gradient #FF7777 to #8A38F5) */
+/* Large Bottom-Right Counter (Gradient #FF7777 to #8A38F5 without glow) */
 .preloader-counter {
   position: absolute;
   bottom: clamp(16px, 2.5vh, 36px);
@@ -115,8 +115,8 @@
   background: linear-gradient(135deg, #ff7777 0%, #d87df8 50%, #8a38f5 100%);
   -webkit-background-clip: text;
   background-clip: text;
+  color: transparent;
   -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 0 24px rgba(255, 119, 119, 0.5));
   font-variant-numeric: tabular-nums;
   z-index: 10;
   pointer-events: none;
@@ -135,15 +135,15 @@
   padding: 0 20px;
 }
 
-/* Spinning Asterisk with Gradient */
+/* Spinning Asterisk with Gradient (No glow) */
 .preloader-asterisk {
   font-family: 'Space Grotesk', 'Outfit', sans-serif;
   font-size: clamp(2rem, 4vw, 3.5rem);
   background: linear-gradient(135deg, #ff7777 0%, #8a38f5 100%);
   -webkit-background-clip: text;
   background-clip: text;
+  color: transparent;
   -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 0 12px rgba(255, 119, 119, 0.8));
   line-height: 1;
   animation: preloaderSpin 6s linear infinite;
   transform-origin: center;
@@ -244,12 +244,12 @@
   background: linear-gradient(135deg, #ff7777 0%, #8a38f5 100%);
   -webkit-background-clip: text;
   background-clip: text;
+  color: transparent;
   -webkit-text-fill-color: transparent;
   margin-left: 2px;
   opacity: 0;
   transform: translateY(130%);
   animation: preloaderCharUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards;
-  filter: drop-shadow(0 0 10px rgba(255, 119, 119, 0.9));
 }
 
 @keyframes preloaderCharUp {

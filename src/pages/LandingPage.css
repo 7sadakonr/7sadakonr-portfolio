@@ -186,6 +186,9 @@
   line-height: 1.2;
   margin-bottom: clamp(16px, 2.5vh, 32px);
   max-width: 100%;
+  width: 100%;
+  text-align: center;
+  justify-content: center;
   overflow-wrap: break-word;
 }
 
@@ -194,19 +197,23 @@
 .contact-hero-title .gradient-text {
   position: relative;
   display: inline-block;
+  vertical-align: baseline;
   line-height: 1.4;
+  padding-bottom: 0.35em;
+  margin-bottom: -0.35em;
+  overflow: visible;
 }
 
 .about-hero-title .gradient-text-glow,
 .project-hero-title .gradient-text-glow,
 .contact-hero-title .gradient-text-glow {
   position: absolute;
-  top: clamp(2px, 1vh, 5px);
+  top: 0;
   left: 0;
   width: 100%;
   height: 100%;
   pointer-events: none;
-  filter: blur(clamp(12px, 3vw, 20px)) brightness(1.3);
+  filter: blur(clamp(12px, 2.5vw, 18px)) brightness(1.3);
   opacity: 1;
   z-index: 0;
   background: linear-gradient(to right, #ff7777 0%, #8a38f5 100%);
@@ -218,6 +225,9 @@
   font-weight: 400;
   white-space: pre;
   line-height: 1.4;
+  padding-bottom: 0.35em;
+  margin-bottom: -0.35em;
+  overflow: visible;
 }
 
 .about-hero-title .gradient-text-content,
@@ -235,8 +245,8 @@
   font-weight: 400;
   white-space: pre;
   line-height: 1.4;
-  padding: 0.15em 0.1em 0.35em 0.1em;
-  margin: -0.15em -0.1em -0.35em -0.1em;
+  padding-bottom: 0.35em;
+  margin-bottom: -0.35em;
   overflow: visible;
 }
 

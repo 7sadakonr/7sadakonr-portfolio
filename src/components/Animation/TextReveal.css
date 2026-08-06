@@ -2,7 +2,8 @@
   display: inline-flex;
   flex-wrap: wrap;
   align-items: baseline;
-  justify-content: inherit;
+  justify-content: center;
+  text-align: center;
   width: 100%;
   max-width: 100%;
   overflow: visible;
@@ -11,29 +12,23 @@
 .text-reveal-mask {
   display: inline-flex;
   align-items: baseline;
-  overflow: hidden;
-  vertical-align: bottom;
-  padding-top: 0.15em;
-  padding-bottom: 0.22em;
-  padding-left: 0.02em;
-  padding-right: 0.02em;
-  margin-top: -0.15em;
-  margin-bottom: -0.22em;
+  vertical-align: baseline;
+  overflow: visible;
   line-height: inherit;
+  clip-path: inset(-50px -40px -40px -40px);
 }
 
-/* Gradient word mask: ample padding for glow (20px blur) and star icon on the right */
+/* Gradient word mask: ample margin for glow (20px blur) and star icon on the right */
 .text-reveal-mask.has-gradient,
 .text-reveal-mask:has(.gradient-text) {
-  overflow: hidden;
-  padding-top: 0.35em;
-  padding-bottom: 0.35em;
-  padding-left: 0.15em;
-  padding-right: 0.6em;
-  margin-top: -0.35em;
-  margin-bottom: -0.35em;
-  margin-left: -0.15em;
-  margin-right: -0.6em;
+  overflow: visible;
+  clip-path: inset(-60px -80px -50px -50px);
+}
+
+.text-reveal-mask.is-revealed,
+.text-reveal-mask:has(.is-revealed) {
+  clip-path: none !important;
+  overflow: visible !important;
 }
 
 .text-reveal-word {
