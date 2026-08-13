@@ -6,6 +6,7 @@ import Preloader from './components/Preloader/Preloader'
 import { SpaceBackground } from './components/SpaceBackground/SpaceBackground'
 import SmoothScroll from './components/SmoothScroll/SmoothScroll'
 import LazySection from './components/LazySection/LazySection'
+import { warmPortfolioRuntime } from './utils/runtimeWarmup'
 
 import './pages/LandingPage.css'
 
@@ -19,6 +20,13 @@ const PageEnd = lazy(() => import('./components/PageEnd/PageEnd'))
 function App() {
   const [isPreloaderVisible, setIsPreloaderVisible] = useState(true)
   const [isHeroRevealed, setIsHeroRevealed] = useState(false)
+
+  // Use the time covered by the preloader to warm interaction/effect code,
+  // lazy page chunks and below-the-fold images before the user reaches them.
+  useEffect(() => {
+    warmPortfolioRuntime()
+  }, [])
+
   // Set up IntersectionObserver to update Navbar based on scroll position
   useEffect(() => {
     const observerOptions = {
