@@ -1,7 +1,9 @@
-import { type CSSProperties, type ComponentPropsWithoutRef } from "react";
+import { lazy, Suspense, type CSSProperties, type ComponentPropsWithoutRef } from "react";
 import "./SpaceBackground.css";
 import { STREAK_DATA } from "./utils/streakData";
-import Fireflies from "../Animation/Fireflies";
+import { loadFireflies } from '../../utils/runtimeWarmup';
+
+const Fireflies = lazy(loadFireflies);
 
 export type SpaceMotion = "subtle" | "none";
 
@@ -21,6 +23,8 @@ export interface SpaceBackgroundProps extends ComponentPropsWithoutRef<"div"> {
   showPlanet?: boolean;
   /** Custom colors for the background elements. */
   colors?: SpaceBackgroundColors;
+  /** Starts animated effects only after the Hero is ready to receive input. */
+  isActive?: boolean;
 }
 
 const DEFAULT_COLORS = {
@@ -36,6 +40,7 @@ export function SpaceBackground({
   motion = "subtle",
   showPlanet = true,
   colors,
+  isActive = true,
   ...rest
 }: SpaceBackgroundProps) {
   const mergedColors = { ...DEFAULT_COLORS, ...colors };
@@ -83,7 +88,11 @@ export function SpaceBackground({
           ))}
         </div>
       </div>
-      <Fireflies count={10} />
+      {isActive && (
+        <Suspense fallback={null}>
+          <Fireflies count={10} enabled={isActive} />
+        </Suspense>
+      )}
       {showPlanet && (
         <div className="space-background__planet" aria-hidden="true" />
       )}

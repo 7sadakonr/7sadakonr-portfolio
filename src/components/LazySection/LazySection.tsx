@@ -12,6 +12,7 @@ import {
 interface LazySectionProps {
   id: LazySectionId
   children: ReactNode
+  canLoad?: boolean
 }
 
 const SectionReady = ({ id, children }: LazySectionProps) => {
@@ -28,14 +29,17 @@ const SectionPlaceholder = ({ id }: { id?: LazySectionId }) => (
   </div>
 )
 
-const LazySection = ({ id, children }: LazySectionProps) => {
+const LazySection = ({ id, children, canLoad = true }: LazySectionProps) => {
   const [shouldRender, setShouldRender] = useState(() => isSectionRequested(id))
   const [isReady, setIsReady] = useState(() => isSectionReady(id))
+  const [isEffectActive, setIsEffectActive] = useState(false)
 
   useEffect(() => {
     const unsubscribe = subscribeToSectionRequests((requestedId) => {
       if (requestedId === id) setShouldRender(true)
     })
+
+    if (!canLoad) return unsubscribe
 
     const element = document.getElementById(id)
     if (!element || shouldRender) return unsubscribe
@@ -56,10 +60,37 @@ const LazySection = ({ id, children }: LazySectionProps) => {
       observer.disconnect()
       unsubscribe()
     }
-  }, [id, shouldRender])
+  }, [canLoad, id, shouldRender])
 
   useEffect(() => {
-    if (!shouldRender || isReady) return
+    if (!canLoad) return
+
+    const element = document.getElementById(id)
+    if (!element || typeof IntersectionObserver === 'undefined') return
+
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsEffectActive(Boolean(entry?.isIntersecting) && !document.hidden),
+      { rootMargin: '150px 0px', threshold: 0 },
+    )
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        setIsEffectActive(false)
+        return
+      }
+      const rect = element.getBoundingClientRect()
+      setIsEffectActive(rect.bottom >= -150 && rect.top <= window.innerHeight + 150)
+    }
+
+    observer.observe(element)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => {
+      observer.disconnect()
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [canLoad, id])
+
+  useEffect(() => {
+    if (!canLoad || !shouldRender || isReady) return
 
     let isActive = true
     void requestSection(id).then(() => {
@@ -69,12 +100,12 @@ const LazySection = ({ id, children }: LazySectionProps) => {
     return () => {
       isActive = false
     }
-  }, [id, isReady, shouldRender])
+  }, [canLoad, id, isReady, shouldRender])
 
   return (
     <section
       id={id}
-      className={`lazy-section${isReady ? ' is-ready' : ''}`}
+      className={`lazy-section${isReady ? ' is-ready' : ''}${isEffectActive ? ' is-effect-active' : ''}`}
       aria-busy={shouldRender && !isReady ? true : undefined}
     >
       {shouldRender ? (

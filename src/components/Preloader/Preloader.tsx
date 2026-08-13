@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from 'react';
-import heroWebp from '../../assets/img/logo-7m.webp';
 import './Preloader.css';
 
 interface PreloaderProps {
@@ -16,61 +15,13 @@ const GREETINGS = [
   'Konnichiwa',
 ];
 
-const CRITICAL_FONTS = [
-  '400 16px "Outfit"',
-  '700 48px "Outfit"',
-  '400 48px "Playwrite IT Moderna"',
-];
-
-const MIN_VISIBLE_MS = 350;
-const MAX_CRITICAL_WAIT_MS = 4500;
-const COMPLETE_HOLD_MS = 300;
-const EXIT_DURATION_MS = 850;
+const MIN_VISIBLE_MS = 600;
+const COMPLETE_HOLD_MS = 100;
+const EXIT_DURATION_MS = 350;
 
 const delay = (ms: number) => new Promise<void>((resolve) => {
   window.setTimeout(resolve, ms);
 });
-
-const preloadImage = (src: string) => new Promise<void>((resolve) => {
-  const image = new Image();
-  let settled = false;
-
-  const finish = () => {
-    if (settled) return;
-    settled = true;
-    image.onload = null;
-    image.onerror = null;
-    resolve();
-  };
-
-  const decodeAndFinish = () => {
-    if (typeof image.decode === 'function') {
-      image.decode().catch(() => undefined).finally(finish);
-      return;
-    }
-    finish();
-  };
-
-  image.decoding = 'async';
-  image.onload = decodeAndFinish;
-  image.onerror = finish;
-  image.src = src;
-
-  if (image.complete) {
-    if (image.naturalWidth > 0) decodeAndFinish();
-    else finish();
-  }
-});
-
-const preloadFont = async (font: string) => {
-  if (!document.fonts) return;
-
-  try {
-    await document.fonts.load(font);
-  } catch {
-    // Font failures must never trap the user behind the preloader.
-  }
-};
 
 export const Preloader: React.FC<PreloaderProps> = ({ onReveal, onComplete }) => {
   const [currentGreetingIndex, setCurrentGreetingIndex] = useState(0);
@@ -81,11 +32,59 @@ export const Preloader: React.FC<PreloaderProps> = ({ onReveal, onComplete }) =>
 
   const onRevealRef = useRef(onReveal);
   const onCompleteRef = useRef(onComplete);
+  const progressRef = useRef(0);
+  const progressTargetRef = useRef(0);
 
   useEffect(() => {
     onRevealRef.current = onReveal;
     onCompleteRef.current = onComplete;
   }, [onReveal, onComplete]);
+
+  // The counter eases toward real task completion instead of jumping from a
+  // fast cached resource directly to 100. It never advances beyond the work
+  // that has actually settled.
+  useEffect(() => {
+    let frameId: number | null = null;
+    let lastFrame = performance.now();
+
+    const start = () => {
+      if (frameId === null && !document.hidden) frameId = requestAnimationFrame(tick);
+    };
+
+    const tick = (now: number) => {
+      const elapsed = Math.min(now - lastFrame, 64);
+      lastFrame = now;
+      const next = Math.min(
+        progressTargetRef.current,
+        progressRef.current + elapsed * 0.24,
+      );
+
+      if (next !== progressRef.current) {
+        progressRef.current = next;
+        setProgress(Math.round(next));
+      }
+      frameId = null;
+      start();
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.hidden && frameId !== null) {
+        cancelAnimationFrame(frameId);
+        frameId = null;
+      }
+      if (!document.hidden) {
+        lastFrame = performance.now();
+        start();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    start();
+    return () => {
+      if (frameId !== null) cancelAnimationFrame(frameId);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
 
   // Block scrolling only while the visual curtain is present.
   useEffect(() => {
@@ -110,42 +109,34 @@ export const Preloader: React.FC<PreloaderProps> = ({ onReveal, onComplete }) =>
 
     let cancelled = false;
     const startedAt = performance.now();
+    const waitForVisualProgress = (target: number) => new Promise<void>((resolve) => {
+      const check = () => {
+        if (progressRef.current >= target || cancelled) {
+          resolve();
+          return;
+        }
+        window.setTimeout(check, 16);
+      };
+      check();
+    });
 
     const greetingTimer = window.setInterval(() => {
       setCurrentGreetingIndex((current) => Math.min(current + 1, GREETINGS.length - 1));
     }, 320);
 
     const run = async () => {
-      const criticalTasks = [
-        preloadImage(heroWebp),
-        ...CRITICAL_FONTS.map(preloadFont),
-      ];
-
-      let completedTasks = 0;
-      const trackedTasks = criticalTasks.map((task) => task.finally(() => {
-        completedTasks += 1;
-        if (cancelled) return;
-
-        // Reserve the final 5% for the handoff/reveal so 100 really means ready.
-        const resourceProgress = Math.round((completedTasks / criticalTasks.length) * 95);
-        setProgress((current) => Math.max(current, resourceProgress));
-      }));
-
-      // Wait for the Hero-critical resources, but always fail open on slow/broken networks.
-      await Promise.race([
-        Promise.allSettled(trackedTasks),
-        delay(MAX_CRITICAL_WAIT_MS),
-      ]);
-
+      progressTargetRef.current = 95;
+      await waitForVisualProgress(95);
       const elapsed = performance.now() - startedAt;
-      if (elapsed < MIN_VISIBLE_MS) {
-        await delay(MIN_VISIBLE_MS - elapsed);
-      }
+      if (elapsed < MIN_VISIBLE_MS) await delay(MIN_VISIBLE_MS - elapsed);
 
       if (cancelled) return;
 
       window.clearInterval(greetingTimer);
-      setProgress(100);
+      progressTargetRef.current = 100;
+      await waitForVisualProgress(100);
+      if (cancelled) return;
+
       setShowName(true);
 
       await delay(COMPLETE_HOLD_MS);

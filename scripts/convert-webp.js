@@ -29,6 +29,8 @@ const conversions = [
   }
 ];
 
+const heroWidths = [160, 240, 320, 480];
+
 async function run() {
   console.log('--- Converting images to WebP ---');
   for (const item of conversions) {
@@ -53,6 +55,16 @@ async function run() {
       const newStat = fs.statSync(outPath);
       const savedPercent = (((origStat.size - newStat.size) / origStat.size) * 100).toFixed(1);
       console.log(` -> ${outPath}: ${(newStat.size / 1024).toFixed(1)} KB (Saved ${savedPercent}%)`);
+    }
+  }
+
+  for (const width of heroWidths) {
+    for (const format of ['avif', 'webp']) {
+      const output = `public/hero-${width}.${format}`;
+      const transformer = sharp('src/assets/img/logo-7m.png').resize({ width, withoutEnlargement: true });
+      if (format === 'avif') await transformer.avif({ quality: 55, effort: 4 }).toFile(output);
+      else await transformer.webp({ quality: 82, effort: 4 }).toFile(output);
+      console.log(` -> ${output}`);
     }
   }
   console.log('\n--- WebP conversion completed successfully ---');

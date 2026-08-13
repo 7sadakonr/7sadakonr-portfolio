@@ -18,7 +18,7 @@
   height: 1em;
   border-radius: 50%;
   opacity: 1;
-  will-change: transform, opacity, box-shadow;
+  will-change: auto;
 
   /* Mix white with the target color based on distance from center */
   --start-color: color-mix(

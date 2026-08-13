@@ -1,4 +1,5 @@
-import Lenis, { type ScrollToOptions } from 'lenis'
+import type Lenis from 'lenis'
+import type { ScrollToOptions } from 'lenis'
 
 const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)'
 

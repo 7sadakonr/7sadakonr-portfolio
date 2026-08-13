@@ -1,15 +1,55 @@
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import './HeroPage.css'
-import heroWebp from '../assets/img/logo-7m.webp';
 import { scrollToTarget } from '../components/SmoothScroll/scrollController';
-import BackgroundBeams from '../components/BackgroundBeams/BackgroundBeams';
 import TextReveal from '../components/Animation/TextReveal';
 
 interface HeroPageProps {
-  isRevealed?: boolean;
+  onCriticalReady?: () => void;
 }
 
-const HeroPage = ({ isRevealed = true }: HeroPageProps) => {
-  const heroImg = heroWebp;
+const BackgroundBeams = lazy(() => import('../components/BackgroundBeams/BackgroundBeams'))
+
+const HeroPage = ({ onCriticalReady }: HeroPageProps) => {
+  const heroRef = useRef<HTMLElement>(null);
+  const criticalReadyRef = useRef(false);
+  const [isImageReady, setIsImageReady] = useState(false);
+  const [isInView, setIsInView] = useState(true);
+  const [isDocumentVisible, setIsDocumentVisible] = useState(() => !document.hidden);
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(() =>
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+  );
+
+  useEffect(() => {
+    const hero = heroRef.current;
+    if (!hero || typeof IntersectionObserver === 'undefined') return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsInView(Boolean(entry?.isIntersecting)),
+      { rootMargin: '100px 0px', threshold: 0 },
+    );
+    observer.observe(hero);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const updateVisibility = () => setIsDocumentVisible(!document.hidden);
+    const updateMotion = () => setPrefersReducedMotion(motionQuery.matches);
+    document.addEventListener('visibilitychange', updateVisibility);
+    motionQuery.addEventListener('change', updateMotion);
+    return () => {
+      document.removeEventListener('visibilitychange', updateVisibility);
+      motionQuery.removeEventListener('change', updateMotion);
+    };
+  }, []);
+
+  const isEffectActive = isImageReady && isInView && isDocumentVisible && !prefersReducedMotion;
+
+  const markCriticalReady = () => {
+    if (criticalReadyRef.current) return;
+    criticalReadyRef.current = true;
+    setIsImageReady(true);
+    onCriticalReady?.();
+  };
 
   const handleExploreClick = () => {
     const aboutSection = document.getElementById('about');
@@ -19,18 +59,22 @@ const HeroPage = ({ isRevealed = true }: HeroPageProps) => {
   };
 
   return (
-    <main className="hero-section">
+    <main ref={heroRef} className="hero-section">
       <div className="hero-scales-container">
-        <BackgroundBeams />
+        {isEffectActive && (
+          <Suspense fallback={null}>
+            <BackgroundBeams enabled />
+          </Suspense>
+        )}
       </div>
 
-      <div className={`hero-content ${isRevealed ? 'is-revealed' : 'is-hidden'}`}>
+      <div className="hero-content is-revealed">
         <div className="hero-text-container">
           <h1 className="main-title">
             <TextReveal
               as="div"
               className="hero-headline-reveal"
-              isRevealed={isRevealed}
+              isRevealed
               delay={0.1}
               stagger={0.075}
             >
@@ -39,7 +83,7 @@ const HeroPage = ({ isRevealed = true }: HeroPageProps) => {
               <span>my</span>
               <span className="gradient-text">
                 <span className="gradient-text-glow">portfolio</span>
-                <span className="gradient-text-content t-shimmer" data-text="portfolio">portfolio</span>
+                <span className={`gradient-text-content t-shimmer${isEffectActive ? ' is-active' : ''}`} data-text="portfolio">portfolio</span>
               </span>
             </TextReveal>
           </h1>
@@ -49,7 +93,7 @@ const HeroPage = ({ isRevealed = true }: HeroPageProps) => {
               as="p"
               className="subtitle"
               text="Hi, I'm Jetsadakorn Muangwichit, a Computer Science Student."
-              isRevealed={isRevealed}
+              isRevealed
               delay={0.38}
               stagger={0.03}
             />
@@ -57,20 +101,34 @@ const HeroPage = ({ isRevealed = true }: HeroPageProps) => {
         </div>
 
         <div className="hero-mask-line hero-img-mask">
-          <img
-            src={heroImg}
-            alt="Hero"
-            width="519"
-            height="403"
-            fetchPriority="high"
-            loading="eager"
-            decoding="async"
-            className="hero-reveal-line hero-reveal--3"
-          />
+          <picture>
+            <source
+              type="image/avif"
+              srcSet="/hero-160.avif 160w, /hero-240.avif 240w, /hero-320.avif 320w, /hero-480.avif 480w"
+              sizes="(max-width: 480px) 240px, (max-width: 768px) 320px, 300px"
+            />
+            <source
+              type="image/webp"
+              srcSet="/hero-160.webp 160w, /hero-240.webp 240w, /hero-320.webp 320w, /hero-480.webp 480w"
+              sizes="(max-width: 480px) 240px, (max-width: 768px) 320px, 300px"
+            />
+            <img
+              src="/hero-480.webp"
+              alt="Hero"
+              width="519"
+              height="403"
+              fetchPriority="high"
+              loading="eager"
+              decoding="async"
+              onLoad={markCriticalReady}
+              onError={markCriticalReady}
+              className="hero-reveal-line hero-reveal--3"
+            />
+          </picture>
         </div>
 
         <div className="hero-mask-line hero-btn-mask">
-          <button className="explore-button hero-reveal-line hero-reveal--4" onClick={handleExploreClick}>
+          <button className={`explore-button hero-reveal-line hero-reveal--4${isEffectActive ? ' is-effect-active' : ''}`} onClick={handleExploreClick}>
             <span className="explore-text">Explore</span>
             <div className="explore-icon">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
