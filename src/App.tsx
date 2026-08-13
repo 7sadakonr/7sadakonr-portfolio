@@ -1,31 +1,39 @@
-import { useEffect, useState, lazy } from 'react'
+import { Suspense, useEffect, useState, lazy } from 'react'
 import { BrowserRouter as Router } from 'react-router-dom'
-import { Analytics } from "@vercel/analytics/react"
 import Navbar from './components/Navbar/Navbar'
 import Preloader from './components/Preloader/Preloader'
 import { SpaceBackground } from './components/SpaceBackground/SpaceBackground'
 import SmoothScroll from './components/SmoothScroll/SmoothScroll'
 import LazySection from './components/LazySection/LazySection'
-import { warmPortfolioRuntime } from './utils/runtimeWarmup'
+import {
+  loadAboutPage,
+  loadContactPage,
+  loadPageEnd,
+  loadProjectPage,
+  warmBackgroundRuntime,
+} from './utils/runtimeWarmup'
 
 import './pages/LandingPage.css'
 
 // Lazy load components for code splitting
 import HeroPage from './pages/HeroPage'
-const AboutPage = lazy(() => import('./pages/AboutPage'))
-const ProjectPage = lazy(() => import('./pages/ProjectPage'))
-const ContactPage = lazy(() => import('./pages/ContactPage'))
-const PageEnd = lazy(() => import('./components/PageEnd/PageEnd'))
+const AboutPage = lazy(loadAboutPage)
+const ProjectPage = lazy(loadProjectPage)
+const ContactPage = lazy(loadContactPage)
+const PageEnd = lazy(loadPageEnd)
+const Analytics = lazy(() => import('@vercel/analytics/react').then(({ Analytics: Component }) => ({ default: Component })))
 
 function App() {
+  const [isCriticalReady, setIsCriticalReady] = useState(false)
   const [isPreloaderVisible, setIsPreloaderVisible] = useState(true)
-  const [isHeroRevealed, setIsHeroRevealed] = useState(false)
+  const isInteractive = isCriticalReady && !isPreloaderVisible
 
-  // Use the time covered by the preloader to warm interaction/effect code,
-  // lazy page chunks and below-the-fold images before the user reaches them.
+  // The hero owns the critical rendering window. Every nonessential download
+  // begins only after its image has painted.
   useEffect(() => {
-    warmPortfolioRuntime()
-  }, [])
+    if (!isInteractive) return
+    return warmBackgroundRuntime()
+  }, [isInteractive])
 
   // Set up IntersectionObserver to update Navbar based on scroll position
   useEffect(() => {
@@ -64,30 +72,29 @@ function App() {
 
   return (
     <Router>
-      <SmoothScroll>
-        <Analytics />
-        {isPreloaderVisible && (
-          <Preloader
-            onReveal={() => setIsHeroRevealed(true)}
-            onComplete={() => setIsPreloaderVisible(false)}
-          />
+      <SmoothScroll isPrepared={isInteractive} isEnabled={isInteractive}>
+        {isPreloaderVisible && <Preloader onComplete={() => setIsPreloaderVisible(false)} />}
+        {isInteractive && (
+          <Suspense fallback={null}>
+            <Analytics />
+          </Suspense>
         )}
         <Navbar />
         
         <div className="landing-page-container">
           <div className="landing-content-flow">
-            <SpaceBackground motion="none" showPlanet={true}>
+            <SpaceBackground motion="none" showPlanet={true} isActive={isInteractive}>
               <section id="home">
-                <HeroPage isRevealed={isHeroRevealed} />
+                <HeroPage onCriticalReady={() => setIsCriticalReady(true)} />
               </section>
             </SpaceBackground>
-            <LazySection id="about">
+            <LazySection id="about" canLoad={isInteractive}>
                 <AboutPage />
             </LazySection>
-            <LazySection id="projects">
+            <LazySection id="projects" canLoad={isInteractive}>
                 <ProjectPage />
             </LazySection>
-            <LazySection id="contact">
+            <LazySection id="contact" canLoad={isInteractive}>
                 <ContactPage />
                 <PageEnd />
             </LazySection>
