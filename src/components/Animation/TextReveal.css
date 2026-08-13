@@ -36,13 +36,18 @@
   align-items: baseline;
   transform: translateY(125%);
   opacity: 0;
-  will-change: transform, opacity;
+  will-change: auto;
+  transition-property: transform, opacity;
   line-height: inherit;
 }
 
 .text-reveal-word.is-revealed {
   transform: translateY(0%);
   opacity: 1;
+}
+
+.text-reveal-word:not(.is-revealed) {
+  will-change: transform, opacity;
 }
 
 .text-reveal-word.is-gradient-word {

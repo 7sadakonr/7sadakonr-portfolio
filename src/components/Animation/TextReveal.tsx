@@ -91,7 +91,7 @@ export const TextReveal: React.FC<TextRevealProps> = ({
       </React.Fragment>
     ));
   } else {
-    const childrenArray = React.Children.toArray(children);
+    const childrenArray = React.Children.toArray(children) as React.ReactElement<{ className?: string }>[];
     contentNodes = childrenArray.map((child, idx) => {
       const isGradient =
         React.isValidElement(child) &&

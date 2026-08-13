@@ -290,6 +290,12 @@
 .space-background--motion-none .space-background__streaks,
 .space-background--motion-none .space-background__planet::before {
   animation: none;
+  will-change: auto;
+}
+
+.space-background--motion-none .space-background__planet,
+.space-background--motion-none .space-background__planet::after {
+  will-change: auto;
 }
 
 /* Freeze front aurora at its brightest/largest state */
