@@ -75,10 +75,10 @@
   transform: scale(1);
 }
 
-/* Corner Metadata Labels */
+/* Corner Metadata Labels: use a local monospace stack so the loader never competes for a webfont. */
 .preloader-meta {
   position: absolute;
-  font-family: 'IBM Plex Mono', 'Space Mono', monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
   font-size: clamp(10px, 0.8vw, 12px);
   text-transform: uppercase;
   letter-spacing: 0.2em;
@@ -103,12 +103,12 @@
   left: clamp(18px, 3.5vw, 48px);
 }
 
-/* Large Bottom-Right Counter (Gradient #FF7777 to #8A38F5 without glow) */
+/* Counter uses Outfit, the same font the Hero needs, so showing the loader warms a critical font. */
 .preloader-counter {
   position: absolute;
   bottom: clamp(16px, 2.5vh, 36px);
   right: clamp(18px, 3.5vw, 48px);
-  font-family: 'Space Grotesk', 'Outfit', sans-serif;
+  font-family: 'Outfit', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   font-size: clamp(3.2rem, 6.5vw, 6.5rem);
   font-weight: 700;
   line-height: 1;
@@ -137,7 +137,7 @@
 
 /* Spinning Asterisk with Gradient (No glow) */
 .preloader-asterisk {
-  font-family: 'Space Grotesk', 'Outfit', sans-serif;
+  font-family: 'Outfit', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   font-size: clamp(2rem, 4vw, 3.5rem);
   background: linear-gradient(135deg, #ff7777 0%, #8a38f5 100%);
   -webkit-background-clip: text;
@@ -184,7 +184,7 @@
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  font-family: 'Space Grotesk', 'Outfit', 'Prompt', 'Noto Sans Thai', sans-serif;
+  font-family: 'Outfit', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   font-size: clamp(2.2rem, 5.5vw, 4.5rem);
   font-weight: 600;
   line-height: 1.35;
@@ -224,7 +224,7 @@
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  font-family: 'Space Grotesk', 'Outfit', 'Prompt', 'Noto Sans Thai', sans-serif;
+  font-family: 'Outfit', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   font-size: clamp(2.2rem, 5.5vw, 4.5rem);
   font-weight: 600;
   line-height: 1.35;
@@ -275,7 +275,7 @@
   transform-origin: left;
   will-change: transform;
   z-index: 10;
-  transition: transform 0.05s linear;
+  transition: transform 0.18s ease-out;
 }
 
 /* Responsive adjustments */
