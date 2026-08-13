@@ -3,24 +3,47 @@ import './Fireflies.css';
 
 interface FirefliesProps {
   count?: number;
+  enabled?: boolean;
 }
 
-const Fireflies: React.FC<FirefliesProps> = ({ count = 7 }) => {
+const Fireflies: React.FC<FirefliesProps> = ({ count = 7, enabled = true }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [isActive, setIsActive] = useState(true);
+  const [isInView, setIsInView] = useState(false);
+  const [isDocumentVisible, setIsDocumentVisible] = useState(() => !document.hidden);
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(() =>
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+  );
 
   useEffect(() => {
     const element = containerRef.current;
     if (!element || typeof IntersectionObserver === 'undefined') return;
 
     const observer = new IntersectionObserver(
-      ([entry]) => setIsActive(Boolean(entry?.isIntersecting)),
+      ([entry]) => setIsInView(Boolean(entry?.isIntersecting)),
       { rootMargin: '250px 0px', threshold: 0 },
     );
 
     observer.observe(element);
     return () => observer.disconnect();
   }, []);
+
+  useEffect(() => {
+    const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const updateVisibility = () => setIsDocumentVisible(!document.hidden);
+    const updateMotion = () => setPrefersReducedMotion(motionQuery.matches);
+
+    document.addEventListener('visibilitychange', updateVisibility);
+    motionQuery.addEventListener('change', updateMotion);
+    updateVisibility();
+    updateMotion();
+
+    return () => {
+      document.removeEventListener('visibilitychange', updateVisibility);
+      motionQuery.removeEventListener('change', updateMotion);
+    };
+  }, []);
+
+  const isActive = enabled && isInView && isDocumentVisible && !prefersReducedMotion;
 
   const fireflies = useMemo(() => {
     const validCount = Math.max(1, count);

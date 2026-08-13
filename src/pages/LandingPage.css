@@ -1673,6 +1673,17 @@ a.contact-item-text:hover {
   }
 
 }
+
+/* Below-the-fold sections keep their visual state but release animation work
+   and compositor hints while they are outside the viewport. */
+@media (prefers-reduced-motion: no-preference) {
+  .lazy-section:not(.is-effect-active) *,
+  .lazy-section:not(.is-effect-active) *::before,
+  .lazy-section:not(.is-effect-active) *::after {
+    animation-play-state: paused !important;
+    will-change: auto !important;
+  }
+}
 /* Marquee CSS */
 .tech-marquee-container {
   display: flex;
@@ -1702,7 +1713,7 @@ a.contact-item-text:hover {
   display: flex;
   gap: 12px;
   width: max-content;
-  will-change: transform;
+  will-change: auto;
 }
 
 .tech-marquee-row.left {

@@ -1,48 +1,65 @@
-import { useEffect, useRef } from 'react'
-import Lenis from 'lenis'
-import 'lenis/dist/lenis.css'
+import { useCallback, useEffect, useRef } from 'react'
+import { loadLenis, type LenisInstance } from '../../utils/runtimeWarmup'
 import { REDUCED_MOTION_QUERY, setActiveLenis } from './scrollController'
 
-export default function SmoothScroll({ children }: { children: React.ReactNode }) {
+interface SmoothScrollProps {
+  children: React.ReactNode
+  isPrepared: boolean
+  isEnabled: boolean
+}
+
+export default function SmoothScroll({ children, isPrepared, isEnabled }: SmoothScrollProps) {
   const requestRef = useRef<number | null>(null)
+  const lenisRef = useRef<LenisInstance | null>(null)
+  const enabledRef = useRef(isEnabled)
+  const motionPreferenceRef = useRef<MediaQueryList | null>(null)
 
-  useEffect(() => {
-    let lenis: Lenis | null = null
-    let timerId: number | null = null
-    const motionPreference = window.matchMedia(REDUCED_MOTION_QUERY)
+  const stopAnimation = useCallback(() => {
+    if (requestRef.current !== null) {
+      cancelAnimationFrame(requestRef.current)
+      requestRef.current = null
+    }
+  }, [])
 
-    const stopAnimation = () => {
-      if (requestRef.current !== null) {
-        cancelAnimationFrame(requestRef.current)
-        requestRef.current = null
-      }
+  const syncActivity = useCallback(() => {
+    const lenis = lenisRef.current
+    const motionPreference = motionPreferenceRef.current
+    if (!lenis || !motionPreference) return
+
+    if (!enabledRef.current || document.hidden || motionPreference.matches) {
+      stopAnimation()
+      lenis.stop()
+      return
     }
 
+    lenis.start()
+    if (requestRef.current !== null) return
+
     const animate = (time: number) => {
-      if (!lenis || document.hidden) {
+      const currentLenis = lenisRef.current
+      if (!currentLenis || document.hidden || !enabledRef.current || motionPreference.matches) {
         requestRef.current = null
         return
       }
-
-      lenis.raf(time)
+      currentLenis.raf(time)
       requestRef.current = requestAnimationFrame(animate)
     }
+    requestRef.current = requestAnimationFrame(animate)
+  }, [stopAnimation])
 
-    const startAnimation = () => {
-      if (lenis && !document.hidden && requestRef.current === null) {
-        requestRef.current = requestAnimationFrame(animate)
-      }
-    }
+  useEffect(() => {
+    enabledRef.current = isEnabled
+    syncActivity()
+  }, [isEnabled, syncActivity])
 
-    const handleVisibilityChange = () => {
-      if (document.hidden) stopAnimation()
-      else startAnimation()
-    }
+  useEffect(() => {
+    if (!isPrepared || lenisRef.current || motionPreferenceRef.current?.matches) return
 
-    const createLenis = () => {
-      if (lenis || motionPreference.matches) return
+    let disposed = false
+    void loadLenis().then(({ default: Lenis }) => {
+      if (disposed || motionPreferenceRef.current?.matches || lenisRef.current) return
 
-      lenis = new Lenis({
+      const lenis = new Lenis({
         duration: 1.5,
         easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
         orientation: 'vertical',
@@ -52,37 +69,40 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
         touchMultiplier: 1.5,
         syncTouch: false,
       })
-
+      lenisRef.current = lenis
       setActiveLenis(lenis)
-
-      startAnimation()
-    }
-
-    const destroyLenis = () => {
-      stopAnimation()
-      lenis?.destroy()
-      lenis = null
-      setActiveLenis(null)
-    }
-
-    const handleMotionPreferenceChange = () => {
-      if (motionPreference.matches) destroyLenis()
-      else createLenis()
-    }
-
-    document.addEventListener('visibilitychange', handleVisibilityChange)
-    motionPreference.addEventListener('change', handleMotionPreferenceChange)
-
-    // Defer Lenis initialization until after first paint to improve LCP
-    timerId = window.setTimeout(createLenis, 0)
+      syncActivity()
+    })
 
     return () => {
-      if (timerId !== null) window.clearTimeout(timerId)
-      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      disposed = true
+    }
+  }, [isPrepared, syncActivity])
+
+  useEffect(() => {
+    const motionPreference = window.matchMedia(REDUCED_MOTION_QUERY)
+    motionPreferenceRef.current = motionPreference
+    const destroyLenis = () => {
+      stopAnimation()
+      lenisRef.current?.destroy()
+      lenisRef.current = null
+      setActiveLenis(null)
+    }
+    const handleMotionPreferenceChange = () => {
+      if (motionPreference.matches) destroyLenis()
+      else syncActivity()
+    }
+
+    document.addEventListener('visibilitychange', syncActivity)
+    motionPreference.addEventListener('change', handleMotionPreferenceChange)
+
+    return () => {
+      document.removeEventListener('visibilitychange', syncActivity)
       motionPreference.removeEventListener('change', handleMotionPreferenceChange)
+      motionPreferenceRef.current = null
       destroyLenis()
     }
-  }, [])
+  }, [stopAnimation, syncActivity])
 
   return <>{children}</>
 }

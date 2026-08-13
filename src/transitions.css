@@ -108,14 +108,16 @@
   transition:
     transform var(--modal-open-dur) var(--modal-ease),
     opacity var(--modal-open-dur) var(--modal-ease);
-  will-change: transform, opacity;
+  will-change: auto;
 }
 .t-modal.is-open {
+  will-change: transform, opacity;
   transform: scale(1);
   opacity: 1;
   pointer-events: auto;
 }
 .t-modal.is-closing {
+  will-change: transform, opacity;
   transform: scale(var(--modal-scale-close));
   opacity: 0;
   pointer-events: none;
@@ -155,6 +157,9 @@
   background-clip: text;
   color: transparent;
   -webkit-text-fill-color: transparent;
+  animation: none;
+}
+.t-shimmer.is-active::before {
   animation: t-shimmer var(--shimmer-dur) var(--shimmer-ease) infinite;
 }
 @keyframes t-shimmer {
@@ -277,7 +282,11 @@
     transform var(--text-swap-dur) var(--text-swap-ease),
     filter var(--text-swap-dur) var(--text-swap-ease),
     opacity var(--text-swap-dur) var(--text-swap-ease);
-  will-change: transform, filter, opacity;
+  will-change: auto;
+}
+.t-text-swap.is-exit,
+.t-text-swap.is-enter-start {
+  will-change: transform, opacity;
 }
 .t-text-swap.is-exit {
   transform: translateY(calc(var(--text-swap-translate-y) * -1));
