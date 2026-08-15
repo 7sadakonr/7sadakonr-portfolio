@@ -83,13 +83,13 @@ const ResumeDownloadMenu = ({ variant }: ResumeDownloadMenuProps) => {
           blur={8}
           contrast={18}
           fill="var(--resume-liquid-surface)"
-          shadow="0 14px 30px rgba(0, 0, 0, 0.28)"
+          shadow="0 14px 30px rgba(0, 0, 0, 0.28), inset 0 0 0 1px rgba(255, 255, 255, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.18)"
           aria-label="Choose resume language"
         >
           <Liquid.Item
             className="resume-download-menu__liquid-item resume-download-menu__liquid-item--thai"
             x={isOpen ? -66 : 0}
-            y={isOpen ? 64 : 0}
+            y={isOpen ? 52 : 0}
             transition="bouncy"
           >
             {renderOption('th', true)}
@@ -97,7 +97,7 @@ const ResumeDownloadMenu = ({ variant }: ResumeDownloadMenuProps) => {
           <Liquid.Item
             className="resume-download-menu__liquid-item resume-download-menu__liquid-item--english"
             x={isOpen ? 66 : 0}
-            y={isOpen ? 64 : 0}
+            y={isOpen ? 52 : 0}
             transition="bouncy"
             delay={40}
           >
