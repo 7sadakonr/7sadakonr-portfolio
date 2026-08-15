@@ -84,13 +84,18 @@ const Fireflies: React.FC<FirefliesProps> = ({ count = 7, enabled = true }) => {
         sizeScale,
         twinkleDuration: `${twinkleDuration.toFixed(2)}s`,
         twinkleDelay: `${twinkleDelay.toFixed(2)}s`,
+        introDelay: `${i * 60}ms`,
         whitePct,
       };
     });
   }, [count]);
 
   return (
-    <div ref={containerRef} className="fireflies-container" aria-hidden="true">
+    <div
+      ref={containerRef}
+      className={`fireflies-container${isActive ? ' is-active' : ''}`}
+      aria-hidden="true"
+    >
       {fireflies.map((fly) => (
         <div
           key={fly.id}
@@ -102,6 +107,7 @@ const Fireflies: React.FC<FirefliesProps> = ({ count = 7, enabled = true }) => {
             '--size-scale': fly.sizeScale,
             '--twinkle-duration': fly.twinkleDuration,
             '--twinkle-delay': fly.twinkleDelay,
+            '--intro-delay': fly.introDelay,
             '--white-pct': fly.whitePct,
             '--star-rotation': fly.starRotation,
             animationPlayState: isActive ? 'running' : 'paused',
