@@ -100,7 +100,7 @@
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.72);
   opacity: 0;
   pointer-events: none;
-  transition: color 160ms ease, opacity 150ms ease;
+  transition: color 160ms ease, opacity 150ms ease, text-shadow 160ms ease;
 }
 
 .resume-download-menu--hero.is-open .resume-download-menu__option--hero {
@@ -116,6 +116,11 @@
 
   .resume-download-menu__trigger--hero:hover {
     color: #fff;
+  }
+
+  .resume-download-menu__option--hero:hover {
+    color: #fff;
+    text-shadow: 0 0 12px rgba(255, 255, 255, 0.34);
   }
 }
 
