@@ -25,6 +25,7 @@ export interface AnimatedContentProps {
   onComplete?: () => void;
   triggerOnce?: boolean;
   className?: string;
+  disabled?: boolean;
 }
 
 const DEFAULT_EASING = 'cubic-bezier(0.16, 1, 0.3, 1)'; // Silk physics curve (osamaislam.vercel.app)
@@ -75,7 +76,8 @@ const AnimatedContent: React.FC<AnimatedContentProps> = ({
   mask = false,
   onComplete,
   triggerOnce = true,
-  className = ''
+  className = '',
+  disabled = false,
 }) => {
   const elementRef = useRef<HTMLElement | null>(null);
   const hasAnimatedRef = useRef(false);
@@ -83,6 +85,8 @@ const AnimatedContent: React.FC<AnimatedContentProps> = ({
   useLayoutEffect(() => {
     const el = elementRef.current;
     if (!el) return;
+
+    if (disabled) return;
 
     // Respect user's motion preferences
     const prefersReducedMotion =
@@ -205,7 +209,8 @@ const AnimatedContent: React.FC<AnimatedContentProps> = ({
     delay,
     blur,
     onComplete,
-    triggerOnce
+    triggerOnce,
+    disabled,
   ]);
 
   if (mask) {

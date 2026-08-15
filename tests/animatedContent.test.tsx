@@ -43,6 +43,17 @@ describe('AnimatedContent', () => {
     expect(getByTestId('card').style.transition).toBe('none')
   })
 
+  it('leaves the child in its resting state when entrance motion is disabled', () => {
+    const { getByTestId } = render(
+      <AnimatedContent disabled direction="horizontal" distance={50}>
+        <div data-testid="card" />
+      </AnimatedContent>,
+    )
+
+    expect(getByTestId('card').style.transform).toBe('')
+    expect(getByTestId('card').style.opacity).toBe('')
+  })
+
   it('keeps the final transform when a mobile browser cancels the reveal animation', () => {
     let observerCallback: IntersectionObserverCallback | undefined
     let finishAnimation: (() => void) | null = null

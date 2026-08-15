@@ -3,6 +3,9 @@ import { useContactForm } from '../hooks/useContactForm'
 
 const ContactForm = () => {
   const { form, isSubmitting, submitStatus, clearSubmitStatus, handleSubmit } = useContactForm()
+  const disableEntranceMotion =
+    typeof window !== 'undefined' &&
+    window.matchMedia('(hover: none) and (pointer: coarse)').matches
 
   return (
     <div className="contact-form-col">
@@ -12,6 +15,7 @@ const ContactForm = () => {
         duration={0.8}
         initialOpacity={0}
         delay={0.4}
+        disabled={disableEntranceMotion}
       >
         <div className="glass-card contact-form-card">
           {submitStatus === 'success' ? (
