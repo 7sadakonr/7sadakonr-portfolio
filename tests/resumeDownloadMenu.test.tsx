@@ -27,7 +27,7 @@ describe('Resume downloads', () => {
     vi.unstubAllGlobals()
   })
 
-  it('reveals Thai and English download links from the footer Resume control', () => {
+  it('opens each selected Resume language in a new PDF tab from the footer control', () => {
     render(<Footer />)
 
     fireEvent.click(screen.getByRole('button', { name: 'Resume' }))
@@ -35,8 +35,10 @@ describe('Resume downloads', () => {
     const thaiResume = screen.getByRole('link', { name: 'ภาษาไทย' })
     const englishResume = screen.getByRole('link', { name: 'English' })
 
-    expect(thaiResume.getAttribute('download')).toBe('Jetsadakorn_Muangwichit_Resume_TH.pdf')
-    expect(englishResume.getAttribute('download')).toBe('Jetsadakorn_Muangwichit_Resume_EN.pdf')
+    expect(thaiResume.getAttribute('target')).toBe('_blank')
+    expect(englishResume.getAttribute('target')).toBe('_blank')
+    expect(thaiResume.hasAttribute('download')).toBe(false)
+    expect(englishResume.hasAttribute('download')).toBe(false)
   })
 
   it('reveals Thai and English downloads from the About page button', () => {
