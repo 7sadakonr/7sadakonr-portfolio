@@ -120,25 +120,6 @@
   pointer-events: auto;
 }
 
-@media (hover: hover) and (pointer: fine) {
-  .resume-download-menu__trigger:hover,
-  .resume-download-menu__option:hover {
-    color: rgba(255, 255, 255, 0.95);
-  }
-
-  .resume-download-menu__trigger--hero:hover {
-    background: rgba(255, 255, 255, 0.12);
-    color: #fff;
-    text-shadow: 0 0 12px rgba(255, 255, 255, 0.36);
-  }
-
-  .resume-download-menu__option--hero:hover {
-    background: rgba(255, 255, 255, 0.12);
-    color: #fff;
-    text-shadow: 0 0 12px rgba(255, 255, 255, 0.42);
-  }
-}
-
 .resume-download-menu__trigger:focus-visible,
 .resume-download-menu__option:focus-visible {
   color: rgba(255, 255, 255, 0.95);
