@@ -10,16 +10,14 @@ type ResumeDownloadMenuProps = {
   variant: 'footer' | 'hero'
 }
 
-const resumeOptions: Record<ResumeLanguage, { label: string; href: string; filename: string }> = {
+const resumeOptions: Record<ResumeLanguage, { label: string; href: string }> = {
   th: {
     label: 'ภาษาไทย',
-    href: resumeThai,
-    filename: 'Jetsadakorn_Muangwichit_Resume_TH.pdf'
+    href: resumeThai
   },
   en: {
     label: 'English',
-    href: resumeEnglish,
-    filename: 'Jetsadakorn_Muangwichit_Resume_EN.pdf'
+    href: resumeEnglish
   }
 }
 
@@ -64,7 +62,8 @@ const ResumeDownloadMenu = ({ variant }: ResumeDownloadMenuProps) => {
       <a
         key={language}
         href={option.href}
-        download={option.filename}
+        target="_blank"
+        rel="noopener noreferrer"
         className={`resume-download-menu__option${hero ? ' resume-download-menu__option--hero' : ''}`}
         tabIndex={hero && !isOpen ? -1 : undefined}
         aria-hidden={hero && !isOpen ? true : undefined}
@@ -113,13 +112,10 @@ const ResumeDownloadMenu = ({ variant }: ResumeDownloadMenuProps) => {
               aria-controls={menuId}
               onClick={() => setIsOpen((open) => !open)}
             >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <svg className="resume-download-menu__download-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
               </svg>
               <span>Download Resume</span>
-              <svg className="resume-download-menu__chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="m4 6 4 4 4-4" />
-              </svg>
             </button>
           </Liquid.Item>
         </Liquid>
