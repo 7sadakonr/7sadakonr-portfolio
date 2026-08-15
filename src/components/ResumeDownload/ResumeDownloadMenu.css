@@ -3,7 +3,7 @@
 }
 
 .resume-download-menu--hero {
-  --resume-liquid-surface: #18181b;
+  --resume-liquid-surface: #1a1a1a;
   width: min(100%, 352px);
   height: 148px;
   margin-top: clamp(20px, 3vh, 35px);

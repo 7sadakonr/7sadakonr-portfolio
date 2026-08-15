@@ -88,7 +88,7 @@ const ResumeDownloadMenu = ({ variant }: ResumeDownloadMenuProps) => {
         >
           <Liquid.Item
             className="resume-download-menu__liquid-item resume-download-menu__liquid-item--thai"
-            x={isOpen ? -66 : 0}
+            x={isOpen ? -82 : 0}
             y={isOpen ? -68 : 0}
             transition="bouncy"
           >
@@ -96,7 +96,7 @@ const ResumeDownloadMenu = ({ variant }: ResumeDownloadMenuProps) => {
           </Liquid.Item>
           <Liquid.Item
             className="resume-download-menu__liquid-item resume-download-menu__liquid-item--english"
-            x={isOpen ? 66 : 0}
+            x={isOpen ? 82 : 0}
             y={isOpen ? -68 : 0}
             transition="bouncy"
             delay={40}
