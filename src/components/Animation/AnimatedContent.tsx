@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useLayoutEffect, useRef } from "react";
 
 export type AnimationDirection =
   | 'vertical'
@@ -80,7 +80,7 @@ const AnimatedContent: React.FC<AnimatedContentProps> = ({
   const elementRef = useRef<HTMLElement | null>(null);
   const hasAnimatedRef = useRef(false);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const el = elementRef.current;
     if (!el) return;
 
@@ -96,8 +96,12 @@ const AnimatedContent: React.FC<AnimatedContentProps> = ({
     const startTransform = getInitialTransform(direction, distance, reverse, scale);
     const startOpacity = animateOpacity ? initialOpacity : 1;
     const startFilter = blur ? `blur(${blur}px)` : 'none';
+    const originalTransition = el.style.transition;
 
-    // Set initial off-screen state immediately without layout shift
+    // The child can have its own hover transition (for example, glass-card).
+    // Disable it while preparing the start state so it cannot animate out and
+    // then back again alongside the Web Animation entrance.
+    el.style.transition = 'none';
     el.style.opacity = String(startOpacity);
     el.style.transform = startTransform;
     if (blur) el.style.filter = startFilter;
@@ -142,6 +146,9 @@ const AnimatedContent: React.FC<AnimatedContentProps> = ({
               el.style.transform = 'none';
               el.style.filter = 'none';
               el.style.willChange = 'auto';
+              requestAnimationFrame(() => {
+                el.style.transition = originalTransition;
+              });
               try {
                 animation.cancel();
               } catch {
