@@ -53,7 +53,8 @@ export default function SmoothScroll({ children, isPrepared, isEnabled }: Smooth
   }, [isEnabled, syncActivity])
 
   useEffect(() => {
-    if (!isPrepared || lenisRef.current || motionPreferenceRef.current?.matches) return
+    const hasFinePointer = window.matchMedia('(pointer: fine)').matches
+    if (!isPrepared || !hasFinePointer || lenisRef.current || motionPreferenceRef.current?.matches) return
 
     let disposed = false
     void loadLenis().then(({ default: Lenis }) => {
