@@ -142,6 +142,16 @@ const AnimatedContent: React.FC<AnimatedContentProps> = ({
             );
 
             animation.onfinish = () => {
+              try {
+                animation.commitStyles();
+              } catch {
+                // Older mobile browsers may not support committing Web Animation styles.
+              }
+              try {
+                animation.cancel();
+              } catch {
+                // Ignore cancel errors
+              }
               el.style.opacity = '1';
               el.style.transform = 'none';
               el.style.filter = 'none';
@@ -149,11 +159,6 @@ const AnimatedContent: React.FC<AnimatedContentProps> = ({
               requestAnimationFrame(() => {
                 el.style.transition = originalTransition;
               });
-              try {
-                animation.cancel();
-              } catch {
-                // Ignore cancel errors
-              }
               onComplete?.();
             };
           } catch {
