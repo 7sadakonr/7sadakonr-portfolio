@@ -83,7 +83,7 @@ const ResumeDownloadMenu = ({ variant }: ResumeDownloadMenuProps) => {
           blur={8}
           contrast={18}
           fill="var(--resume-liquid-surface)"
-          shadow="0 14px 30px rgba(0, 0, 0, 0.28), inset 0 0 0 1px rgba(255, 255, 255, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.18)"
+          shadow="0 14px 30px rgba(0, 0, 0, 0.28), 0 0 0 1px rgba(255, 255, 255, 0.16)"
           aria-label="Choose resume language"
         >
           <Liquid.Item

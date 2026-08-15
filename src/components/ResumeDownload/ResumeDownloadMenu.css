@@ -70,6 +70,7 @@
   letter-spacing: 0.015em;
   white-space: nowrap;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+  transition: background-color 160ms ease, color 160ms ease, text-shadow 160ms ease;
 }
 
 .resume-download-menu__trigger--hero svg {
@@ -126,7 +127,9 @@
   }
 
   .resume-download-menu__trigger--hero:hover {
+    background: rgba(255, 255, 255, 0.12);
     color: #fff;
+    text-shadow: 0 0 12px rgba(255, 255, 255, 0.36);
   }
 
   .resume-download-menu__option--hero:hover {
