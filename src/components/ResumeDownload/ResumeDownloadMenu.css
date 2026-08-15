@@ -7,6 +7,11 @@
   width: min(100%, 352px);
   height: 148px;
   margin-top: clamp(20px, 3vh, 35px);
+  transition: height 220ms ease;
+}
+
+.resume-download-menu--hero.is-open {
+  height: 210px;
 }
 
 .resume-download-menu__liquid {
@@ -16,10 +21,11 @@
 
 .resume-download-menu__liquid-item {
   position: absolute;
-  bottom: 18px;
+  top: 79px;
 }
 
 .resume-download-menu__liquid-item--trigger {
+  top: 72px;
   left: 50%;
   width: min(100%, 276px);
   margin-left: max(-138px, -50%);
@@ -134,6 +140,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .resume-download-menu--hero,
   .resume-download-menu__trigger,
   .resume-download-menu__option {
     transition: none;
@@ -146,7 +153,12 @@
     height: 134px;
   }
 
+  .resume-download-menu--hero.is-open {
+    height: 188px;
+  }
+
   .resume-download-menu__liquid-item--trigger {
+    top: 66px;
     width: min(100%, 280px);
     margin-left: max(-140px, -50%);
   }
@@ -154,5 +166,10 @@
   .resume-download-menu__trigger--hero {
     min-height: 50px;
     padding: 0 20px;
+  }
+
+  .resume-download-menu__liquid-item--thai,
+  .resume-download-menu__liquid-item--english {
+    top: 69px;
   }
 }
