@@ -1,5 +1,6 @@
 import { useRef, useState, useCallback, useEffect, CSSProperties } from 'react';
 import './LineSidebar.css';
+import { getTechIcon } from '../../features/projects/data/projectTech';
 
 type Falloff = 'linear' | 'smooth' | 'sharp';
 
@@ -222,18 +223,7 @@ const LineSidebar = ({
                       {tech && tech.length > 0 && (
                         <div className="line-sidebar__tech-badges">
                           {tech.map((t, i) => {
-                            const lower = t.toLowerCase();
-                            let iconId = null;
-                            if (lower.includes('next')) iconId = 'nextjs';
-                            else if (lower.includes('react')) iconId = 'react';
-                            else if (lower.includes('typescript')) iconId = 'ts';
-                            else if (lower.includes('tailwind')) iconId = 'tailwind';
-                            else if (lower.includes('node')) iconId = 'nodejs';
-                            else if (lower.includes('express')) iconId = 'express';
-                            else if (lower.includes('prisma')) iconId = 'prisma';
-                            else if (lower.includes('postgres')) iconId = 'postgres';
-                            else if (lower.includes('vite')) iconId = 'vite';
-                            else if (lower === 'css') iconId = 'css';
+                            const iconId = getTechIcon(t);
 
                             return (
                               <div key={i} className="tech-pill" title={t}>
