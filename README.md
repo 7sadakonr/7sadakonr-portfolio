@@ -30,7 +30,6 @@ The current implementation combines route-based page loading, Lenis smooth scrol
 - Global command menu with keyboard shortcuts
 - Lenis-powered smooth scrolling
 - Interactive project cards and image magnifier
-- Text highlights and annotations with React Rough Notation
 - Contact form delivery through EmailJS
 - Route-based lazy loading and code splitting
 - Optimized image assets and WebP conversion workflow
@@ -49,7 +48,6 @@ The current implementation combines route-based page loading, Lenis smooth scrol
 | Routing | React Router 7.7 | Client-side routes and navigation |
 | Smooth Scrolling | Lenis 1.3.25 | Smooth scrolling and scroll control |
 | Contact Form | EmailJS Browser 4.4 | Sending messages from the contact page |
-| Text Annotation | React Rough Notation 1.0.8 | Animated highlights and text emphasis |
 | Styling | Custom CSS | Glass effects, responsive layouts, and animations |
 | Image Tooling | Sharp 0.35 | Local image conversion and optimization script |
 | Build Optimization | Terser 5.44 | Production JavaScript minification |
@@ -76,7 +74,7 @@ The current project does **not** use GSAP or Three.js.
 - Route components are loaded lazily
 - React, React DOM, React Router, and Lenis are split into reusable vendor chunks
 - Production console statements and debugger calls are removed by Terser
-- Project images are available in optimized WebP formats
+- Project images are available in optimized WebP formats; run `npm run images:convert` after updating their PNG sources
 - Animated components include performance-conscious rendering behavior
 
 ---

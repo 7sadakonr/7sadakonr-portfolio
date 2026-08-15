@@ -1,10 +1,16 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { useLocation } from 'react-router-dom'
+import React, { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import './Navbar.css'
 import GlassSurface from '../GlassSurface/GlassSurface'
 import { scrollToTarget } from '../SmoothScroll/scrollController'
 import { ensureTargetReady, getOwningSection } from '../LazySection/sectionLoader'
-import CommandMenu, { type CommandMenuItem } from '../CommandMenu/CommandMenu'
+import type { CommandMenuItem } from '../CommandMenu/CommandMenu'
+import { getNavigationTarget } from '../../features/navigation/navigation.config'
+import { requestProjectTarget, subscribeToSectionChanges } from '../../features/navigation/navigationEvents'
+import { beginNavigation, resetNavigation } from '../../features/navigation/navigationState'
+import { loadCommandMenu } from '../../utils/runtimeWarmup'
+
+const CommandMenu = lazy(loadCommandMenu)
 
 const NAVBAR_GLASS_PRESET =
   /* NAVBAR_GLASS_PRESET_START */
@@ -51,15 +57,27 @@ const COMMAND_MENU_ITEMS: CommandMenuItem[] = [
   { id: 'proj-4', path: '/project', label: 'Nyeta', category: 'Projects', keywords: 'nyeta visual assistance ai webrtc llama', targetId: 'project-3' },
 ] as const
 
-const Navbar = () => {
+interface NavbarProps {
+  isInteractive?: boolean
+}
+
+const Navbar = ({ isInteractive = true }: NavbarProps) => {
   const indicatorRef = useRef<HTMLDivElement>(null)
   const location = useLocation()
+  const navigate = useNavigate()
   const [isCommandMenuOpen, setIsCommandMenuOpen] = useState(false)
+  const [shouldMountCommandMenu, setShouldMountCommandMenu] = useState(false)
   const [hasInitialized, setHasInitialized] = useState(false)
   const [isIPad, setIsIPad] = useState(false)
   const [isMac, setIsMac] = useState(true)
   const pillTextRef = useRef<HTMLSpanElement>(null)
   const navigationRequestRef = useRef(0)
+  const skipLocationScrollRef = useRef<string | null>(null)
+
+  const openCommandMenu = useCallback(() => {
+    setShouldMountCommandMenu(true)
+    setIsCommandMenuOpen(true)
+  }, [])
 
 
   // Detect iPad and Mac
@@ -162,13 +180,14 @@ const Navbar = () => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && (e.key.toLowerCase() === 'k' || e.code === 'KeyK')) {
         e.preventDefault()
-        setIsCommandMenuOpen(prev => !prev)
+        if (isCommandMenuOpen) setIsCommandMenuOpen(false)
+        else openCommandMenu()
       }
     }
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [])
+  }, [isCommandMenuOpen, openCommandMenu])
 
   const [activePath, setActivePath] = useState(location.pathname)
 
@@ -179,16 +198,16 @@ const Navbar = () => {
 
   // Listen for scroll events from LandingPage
   useEffect(() => {
-    const handleLandingScroll = (e: Event) => {
-      const customEvent = e as CustomEvent<{ path: string }>
-      if (customEvent.detail && customEvent.detail.path) {
-        setActivePath(customEvent.detail.path)
+    const handleLandingScroll = (path: string) => {
+      setActivePath(path)
+      if (location.pathname !== path) {
+        skipLocationScrollRef.current = path
+        navigate(path, { replace: true })
       }
     }
 
-    window.addEventListener('landing-scroll', handleLandingScroll, { passive: true })
-    return () => window.removeEventListener('landing-scroll', handleLandingScroll)
-  }, [])
+    return subscribeToSectionChanges(handleLandingScroll)
+  }, [location.pathname, navigate])
 
   // Update indicator when activePath changes (for LandingPage scroll)
   useEffect(() => {
@@ -201,17 +220,7 @@ const Navbar = () => {
     }
   }, [activePath, hasInitialized, updateIndicatorPosition, isIPad])
 
-  const handleNavClick = async (e: React.MouseEvent<HTMLAnchorElement>, path: string, explicitTargetId?: string) => {
-    let targetId = explicitTargetId;
-    if (!targetId) {
-      if (path === '/about') targetId = 'about';
-      else if (path === '/project') targetId = 'projects';
-      else if (path === '/contact') targetId = 'contact';
-      else targetId = 'home';
-    }
-
-    e.preventDefault();
-    setIsCommandMenuOpen(false);
+  const navigateToTarget = useCallback(async (path: string, targetId: string, updateHistory: boolean) => {
     const navigationRequest = ++navigationRequestRef.current
 
     if (getOwningSection(targetId)) {
@@ -227,23 +236,40 @@ const Navbar = () => {
     );
     if (element) {
       // Prevent scroll-spy from bouncing during smooth scroll
-      window.isNavigating = true;
-      if (window.navTimeoutId) clearTimeout(window.navTimeoutId);
-      window.navTimeoutId = setTimeout(() => {
-        window.isNavigating = false;
-      }, 1000);
+      beginNavigation()
 
-      const offset = explicitTargetId && (explicitTargetId.startsWith('project-') || explicitTargetId === 'skills') ? -window.innerHeight / 4 : 0;
+      const offset = targetId.startsWith('project-') || targetId === 'skills' ? -window.innerHeight / 4 : 0;
       scrollToTarget(element, { offset });
-      window.history.pushState(null, '', path);
+      if (updateHistory) {
+        skipLocationScrollRef.current = path
+        navigate(path)
+      }
       setActivePath(path);
 
-      if (explicitTargetId && explicitTargetId.startsWith('project-')) {
-          const index = parseInt(explicitTargetId.replace('project-', ''), 10);
-          window.dispatchEvent(new CustomEvent('project-scroll', { detail: { index } }));
+      if (targetId.startsWith('project-')) {
+          const index = parseInt(targetId.replace('project-', ''), 10);
+          requestProjectTarget(index)
       }
     }
-  };
+  }, [navigate])
+
+  const handleNavClick = async (e: React.MouseEvent<HTMLAnchorElement>, path: string, explicitTargetId?: string) => {
+    e.preventDefault();
+    setIsCommandMenuOpen(false);
+    await navigateToTarget(path, explicitTargetId ?? getNavigationTarget(path).targetId, true)
+  }
+
+  useEffect(() => {
+    if (!isInteractive) return
+    if (skipLocationScrollRef.current === location.pathname) {
+      skipLocationScrollRef.current = null
+      return
+    }
+    const target = getNavigationTarget(location.pathname)
+    void navigateToTarget(target.path, target.targetId, false)
+  }, [isInteractive, location.pathname, navigateToTarget])
+
+  useEffect(() => resetNavigation, [])
 
   const currentLabel = NAV_ITEMS.find(item => item.path === activePath)?.label || 'Home';
 
@@ -311,7 +337,7 @@ const Navbar = () => {
             >
               <button
                 className="desktop-command-btn"
-                onClick={() => setIsCommandMenuOpen(true)}
+                onClick={openCommandMenu}
                 aria-label="Open command menu"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -334,7 +360,7 @@ const Navbar = () => {
           >
             <button
               className="command-pill-button"
-              onClick={() => setIsCommandMenuOpen(true)}
+              onClick={openCommandMenu}
               aria-label="Open command menu"
             >
               <svg className="pill-search-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
@@ -345,13 +371,17 @@ const Navbar = () => {
         </div>
       </nav>
 
-      <CommandMenu
-        isOpen={isCommandMenuOpen}
-        onClose={() => setIsCommandMenuOpen(false)}
-        menuItems={COMMAND_MENU_ITEMS}
-        activePath={activePath}
-        handleNavClick={handleNavClick}
-      />
+      {shouldMountCommandMenu && (
+        <Suspense fallback={null}>
+          <CommandMenu
+            isOpen={isCommandMenuOpen}
+            onClose={() => setIsCommandMenuOpen(false)}
+            menuItems={COMMAND_MENU_ITEMS}
+            activePath={activePath}
+            handleNavClick={handleNavClick}
+          />
+        </Suspense>
+      )}
 
     </>
   )
