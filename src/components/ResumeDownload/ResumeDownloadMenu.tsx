@@ -80,7 +80,7 @@ const ResumeDownloadMenu = ({ variant }: ResumeDownloadMenuProps) => {
         <Liquid
           id={menuId}
           className="resume-download-menu__liquid"
-          blur={6}
+          blur={8}
           contrast={18}
           fill="var(--resume-liquid-surface)"
           shadow="0 14px 30px rgba(0, 0, 0, 0.28)"
@@ -88,16 +88,16 @@ const ResumeDownloadMenu = ({ variant }: ResumeDownloadMenuProps) => {
         >
           <Liquid.Item
             className="resume-download-menu__liquid-item resume-download-menu__liquid-item--thai"
-            x={isOpen ? -82 : 0}
-            y={isOpen ? -90 : 0}
+            x={isOpen ? -66 : 0}
+            y={isOpen ? -56 : 0}
             transition="bouncy"
           >
             {renderOption('th', true)}
           </Liquid.Item>
           <Liquid.Item
             className="resume-download-menu__liquid-item resume-download-menu__liquid-item--english"
-            x={isOpen ? 82 : 0}
-            y={isOpen ? -90 : 0}
+            x={isOpen ? 66 : 0}
+            y={isOpen ? -56 : 0}
             transition="bouncy"
             delay={40}
           >
