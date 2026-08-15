@@ -60,4 +60,21 @@ describe('Resume downloads', () => {
     expect(screen.queryByRole('link', { name: 'ภาษาไทย' })).toBeNull()
     expect(document.activeElement).toBe(trigger)
   })
+
+  it('returns focus to the open About menu instead of the footer Resume trigger on Escape', () => {
+    render(
+      <>
+        <AboutPage />
+        <Footer />
+      </>
+    )
+
+    const heroTrigger = screen.getByRole('button', { name: 'Download Resume' })
+    heroTrigger.focus()
+    fireEvent.click(heroTrigger)
+    fireEvent.keyDown(document, { key: 'Escape' })
+
+    expect(heroTrigger.getAttribute('aria-expanded')).toBe('false')
+    expect(document.activeElement).toBe(heroTrigger)
+  })
 })
