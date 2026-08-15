@@ -2,23 +2,17 @@ export type LazySectionId = 'about' | 'projects' | 'contact'
 
 const sectionOrder: LazySectionId[] = ['about', 'projects', 'contact']
 
-const targetOwners: Record<string, LazySectionId> = {
-  about: 'about',
-  'about-me': 'about',
-  skills: 'about',
-  projects: 'projects',
-  contact: 'contact',
-}
-
 const requestedSections = new Set<LazySectionId>()
 const readySections = new Set<LazySectionId>()
 const readyWaiters = new Map<LazySectionId, Set<() => void>>()
 
+const events = new EventTarget()
 const requestEventName = 'landing-section-load-request'
 
 export const getOwningSection = (targetId: string): LazySectionId | null => {
-  if (targetOwners[targetId]) return targetOwners[targetId]
-  if (targetId.startsWith('project-')) return 'projects'
+  if (targetId === 'about' || targetId === 'about-me' || targetId === 'skills') return 'about'
+  if (targetId === 'projects' || targetId.startsWith('project-')) return 'projects'
+  if (targetId === 'contact') return 'contact'
   return null
 }
 
@@ -39,7 +33,7 @@ export const requestSection = (sectionId: LazySectionId): Promise<void> => {
     readyWaiters.set(sectionId, waiters)
   })
 
-  window.dispatchEvent(
+  events.dispatchEvent(
     new CustomEvent<{ sectionId: LazySectionId }>(requestEventName, {
       detail: { sectionId },
     }),
@@ -77,6 +71,6 @@ export const subscribeToSectionRequests = (
     listener(customEvent.detail.sectionId)
   }
 
-  window.addEventListener(requestEventName, handleRequest)
-  return () => window.removeEventListener(requestEventName, handleRequest)
+  events.addEventListener(requestEventName, handleRequest)
+  return () => events.removeEventListener(requestEventName, handleRequest)
 }

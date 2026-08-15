@@ -4,12 +4,6 @@ import path from 'path';
 
 const conversions = [
   {
-    src: 'src/assets/img/logo-7m.png',
-    dest: ['src/assets/img/logo-7m.webp', 'public/logo-7m.webp'],
-    nearLossless: true,
-    quality: 92
-  },
-  {
     src: 'src/assets/img/portfolio_real_new.png',
     dest: ['src/assets/img/portfolio_real_new.webp'],
     quality: 88,

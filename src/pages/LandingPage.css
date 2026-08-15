@@ -724,18 +724,6 @@
   align-items: center;
 }
 
-.project-card.project-card-reverse {
-  grid-template-columns: 1fr 1.2fr;
-}
-
-.project-card.project-card-reverse .project-preview {
-  order: 2;
-}
-
-.project-card.project-card-reverse .project-info {
-  order: 1;
-}
-
 @media (hover: hover) and (pointer: fine) {
 
 .project-preview:hover {
@@ -831,30 +819,6 @@
   gap: clamp(14px, 2vh, 22px);
 }
 
-.project-header {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.project-subtitle {
-  font-family: "Outfit", sans-serif;
-  font-size: clamp(11px, 1.5vw, 13px);
-  font-weight: 500;
-  color: rgba(138, 56, 245, 0.9);
-  text-transform: uppercase;
-  letter-spacing: 2px;
-}
-
-.project-title {
-  font-family: "Outfit", sans-serif;
-  font-size: clamp(22px, 3.5vw, 32px);
-  font-weight: 700;
-  color: #fff;
-  line-height: 1.2;
-  margin: 0;
-}
-
 .project-description {
   font-family: "Outfit", sans-serif;
   font-size: clamp(13px, 1.8vw, 16px);
@@ -862,17 +826,6 @@
   line-height: 1.7;
   color: rgba(255, 255, 255, 0.55);
   margin: 0;
-}
-
-.mobile-only-description {
-  display: none;
-}
-
-@media (max-width: 900px) {
-  .mobile-only-description {
-    display: block;
-    margin-bottom: 25px;
-  }
 }
 
 /* Tech Stack */
@@ -1067,12 +1020,6 @@
   min-width: 0;
 }
 
-/* Contact Info Card */
-.contact-info-card {
-  height: fit-content;
-}
-
-.contact-info-title,
 .contact-form-title {
   font-family: "Outfit", sans-serif;
   font-size: clamp(24px, 3.5vw, 32px);
@@ -1081,175 +1028,11 @@
   margin: 0 0 clamp(12px, 2vh, 20px) 0;
 }
 
-.contact-info-description {
-  font-family: "Outfit", sans-serif;
-  font-size: clamp(14px, 1.8vw, 16px);
-  font-weight: 400;
-  line-height: 1.7;
-  color: rgba(255, 255, 255, 0.55);
-  margin: 0 0 clamp(25px, 4vh, 40px) 0;
-}
-
-/* Contact Items */
-.contact-items {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: clamp(16px, 2.5vh, 24px);
-}
-
-.contact-item {
-  display: flex;
-  align-items: center;
-  gap: clamp(12px, 2vw, 18px);
-}
-
-.contact-item-icon {
-  width: clamp(40px, 6vw, 48px);
-  height: clamp(40px, 6vw, 48px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  flex-shrink: 0;
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  transition:
-    transform 0.3s ease,
-    background 0.3s ease,
-    box-shadow 0.3s ease,
-    border-color 0.3s ease,
-    opacity 0.3s ease,
-    color 0.3s ease,
-    filter 0.3s ease;
-}
-
-.contact-item-icon svg {
-  width: clamp(18px, 2.5vw, 22px);
-  height: clamp(18px, 2.5vw, 22px);
-  color: rgba(255, 255, 255, 0.7);
-  transition: color 0.3s ease;
-}
-
-.contact-item-text {
-  font-family: "Outfit", sans-serif;
-  font-size: clamp(14px, 1.8vw, 16px);
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.85);
-  text-decoration: none;
-  transition: color 0.3s ease;
-}
-
-@media (hover: hover) and (pointer: fine) {
-
-a.contact-item-text:hover {
-  color: #fff;
-}
-}
-
-/* Social Links */
-.social-section {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: clamp(16px, 2vh, 20px);
-}
-
-.social-label {
-  font-family: "Outfit", sans-serif;
-  font-size: clamp(11px, 1.4vw, 13px);
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.4);
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
-}
-
-.social-links {
-  display: flex;
-  justify-content: flex-start;
-  flex-wrap: wrap;
-  gap: clamp(12px, 2vw, 16px);
-}
-
-.social-link {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: clamp(12px, 1.8vw, 16px) clamp(24px, 3.5vw, 36px);
-  text-decoration: none;
-  color: rgba(255, 255, 255, 0.95);
-  font-family: "Outfit", sans-serif;
-  font-size: clamp(12px, 1.6vw, 14px);
-  font-weight: 600;
-  letter-spacing: 0.8px;
-  white-space: nowrap;
-  cursor: pointer;
-  border: none;
-  border-radius: 50px;
-  position: relative;
-  overflow: hidden;
-  background: linear-gradient(
-    135deg,
-    rgba(5, 5, 5, 0.95),
-    rgba(20, 20, 20, 0.9)
-  );
-  border: 0.5px solid rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(4px) saturate(2.5) contrast(1.6) brightness(0.7);
-  -webkit-backdrop-filter: blur(4px) saturate(2.5) contrast(1.6) brightness(0.7);
-  box-shadow:
-    0 4px 16px rgba(0, 0, 0, 0.5),
-    0 2px 4px rgba(0, 0, 0, 0.6),
-    inset 0 1.5px 0 0 rgba(255, 255, 255, 0.15);
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
-  transition:
-    transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
-    background 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
-    box-shadow 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
-    border-color 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
-    opacity 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
-    color 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
-    filter 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.social-link svg {
-  width: clamp(16px, 2vw, 20px);
-  height: clamp(16px, 2vw, 20px);
-  color: rgba(255, 255, 255, 0.8);
-  transition:
-    transform 0.3s ease,
-    background 0.3s ease,
-    box-shadow 0.3s ease,
-    border-color 0.3s ease,
-    opacity 0.3s ease,
-    color 0.3s ease,
-    filter 0.3s ease;
-}
-
-@media (hover: hover) and (pointer: fine) {
-
-.social-link:hover {
-  background: linear-gradient(
-    135deg,
-    rgba(25, 25, 25, 0.95),
-    rgba(45, 45, 45, 0.9)
-  );
-  color: #fff;
-  transform: scale(1.05);
-}
-}
-
 /* Contact Form */
 .contact-form {
   display: flex;
   flex-direction: column;
   gap: clamp(18px, 2.5vh, 25px);
-}
-
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: clamp(14px, 2vw, 24px);
 }
 
 .form-group {
@@ -1488,17 +1271,8 @@ a.contact-item-text:hover {
 }
 
 @media (max-width: 900px) {
-  .project-card,
-  .project-card.project-card-reverse {
+  .project-card {
     grid-template-columns: 1fr;
-  }
-
-  .project-card.project-card-reverse .project-preview {
-    order: 1; /* Reset order on mobile so image is always on top */
-  }
-
-  .project-card.project-card-reverse .project-info {
-    order: 2;
   }
 
   .project-preview {
@@ -1614,9 +1388,6 @@ a.contact-item-text:hover {
     justify-content: center;
   }
 
-  .form-row {
-    grid-template-columns: 1fr;
-  }
 }
 
 @media (max-width: 480px) {
@@ -1663,7 +1434,6 @@ a.contact-item-text:hover {
   .project-btn,
   .resume-button,
   .skill-item,
-  .social-link,
   .submit-btn {
     transition: none;
   }
