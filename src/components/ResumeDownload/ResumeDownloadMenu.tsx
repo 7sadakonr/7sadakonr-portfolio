@@ -35,14 +35,17 @@ const ResumeDownloadMenu = ({ variant }: ResumeDownloadMenuProps) => {
   }
 
   useEffect(() => {
+    if (!isOpen) return
+
     const handlePointerDown = (event: PointerEvent) => {
       if (rootRef.current?.contains(event.target as Node)) return
-      closeMenu()
+      setIsOpen(false)
     }
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return
-      closeMenu(true)
+      setIsOpen(false)
+      triggerRef.current?.focus()
     }
 
     document.addEventListener('pointerdown', handlePointerDown)
@@ -52,7 +55,7 @@ const ResumeDownloadMenu = ({ variant }: ResumeDownloadMenuProps) => {
       document.removeEventListener('pointerdown', handlePointerDown)
       document.removeEventListener('keydown', handleKeyDown)
     }
-  }, [])
+  }, [isOpen])
 
   const renderOption = (language: ResumeLanguage, hero = false) => {
     const option = resumeOptions[language]
