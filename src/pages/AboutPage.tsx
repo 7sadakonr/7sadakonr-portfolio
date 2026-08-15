@@ -3,18 +3,9 @@ import TextReveal from '../components/Animation/TextReveal'
 import DotPattern from '../components/DotPattern/DotPattern'
 import GithubCalendar from '../components/GithubCalendar/GithubCalendar'
 import Scales from '../components/Scales/Scales'
-import resumePDF from '../assets/resume.pdf'
+import ResumeDownloadMenu from '../components/ResumeDownload/ResumeDownloadMenu'
 
 const AboutSection = () => {
-    const handleResumeDownload = () => {
-        const link = document.createElement('a');
-        link.href = resumePDF;
-        link.download = 'Jetsadakorn_Resume.pdf';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    };
-
     return (
         <div className="about-page-wrapper landing-section">
             {/* Main Content */}
@@ -50,12 +41,7 @@ const AboutSection = () => {
                         initialOpacity={0}
                         delay={0.55}
                     >
-                        <button onClick={handleResumeDownload} className="resume-button">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
-                            </svg>
-                            Download Resume
-                        </button>
+                        <ResumeDownloadMenu variant="hero" />
                     </AnimatedContent>
                 </section>
 
