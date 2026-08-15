@@ -13,10 +13,10 @@ const lazyLoader = <T>(loader: () => Promise<T>) => {
 
 export const loadLenis = lazyLoader(() => import('lenis'))
 export const loadFireflies = lazyLoader(() => import('../components/Animation/Fireflies'))
-export const loadAnimatedContent = lazyLoader(() => import('../components/Animation/AnimatedContent'))
+export const loadCommandMenu = lazyLoader(() => import('../components/CommandMenu/CommandMenu'))
 export const loadAboutPage = lazyLoader(() => import('../pages/AboutPage'))
-export const loadProjectPage = lazyLoader(() => import('../pages/ProjectPage'))
-export const loadContactPage = lazyLoader(() => import('../pages/ContactPage'))
+export const loadProjectPage = lazyLoader(() => import('../features/projects/ProjectPage'))
+export const loadContactPage = lazyLoader(() => import('../features/contact/ContactPage'))
 export const loadPageEnd = lazyLoader(() => import('../components/PageEnd/PageEnd'))
 
 export type LenisModule = Awaited<ReturnType<typeof loadLenis>>
@@ -89,15 +89,17 @@ const runWhenIdle = (task: () => void, timeout: number) => {
   }
 }
 
-let backgroundWarmupStarted = false
+let backgroundWarmupRunning = false
+let backgroundWarmupComplete = false
 
 export const warmBackgroundRuntime = () => {
-  if (backgroundWarmupStarted) return () => undefined
-  backgroundWarmupStarted = true
+  if (backgroundWarmupRunning || backgroundWarmupComplete) return () => undefined
+  backgroundWarmupRunning = true
 
   const stages: (() => Promise<unknown>)[] = [
     () => loadAboutPage(),
     () => loadProjectPage(),
+    () => loadCommandMenu(),
     () => Promise.allSettled([loadContactPage(), loadPageEnd()]),
   ]
   if (shouldWarmHeavyAssets()) {
@@ -109,7 +111,12 @@ export const warmBackgroundRuntime = () => {
   let cancelled = false
   let cancelCurrent: () => void = () => undefined
   const scheduleStage = (index: number) => {
-    if (cancelled || index >= stages.length) return
+    if (cancelled) return
+    if (index >= stages.length) {
+      backgroundWarmupRunning = false
+      backgroundWarmupComplete = true
+      return
+    }
     cancelCurrent = runWhenIdle(() => {
       const stage = stages[index]
       if (!stage) return
@@ -121,5 +128,6 @@ export const warmBackgroundRuntime = () => {
   return () => {
     cancelled = true
     cancelCurrent()
+    if (!backgroundWarmupComplete) backgroundWarmupRunning = false
   }
 }

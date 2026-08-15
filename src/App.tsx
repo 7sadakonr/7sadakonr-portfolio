@@ -12,6 +12,9 @@ import {
   loadProjectPage,
   warmBackgroundRuntime,
 } from './utils/runtimeWarmup'
+import { getRouteForSection } from './features/navigation/navigation.config'
+import { publishSectionChange } from './features/navigation/navigationEvents'
+import { isNavigationInProgress } from './features/navigation/navigationState'
 
 import './pages/LandingPage.css'
 
@@ -46,19 +49,13 @@ function App() {
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
-                if (window.isNavigating) return; // Prevent bouncing during manual navigation
+                if (isNavigationInProgress()) return; // Prevent bouncing during manual navigation
                 
                 const id = entry.target.id
-                let route = null
-                if (['home'].includes(id)) route = '/'
-                if (['about', 'about-me', 'skills'].includes(id)) route = '/about'
-                if (['projects'].includes(id)) route = '/project'
-                if (['contact'].includes(id)) route = '/contact'
+                const route = getRouteForSection(id)
 
                 if (route) {
-                    window.dispatchEvent(new CustomEvent('landing-scroll', {
-                        detail: { path: route }
-                    }))
+                    publishSectionChange(route)
                 }
             }
         })
@@ -79,7 +76,7 @@ function App() {
             <Analytics />
           </Suspense>
         )}
-        <Navbar />
+        <Navbar isInteractive={isInteractive} />
         
         <div className="landing-page-container">
           <div className="landing-content-flow">

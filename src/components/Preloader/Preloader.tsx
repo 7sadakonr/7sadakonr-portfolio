@@ -17,7 +17,8 @@ const GREETINGS = [
 
 const MIN_VISIBLE_MS = 600;
 const COMPLETE_HOLD_MS = 100;
-const EXIT_DURATION_MS = 350;
+// The accent layer exits 100ms after the 750ms main curtain transition.
+const EXIT_DURATION_MS = 850;
 
 const delay = (ms: number) => new Promise<void>((resolve) => {
   window.setTimeout(resolve, ms);
