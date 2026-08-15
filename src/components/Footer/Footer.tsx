@@ -1,5 +1,5 @@
 import logo from '../../assets/img/logo.svg'
-import resume from '../../assets/resume.pdf'
+import ResumeDownloadMenu from '../ResumeDownload/ResumeDownloadMenu'
 import './Footer.css'
 
 const Footer = () => (
@@ -41,7 +41,7 @@ const Footer = () => (
             <ul>
               <li><a href="https://github.com/7sadakonr" target="_blank" rel="noopener noreferrer">GitHub</a></li>
               <li><a href="mailto:7sadakonr@gmail.com">7sadakonr@gmail.com</a></li>
-              <li><a href={resume} target="_blank" rel="noopener noreferrer">Resume</a></li>
+              <li><ResumeDownloadMenu variant="footer" /></li>
             </ul>
           </section>
           <section className="site-footer__column">
