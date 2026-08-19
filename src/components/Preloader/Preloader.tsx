@@ -27,7 +27,6 @@ const delay = (ms: number) => new Promise<void>((resolve) => {
 export const Preloader: React.FC<PreloaderProps> = ({ onReveal, onComplete }) => {
   const [currentGreetingIndex, setCurrentGreetingIndex] = useState(0);
   const [showName, setShowName] = useState(false);
-  const [progress, setProgress] = useState(0);
   const [isExiting, setIsExiting] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
 
@@ -35,6 +34,8 @@ export const Preloader: React.FC<PreloaderProps> = ({ onReveal, onComplete }) =>
   const onCompleteRef = useRef(onComplete);
   const progressRef = useRef(0);
   const progressTargetRef = useRef(0);
+  const counterDomRef = useRef<HTMLDivElement>(null);
+  const barDomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     onRevealRef.current = onReveal;
@@ -62,7 +63,13 @@ export const Preloader: React.FC<PreloaderProps> = ({ onReveal, onComplete }) =>
 
       if (next !== progressRef.current) {
         progressRef.current = next;
-        setProgress(Math.round(next));
+        
+        if (counterDomRef.current) {
+          counterDomRef.current.innerText = Math.round(next).toString();
+        }
+        if (barDomRef.current) {
+          barDomRef.current.style.transform = `scaleX(${next / 100})`;
+        }
       }
       frameId = null;
       start();
@@ -213,8 +220,8 @@ export const Preloader: React.FC<PreloaderProps> = ({ onReveal, onComplete }) =>
         </div>
 
         {/* Bottom-Right progress: now reflects real critical-resource readiness */}
-        <div className="preloader-counter">
-          {progress}
+        <div className="preloader-counter" ref={counterDomRef}>
+          0
         </div>
 
         {/* Center Content: Rotating Asterisk + Greeting Mask */}
@@ -259,7 +266,8 @@ export const Preloader: React.FC<PreloaderProps> = ({ onReveal, onComplete }) =>
         {/* Bottom progress bar uses the same real readiness value */}
         <div
           className="preloader-progress-bar"
-          style={{ transform: `scaleX(${progress / 100})` }}
+          ref={barDomRef}
+          style={{ transform: 'scaleX(0)' }}
         />
       </div>
     </div>

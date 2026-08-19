@@ -118,9 +118,31 @@ const GithubCalendar = ({
     const [stats, setStats] = useState<GithubStats | null>(() => getCachedData<GithubStats>(statsCacheKey))
     const [loading, setLoading] = useState(() => !getCachedData<GithubContributionData>(contribCacheKey))
     const [error, setError] = useState(false)
+    const [isVisible, setIsVisible] = useState(false)
     const viewportRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
+        if (typeof IntersectionObserver === 'undefined') {
+            setIsVisible(true);
+            return;
+        }
+
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (entry.isIntersecting) {
+                    setIsVisible(true);
+                    observer.disconnect();
+                }
+            },
+            { rootMargin: '200px 0px' }
+        );
+        if (viewportRef.current) observer.observe(viewportRef.current);
+        return () => observer.disconnect();
+    }, []);
+
+    useEffect(() => {
+        if (!isVisible) return;
+
         const cached = getCachedData<GithubContributionData>(contribCacheKey)
         if (cached) {
             setData(cached)
@@ -168,9 +190,11 @@ const GithubCalendar = ({
         fetchContributions()
 
         return () => controller.abort()
-    }, [username, contribCacheKey])
+    }, [username, contribCacheKey, isVisible])
 
     useEffect(() => {
+        if (!isVisible) return;
+
         const cached = getCachedData<GithubStats>(statsCacheKey)
         if (cached) {
             setStats(cached)
@@ -228,7 +252,7 @@ const GithubCalendar = ({
         fetchStats()
 
         return () => controller.abort()
-    }, [username, statsCacheKey])
+    }, [username, statsCacheKey, isVisible])
 
     const calendarCells = useMemo(() => {
         if (!data?.contributions.length) {
