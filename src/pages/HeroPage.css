@@ -461,6 +461,10 @@
 
 /* Mobile responsive */
 @media (max-width: 767px) {
+  .hero-btn-mask {
+    display: none !important;
+  }
+
   .explore-button {
     padding: 4px 4px 4px 16px;
     gap: 10px;
