@@ -104,13 +104,13 @@ const HeroPage = ({ onCriticalReady }: HeroPageProps) => {
           <picture>
             <source
               type="image/avif"
-              srcSet="/hero-160.avif 160w, /hero-240.avif 240w, /hero-320.avif 320w, /hero-480.avif 480w"
-              sizes="(max-width: 480px) 240px, (max-width: 768px) 320px, 300px"
+              srcSet="/hero-120.avif 120w, /hero-160.avif 160w, /hero-240.avif 240w, /hero-320.avif 320w, /hero-480.avif 480w"
+              sizes="(max-width: 480px) 120px, (max-width: 768px) 320px, 300px"
             />
             <source
               type="image/webp"
-              srcSet="/hero-160.webp 160w, /hero-240.webp 240w, /hero-320.webp 320w, /hero-480.webp 480w"
-              sizes="(max-width: 480px) 240px, (max-width: 768px) 320px, 300px"
+              srcSet="/hero-120.webp 120w, /hero-160.webp 160w, /hero-240.webp 240w, /hero-320.webp 320w, /hero-480.webp 480w"
+              sizes="(max-width: 480px) 120px, (max-width: 768px) 320px, 300px"
             />
             <img
               src="/hero-480.webp"
