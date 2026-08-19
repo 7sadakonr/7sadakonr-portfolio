@@ -68,6 +68,7 @@ const Navbar = ({ isInteractive = true }: NavbarProps) => {
   const [isCommandMenuOpen, setIsCommandMenuOpen] = useState(false)
   const [shouldMountCommandMenu, setShouldMountCommandMenu] = useState(false)
   const [hasInitialized, setHasInitialized] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
   const [isIPad, setIsIPad] = useState(false)
   const [isMac, setIsMac] = useState(true)
   const pillTextRef = useRef<HTMLSpanElement>(null)
@@ -91,6 +92,12 @@ const Navbar = ({ isInteractive = true }: NavbarProps) => {
 
     setIsIPad(detectIPad());
     setIsMac(/Mac|iPhone|iPod|iPad/i.test(ua));
+
+    const mql = window.matchMedia('(max-width: 1024px)');
+    setIsMobile(mql.matches);
+    const handleMediaChange = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mql.addEventListener('change', handleMediaChange);
+    return () => mql.removeEventListener('change', handleMediaChange);
   }, []);
 
   const updateIndicatorPosition = useCallback(() => {
@@ -99,31 +106,37 @@ const Navbar = ({ isInteractive = true }: NavbarProps) => {
     const indicator = indicatorRef.current
 
     if (activeLink && navLinks && indicator) {
-      const parentRect = navLinks.getBoundingClientRect()
-      const rect = activeLink.getBoundingClientRect()
+      requestAnimationFrame(() => {
+        const parentRect = navLinks.getBoundingClientRect()
+        const rect = activeLink.getBoundingClientRect()
 
-      if (rect && parentRect) {
-        // offsetLeft and offsetTop are exactly relative to the nearest positioned ancestor (.nav-links)
-        const targetX = (activeLink as HTMLElement).offsetLeft;
-        const targetTop = (activeLink as HTMLElement).offsetTop;
-        const targetWidth = (activeLink as HTMLElement).offsetWidth;
-        const targetHeight = (activeLink as HTMLElement).offsetHeight;
+        if (rect && parentRect) {
+          // offsetLeft and offsetTop are exactly relative to the nearest positioned ancestor (.nav-links)
+          const targetX = (activeLink as HTMLElement).offsetLeft;
+          const targetTop = (activeLink as HTMLElement).offsetTop;
+          const targetWidth = (activeLink as HTMLElement).offsetWidth;
+          const targetHeight = (activeLink as HTMLElement).offsetHeight;
 
-        if (!hasInitialized) {
-          const prev = indicator.style.transition
-          indicator.style.transition = 'none'
-          indicator.style.transform = `translateX(${targetX}px) translateY(${targetTop}px)`
-          indicator.style.width = `${targetWidth}px`
-          indicator.style.height = `${targetHeight}px`
-          void indicator.offsetWidth // force reflow
-          indicator.style.transition = prev
-          setHasInitialized(true)
-        } else {
-          indicator.style.transform = `translateX(${targetX}px) translateY(${targetTop}px)`
-          indicator.style.width = `${targetWidth}px`
-          indicator.style.height = `${targetHeight}px`
+          requestAnimationFrame(() => {
+            if (!hasInitialized) {
+              const prev = indicator.style.transition
+              indicator.style.transition = 'none'
+              indicator.style.transform = `translateX(${targetX}px) translateY(${targetTop}px)`
+              indicator.style.width = `${targetWidth}px`
+              indicator.style.height = `${targetHeight}px`
+              
+              requestAnimationFrame(() => {
+                indicator.style.transition = prev
+                setHasInitialized(true)
+              })
+            } else {
+              indicator.style.transform = `translateX(${targetX}px) translateY(${targetTop}px)`
+              indicator.style.width = `${targetWidth}px`
+              indicator.style.height = `${targetHeight}px`
+            }
+          })
         }
-      }
+      })
     }
   }, [hasInitialized])
 
@@ -293,15 +306,19 @@ const Navbar = ({ isInteractive = true }: NavbarProps) => {
       el.textContent = nextText;
       el.classList.remove("is-exit");
       el.classList.add("is-enter-start");
-      void el.offsetHeight; // force reflow
-      el.classList.remove("is-enter-start");
+      
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          el.classList.remove("is-enter-start");
+        });
+      });
     }, dur);
   }, [currentLabel]);
 
   return (
     <>
       {/* Desktop Navbar */}
-      {!isIPad && (
+      {!(isMobile || isIPad) && (
         <nav className="navbar" role="navigation" aria-label="Main navigation">
           <GlassSurface
             {...NAVBAR_GLASS_PRESET}
@@ -351,25 +368,27 @@ const Navbar = ({ isInteractive = true }: NavbarProps) => {
       )}
 
       {/* Mobile Fullscreen Navbar */}
-      <nav className={`mobile-navbar-fullscreen ${isIPad ? 'show-for-ipad' : ''}`} role="navigation" aria-label="Mobile navigation">
-        <div className="mobile-pill-container">
-          <GlassSurface
-            {...NAVBAR_GLASS_PRESET}
-            width={180}
-            height={45}
-          >
-            <button
-              className="command-pill-button"
-              onClick={openCommandMenu}
-              aria-label="Open command menu"
+      {(isMobile || isIPad) && (
+        <nav className={`mobile-navbar-fullscreen ${isIPad ? 'show-for-ipad' : ''}`} role="navigation" aria-label="Mobile navigation">
+          <div className="mobile-pill-container">
+            <GlassSurface
+              {...NAVBAR_GLASS_PRESET}
+              width={180}
+              height={45}
             >
-              <svg className="pill-search-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-              <span className="pill-text t-text-swap" ref={pillTextRef}></span>
-              <span className="pill-shortcut">{isMac ? '⌘K' : 'Ctrl K'}</span>
-            </button>
-          </GlassSurface>
-        </div>
-      </nav>
+              <button
+                className="command-pill-button"
+                onClick={openCommandMenu}
+                aria-label="Open command menu"
+              >
+                <svg className="pill-search-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <span className="pill-text t-text-swap" ref={pillTextRef}></span>
+                <span className="pill-shortcut">{isMac ? '⌘K' : 'Ctrl K'}</span>
+              </button>
+            </GlassSurface>
+          </div>
+        </nav>
+      )}
 
       {shouldMountCommandMenu && (
         <Suspense fallback={null}>

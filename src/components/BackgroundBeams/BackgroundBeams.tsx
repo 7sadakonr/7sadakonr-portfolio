@@ -43,40 +43,42 @@ export const BackgroundBeams = React.memo(
       if (!isFinePointer || !isActive) return;
 
       let rafId: number | null = null;
-      let isNear = false;
-      let mouseX = -1000;
-      let mouseY = -1000;
+      let clientX = -1000;
+      let clientY = -1000;
       const glowElement = glowRef.current;
 
       const updateGlow = () => {
-        if (glowRef.current) {
-          glowRef.current.style.opacity = isNear ? "1" : "0";
-          if (isNear) {
-            const mask = `radial-gradient(circle at ${mouseX}px ${mouseY}px, black 0%, transparent 350px)`;
-            glowRef.current.style.maskImage = mask;
-            glowRef.current.style.webkitMaskImage = mask;
-          }
-        }
         rafId = null;
+        if (!containerRef.current || !glowRef.current) return;
+        
+        const rect = containerRef.current.getBoundingClientRect();
+        let isNear = false;
+        let mouseX = -1000;
+        let mouseY = -1000;
+
+        // Check if mouse is near container
+        if (
+          clientY >= rect.top - 50 &&
+          clientY <= rect.bottom + 50 &&
+          clientX >= rect.left &&
+          clientX <= rect.right
+        ) {
+          isNear = true;
+          mouseX = clientX - rect.left;
+          mouseY = clientY - rect.top;
+        }
+
+        glowRef.current.style.opacity = isNear ? "1" : "0";
+        if (isNear) {
+          const mask = `radial-gradient(circle at ${mouseX}px ${mouseY}px, black 0%, transparent 350px)`;
+          glowRef.current.style.maskImage = mask;
+          glowRef.current.style.webkitMaskImage = mask;
+        }
       };
 
       const handleMouseMove = (e: MouseEvent) => {
-        if (!containerRef.current) return;
-        const rect = containerRef.current.getBoundingClientRect();
-        // Check if mouse is near container
-        if (
-          e.clientY >= rect.top - 50 &&
-          e.clientY <= rect.bottom + 50 &&
-          e.clientX >= rect.left &&
-          e.clientX <= rect.right
-        ) {
-          isNear = true;
-          mouseX = e.clientX - rect.left;
-          mouseY = e.clientY - rect.top;
-        } else {
-          isNear = false;
-        }
-
+        clientX = e.clientX;
+        clientY = e.clientY;
         if (rafId === null) {
           rafId = requestAnimationFrame(updateGlow);
         }
