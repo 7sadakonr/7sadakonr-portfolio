@@ -122,6 +122,11 @@ const GithubCalendar = ({
     const viewportRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
+        if (typeof IntersectionObserver === 'undefined') {
+            setIsVisible(true);
+            return;
+        }
+
         const observer = new IntersectionObserver(
             ([entry]) => {
                 if (entry.isIntersecting) {
