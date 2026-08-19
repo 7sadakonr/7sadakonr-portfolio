@@ -1,7 +1,7 @@
 import TextReveal from '../../components/Animation/TextReveal'
 import ContactForm from './components/ContactForm'
 import ContactInfo from './components/ContactInfo'
-import './ContactPage.css'
+
 const ContactSection = () => (
   <div className="contact-page-wrapper landing-section">
     {/* Main Content */}
