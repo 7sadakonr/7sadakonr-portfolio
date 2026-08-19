@@ -1,3 +1,5 @@
+import { loadAboutPage, loadProjectPage, loadContactPage } from '../../utils/runtimeWarmup'
+
 export type LazySectionId = 'about' | 'projects' | 'contact'
 
 const sectionOrder: LazySectionId[] = ['about', 'projects', 'contact']
@@ -42,6 +44,12 @@ export const requestSection = (sectionId: LazySectionId): Promise<void> => {
   return readyPromise
 }
 
+export const prefetchSection = (sectionId: LazySectionId) => {
+  if (sectionId === 'about') void loadAboutPage()
+  else if (sectionId === 'projects') void loadProjectPage()
+  else if (sectionId === 'contact') void loadContactPage()
+}
+
 export const ensureTargetReady = async (targetId: string): Promise<void> => {
   const owner = getOwningSection(targetId)
   if (!owner) return
@@ -50,7 +58,11 @@ export const ensureTargetReady = async (targetId: string): Promise<void> => {
   for (let i = 0; i <= ownerIndex; i++) {
     const sec = sectionOrder[i]
     if (sec) {
-      await requestSection(sec)
+      if (i === ownerIndex) {
+        await requestSection(sec)
+      } else {
+        prefetchSection(sec)
+      }
     }
   }
 }

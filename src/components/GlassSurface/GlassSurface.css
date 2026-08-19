@@ -1,3 +1,9 @@
+@property --bg-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 135deg;
+}
+
 .glass-surface {
   position: relative;
   display: flex;
