@@ -4,6 +4,7 @@ import DotPattern from '../components/DotPattern/DotPattern'
 import GithubCalendar from '../components/GithubCalendar/GithubCalendar'
 import Scales from '../components/Scales/Scales'
 import ResumeDownloadMenu from '../components/ResumeDownload/ResumeDownloadMenu'
+import './AboutPage.css'
 
 const AboutSection = () => {
     return (
@@ -137,7 +138,7 @@ const AboutSection = () => {
                                             { id: 'nextjs', name: 'Next.js' }
                                         ].map((skill, i) => (
                                             <div className="tech-pill" title={skill.name} key={`row1-${i}`}>
-                                                <img src={`https://skillicons.dev/icons?i=${skill.id}`} alt={skill.name} loading="lazy" decoding="async" style={{ width: '16px', height: '16px' }} />
+                                                <img src={`/tech-icons/${skill.id}.svg`} alt={skill.name} loading="lazy" decoding="async" style={{ width: '16px', height: '16px' }} />
                                                 <span>{skill.name}</span>
                                             </div>
                                         ))}
@@ -156,7 +157,7 @@ const AboutSection = () => {
                                             { id: 'tailwind', name: 'Tailwind' }
                                         ].map((skill, i) => (
                                             <div className="tech-pill" title={skill.name} key={`row2-${i}`}>
-                                                <img src={`https://skillicons.dev/icons?i=${skill.id}`} alt={skill.name} loading="lazy" decoding="async" style={{ width: '16px', height: '16px' }} />
+                                                <img src={`/tech-icons/${skill.id}.svg`} alt={skill.name} loading="lazy" decoding="async" style={{ width: '16px', height: '16px' }} />
                                                 <span>{skill.name}</span>
                                             </div>
                                         ))}
@@ -177,7 +178,7 @@ const AboutSection = () => {
                                             { id: 'postman', name: 'Postman' }
                                         ].map((skill, i) => (
                                             <div className="tech-pill" title={skill.name} key={`row3-${i}`}>
-                                                <img src={`https://skillicons.dev/icons?i=${skill.id}`} alt={skill.name} loading="lazy" decoding="async" style={{ width: '16px', height: '16px' }} />
+                                                <img src={`/tech-icons/${skill.id}.svg`} alt={skill.name} loading="lazy" decoding="async" style={{ width: '16px', height: '16px' }} />
                                                 <span>{skill.name}</span>
                                             </div>
                                         ))}

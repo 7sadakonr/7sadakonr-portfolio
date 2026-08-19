@@ -98,9 +98,6 @@ export const warmBackgroundRuntime = () => {
 
   const stages: (() => Promise<unknown>)[] = [
     () => loadAboutPage(),
-    () => loadProjectPage(),
-    () => loadCommandMenu(),
-    () => Promise.allSettled([loadContactPage(), loadPageEnd()]),
   ]
   if (shouldWarmHeavyAssets()) {
     stages.push(async () => {
