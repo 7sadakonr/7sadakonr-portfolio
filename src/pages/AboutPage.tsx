@@ -4,7 +4,6 @@ import DotPattern from '../components/DotPattern/DotPattern'
 import GithubCalendar from '../components/GithubCalendar/GithubCalendar'
 import Scales from '../components/Scales/Scales'
 import ResumeDownloadMenu from '../components/ResumeDownload/ResumeDownloadMenu'
-import './AboutPage.css'
 
 const AboutSection = () => {
     return (
