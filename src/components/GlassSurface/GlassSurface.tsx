@@ -29,6 +29,31 @@ interface GlassSurfaceProps {
   onClick?: () => void;
 }
 
+let cachedIsSVGSupported: boolean | null = null;
+const checkSVGSupport = (filterId: string) => {
+  if (cachedIsSVGSupported !== null) return cachedIsSVGSupported;
+  if (typeof window === 'undefined') return false;
+  
+  const isTouchOrSmall = window.matchMedia('(max-width: 768px), (pointer: coarse)').matches;
+  if (isTouchOrSmall) {
+    cachedIsSVGSupported = false;
+    return false;
+  }
+
+  const isWebkit = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
+  const isFirefox = /Firefox/.test(navigator.userAgent);
+
+  if (isWebkit || isFirefox) {
+    cachedIsSVGSupported = false;
+    return false;
+  }
+
+  const div = document.createElement('div');
+  div.style.backdropFilter = `url(#${filterId})`;
+  cachedIsSVGSupported = div.style.backdropFilter !== '';
+  return cachedIsSVGSupported;
+};
+
 const GlassSurface: React.FC<GlassSurfaceProps> = ({
   children,
   width = 200,
@@ -109,22 +134,7 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
     feImageRef.current?.setAttribute('href', generateDisplacementMap());
   };
 
-  const isSVGSupported = useMemo(() => {
-    if (typeof window === 'undefined') return false;
-    const isTouchOrSmall = window.matchMedia('(max-width: 768px), (pointer: coarse)').matches;
-    if (isTouchOrSmall) return false;
-
-    const isWebkit = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
-    const isFirefox = /Firefox/.test(navigator.userAgent);
-
-    if (isWebkit || isFirefox) {
-      return false;
-    }
-
-    const div = document.createElement('div');
-    div.style.backdropFilter = `url(#${filterId})`;
-    return div.style.backdropFilter !== '';
-  }, [filterId]);
+  const isSVGSupported = useMemo(() => checkSVGSupport(filterId), [filterId]);
 
   useEffect(() => {
     if (!isSVGSupported) return;
@@ -276,4 +286,4 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
   );
 };
 
-export default GlassSurface;
+export default React.memo(GlassSurface);
