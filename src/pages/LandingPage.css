@@ -279,7 +279,6 @@
   inset: -3px;
   border-radius: 50%;
   background: linear-gradient(135deg, #8a38f5, #ff7777, #8a38f5);
-  background-size: 200% 200%;
   animation: gradientRotate 4s linear infinite;
   z-index: -1;
 }
@@ -294,15 +293,10 @@
 
 @keyframes gradientRotate {
   0% {
-    background-position: 0% 50%;
+    transform: rotate(0deg);
   }
-
-  50% {
-    background-position: 100% 50%;
-  }
-
   100% {
-    background-position: 0% 50%;
+    transform: rotate(360deg);
   }
 }
 
@@ -335,8 +329,7 @@
     inset 0 1px 0 0 rgba(255, 255, 255, 0.15);
 }
 }
-
-/* ===========================================
+/* ===========================================
    ABOUT BENTO GRID SECTION
    =========================================== */
 
@@ -665,8 +658,7 @@
   transform: translateY(2px);
 }
 }
-
-/* ===========================================
+/* ===========================================
    PROJECTS SECTION
    =========================================== */
 
@@ -964,8 +956,7 @@
   height: 16px;
   transition: transform 0.3s ease;
 }
-
-/* ===========================================
+/* ===========================================
    CONTACT SECTION
    =========================================== */
 

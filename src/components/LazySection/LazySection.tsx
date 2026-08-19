@@ -5,6 +5,7 @@ import {
   markSectionReady,
   requestSection,
   ensureTargetReady,
+  prefetchSection,
   subscribeToSectionRequests,
   type LazySectionId,
 } from './sectionLoader'
@@ -44,20 +45,32 @@ const LazySection = ({ id, children, canLoad = true }: LazySectionProps) => {
     const element = document.getElementById(id)
     if (!element || shouldRender) return unsubscribe
 
-    const observer = new IntersectionObserver(
+    const prefetchObserver = new IntersectionObserver(
+      (entries) => {
+        if (!entries.some((entry) => entry.isIntersecting)) return
+
+        prefetchSection(id)
+        prefetchObserver.disconnect()
+      },
+      { rootMargin: '800px 0px', threshold: 0 },
+    )
+    
+    const mountObserver = new IntersectionObserver(
       (entries) => {
         if (!entries.some((entry) => entry.isIntersecting)) return
 
         void ensureTargetReady(id)
-        observer.disconnect()
+        mountObserver.disconnect()
       },
-      { rootMargin: '800px 0px', threshold: 0 },
+      { rootMargin: '300px 0px', threshold: 0 },
     )
 
-    observer.observe(element)
+    prefetchObserver.observe(element)
+    mountObserver.observe(element)
 
     return () => {
-      observer.disconnect()
+      prefetchObserver.disconnect()
+      mountObserver.disconnect()
       unsubscribe()
     }
   }, [canLoad, id, shouldRender])
