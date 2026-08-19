@@ -1,4 +1,10 @@
-@property --bg-angle {\n  syntax: \'<angle>\';\n  inherits: false;\n  initial-value: 135deg;\n}\n\n.glass-surface {
+@property --bg-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 135deg;
+}
+
+.glass-surface {
   position: relative;
   display: flex;
   align-items: center;
