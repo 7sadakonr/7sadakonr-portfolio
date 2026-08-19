@@ -120,6 +120,7 @@ const GithubCalendar = ({
     const [error, setError] = useState(false)
     const [isVisible, setIsVisible] = useState(false)
     const viewportRef = useRef<HTMLDivElement>(null)
+    const containerRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
         if (typeof IntersectionObserver === 'undefined') {
@@ -136,7 +137,7 @@ const GithubCalendar = ({
             },
             { rootMargin: '200px 0px' }
         );
-        if (viewportRef.current) observer.observe(viewportRef.current);
+        if (containerRef.current) observer.observe(containerRef.current);
         return () => observer.disconnect();
     }, []);
 
@@ -345,6 +346,7 @@ const GithubCalendar = ({
 
     return (
         <div
+            ref={containerRef}
             className={[
                 'github-calendar',
                 `github-calendar--${variant}`,
