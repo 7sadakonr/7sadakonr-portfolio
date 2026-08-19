@@ -1,3 +1,4 @@
+@import "./transitions.css";
 /* latin-ext */
 @font-face {
   font-family: 'Outfit';
@@ -78,8 +79,6 @@
   font-display: swap;
   src: url(/fonts/playwrite-latin.woff2) format('woff2');
 }
-
-@import "./transitions.css";
 
 /* Performance optimizations */
 * {
