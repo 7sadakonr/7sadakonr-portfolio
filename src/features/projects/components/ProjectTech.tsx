@@ -12,7 +12,7 @@ const ProjectTech = ({ tech }: ProjectTechProps) => (
         const iconId = getTechIcon(technology)
         return (
           <div key={index} className="tech-pill" title={technology}>
-            {iconId && <img src={`https://skillicons.dev/icons?i=${iconId}`} alt={technology} loading="lazy" decoding="async" style={{ width: '16px', height: '16px' }} />}
+            {iconId && <img src={`/tech-icons/${iconId}.svg`} alt={technology} loading="lazy" decoding="async" style={{ width: '16px', height: '16px' }} />}
             <span>{technology}</span>
           </div>
         )

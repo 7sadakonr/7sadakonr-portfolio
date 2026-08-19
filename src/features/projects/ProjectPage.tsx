@@ -6,8 +6,7 @@ import { createProjectSidebarItems } from './data/projectSidebarItems'
 import ProjectCard from './components/ProjectCard'
 import ProjectSidebar from './components/ProjectSidebar'
 import { useActiveProject } from './hooks/useActiveProject'
-// CSS is now in LandingPage.css
-
+import './ProjectPage.css'
 const ProjectSection = () => {
   const { activeProjectIndex, setActiveProjectIndex, setProjectRef, scrollToProject } = useActiveProject()
   const sidebarItems = useMemo(() => createProjectSidebarItems(PROJECTS), [])
