@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import '../../pages/LandingPage.css'
 import AnimatedContent from '../../components/Animation/AnimatedContent'
 import TextReveal from '../../components/Animation/TextReveal'
 import { PROJECTS } from './data/projects'
