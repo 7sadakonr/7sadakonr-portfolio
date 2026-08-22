@@ -42,6 +42,8 @@ const NAV_ITEMS = [
   { path: '/contact', label: 'CONTACT' },
 ] as const
 
+const formatPillLabel = (label: string) => label.charAt(0) + label.slice(1).toLowerCase()
+
 const COMMAND_MENU_ITEMS: CommandMenuItem[] = [
   { id: 'nav-home', path: '/', label: 'HOME', category: 'Navigation', keywords: 'home landing start', targetId: 'home' },
   { id: 'nav-about', path: '/about', label: 'ABOUT', category: 'Navigation', keywords: 'about profile me', targetId: 'about' },
@@ -71,7 +73,6 @@ const Navbar = ({ isInteractive = true }: NavbarProps) => {
   const [isMobile, setIsMobile] = useState(false)
   const [isIPad, setIsIPad] = useState(false)
   const [isMac, setIsMac] = useState(true)
-  const pillTextRef = useRef<HTMLSpanElement>(null)
   const navigationRequestRef = useRef(0)
   const skipLocationScrollRef = useRef<string | null>(null)
 
@@ -203,6 +204,10 @@ const Navbar = ({ isInteractive = true }: NavbarProps) => {
   }, [isCommandMenuOpen, openCommandMenu])
 
   const [activePath, setActivePath] = useState(location.pathname)
+  const currentLabel = NAV_ITEMS.find(item => item.path === activePath)?.label || 'Home'
+  const currentPillLabel = formatPillLabel(currentLabel)
+  const [pillLabel, setPillLabel] = useState(currentPillLabel)
+  const [pillLabelAnimation, setPillLabelAnimation] = useState<'idle' | 'exit' | 'enter'>('idle')
 
   // Update active path on mount and location change
   useEffect(() => {
@@ -284,36 +289,37 @@ const Navbar = ({ isInteractive = true }: NavbarProps) => {
 
   useEffect(() => resetNavigation, [])
 
-  const currentLabel = NAV_ITEMS.find(item => item.path === activePath)?.label || 'Home';
-
   useEffect(() => {
-    const el = pillTextRef.current;
-    if (!el) return;
-
-    const nextText = currentLabel.charAt(0) + currentLabel.slice(1).toLowerCase();
-
-    if (el.textContent === '' || el.textContent === nextText) {
-      el.textContent = nextText;
-      return;
-    }
-
     const dur = parseFloat(
       getComputedStyle(document.documentElement).getPropertyValue("--text-swap-dur") || "150"
-    );
+    )
 
-    el.classList.add("is-exit");
-    setTimeout(() => {
-      el.textContent = nextText;
-      el.classList.remove("is-exit");
-      el.classList.add("is-enter-start");
-      
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          el.classList.remove("is-enter-start");
-        });
-      });
-    }, dur);
-  }, [currentLabel]);
+    if (pillLabel === currentPillLabel) return
+
+    setPillLabelAnimation('exit')
+    const timeoutId = window.setTimeout(() => {
+      setPillLabel(currentPillLabel)
+      setPillLabelAnimation('enter')
+    }, dur)
+
+    return () => {
+      window.clearTimeout(timeoutId)
+    }
+  }, [currentPillLabel, pillLabel])
+
+  useEffect(() => {
+    if (pillLabelAnimation !== 'enter') return
+
+    let secondFrame = 0
+    const firstFrame = requestAnimationFrame(() => {
+      secondFrame = requestAnimationFrame(() => setPillLabelAnimation('idle'))
+    })
+
+    return () => {
+      cancelAnimationFrame(firstFrame)
+      cancelAnimationFrame(secondFrame)
+    }
+  }, [pillLabelAnimation])
 
   return (
     <>
@@ -382,7 +388,7 @@ const Navbar = ({ isInteractive = true }: NavbarProps) => {
                 aria-label="Open command menu"
               >
                 <svg className="pill-search-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                <span className="pill-text t-text-swap" ref={pillTextRef}></span>
+                <span className={`pill-text t-text-swap${pillLabelAnimation === 'exit' ? ' is-exit' : pillLabelAnimation === 'enter' ? ' is-enter-start' : ''}`}>{pillLabel}</span>
                 <span className="pill-shortcut">{isMac ? '⌘K' : 'Ctrl K'}</span>
               </button>
             </GlassSurface>
