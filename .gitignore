@@ -36,6 +36,7 @@ dist-ssr
 .codex
 .agents
 .worktrees
+.project-migration/
 
 # Documentation
 /doc

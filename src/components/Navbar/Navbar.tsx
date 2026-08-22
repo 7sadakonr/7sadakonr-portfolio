@@ -1,4 +1,4 @@
-import React, { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
+import React, { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import './Navbar.css'
 import GlassSurface from '../GlassSurface/GlassSurface'
@@ -8,7 +8,8 @@ import type { CommandMenuItem } from '../CommandMenu/CommandMenu'
 import { getNavigationTarget } from '../../features/navigation/navigation.config'
 import { requestProjectTarget, subscribeToSectionChanges } from '../../features/navigation/navigationEvents'
 import { beginNavigation, resetNavigation } from '../../features/navigation/navigationState'
-import { loadCommandMenu } from '../../utils/runtimeWarmup'
+import { loadCommandMenu, loadProjectData } from '../../utils/runtimeWarmup'
+import { getProjectCatalog, subscribeToProjectCatalog } from '../../features/projects/data/projectCatalogStore'
 
 const CommandMenu = lazy(loadCommandMenu)
 
@@ -53,10 +54,6 @@ const COMMAND_MENU_ITEMS: CommandMenuItem[] = [
   { id: 'sec-about', path: '/about', label: 'About Me', category: 'Content', keywords: 'about me background story', targetId: 'about-me' },
   { id: 'sec-skills', path: '/about', label: 'My Skills', category: 'Content', keywords: 'skills html css javascript react figma tech', targetId: 'skills' },
 
-  { id: 'proj-1', path: '/project', label: 'Todo-List', category: 'Projects', keywords: 'todo task list project nextjs express postgres', targetId: 'project-0' },
-  { id: 'proj-2', path: '/project', label: 'Portfolio Website', category: 'Projects', keywords: 'portfolio personal project react vite framer', targetId: 'project-1' },
-  { id: 'proj-3', path: '/project', label: 'Zendix File Transfer', category: 'Projects', keywords: 'zendix file transfer share peer webrtc', targetId: 'project-2' },
-  { id: 'proj-4', path: '/project', label: 'Nyeta', category: 'Projects', keywords: 'nyeta visual assistance ai webrtc llama', targetId: 'project-3' },
 ] as const
 
 interface NavbarProps {
@@ -73,13 +70,29 @@ const Navbar = ({ isInteractive = true }: NavbarProps) => {
   const [isMobile, setIsMobile] = useState(false)
   const [isIPad, setIsIPad] = useState(false)
   const [isMac, setIsMac] = useState(true)
+  const [projects, setProjects] = useState(getProjectCatalog)
   const navigationRequestRef = useRef(0)
   const skipLocationScrollRef = useRef<string | null>(null)
 
   const openCommandMenu = useCallback(() => {
     setShouldMountCommandMenu(true)
     setIsCommandMenuOpen(true)
+    if (!getProjectCatalog()) void loadProjectData().then(({ loadPublicProjects }) => loadPublicProjects()).catch(() => undefined)
   }, [])
+
+  useEffect(() => subscribeToProjectCatalog(setProjects), [])
+
+  const commandMenuItems = useMemo<CommandMenuItem[]>(() => [
+    ...COMMAND_MENU_ITEMS,
+    ...(projects ?? []).map((project, index) => ({
+      id: `project-${project.id}`,
+      path: '/project' as const,
+      label: project.title,
+      category: 'Projects',
+      keywords: `${project.title} ${project.tech.join(' ')}`.toLowerCase(),
+      targetId: `project-${index}` as const,
+    })),
+  ], [projects])
 
 
   // Detect iPad and Mac
@@ -401,7 +414,7 @@ const Navbar = ({ isInteractive = true }: NavbarProps) => {
           <CommandMenu
             isOpen={isCommandMenuOpen}
             onClose={() => setIsCommandMenuOpen(false)}
-            menuItems={COMMAND_MENU_ITEMS}
+            menuItems={commandMenuItems}
             activePath={activePath}
             handleNavClick={handleNavClick}
           />

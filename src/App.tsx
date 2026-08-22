@@ -1,5 +1,5 @@
 import { Suspense, useEffect, useState, lazy } from 'react'
-import { BrowserRouter as Router } from 'react-router-dom'
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom'
 import Preloader from './components/Preloader/Preloader'
 import { SpaceBackground } from './components/SpaceBackground/SpaceBackground'
 import SmoothScroll from './components/SmoothScroll/SmoothScroll'
@@ -25,8 +25,9 @@ const ContactPage = lazy(loadContactPage)
 const PageEnd = lazy(loadPageEnd)
 const Navbar = lazy(loadNavbar)
 const Analytics = lazy(() => import('@vercel/analytics/react').then(({ Analytics: Component }) => ({ default: Component })))
+const AdminRoutes = lazy(() => import('./features/admin/AdminRoutes'))
 
-function App() {
+function PortfolioApp() {
   const [isCriticalReady, setIsCriticalReady] = useState(false)
   const [isPreloaderVisible, setIsPreloaderVisible] = useState(true)
   const isInteractive = isCriticalReady && !isPreloaderVisible
@@ -61,7 +62,6 @@ function App() {
   }, [])
 
   return (
-    <Router>
       <SmoothScroll isPrepared={isInteractive} isEnabled={isInteractive}>
         {isPreloaderVisible && <Preloader onComplete={() => setIsPreloaderVisible(false)} />}
         {isInteractive && (
@@ -95,6 +95,16 @@ function App() {
           </div>
         </div>
       </SmoothScroll>
+  )
+}
+
+function App() {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/admin/*" element={<Suspense fallback={null}><AdminRoutes /></Suspense>} />
+        <Route path="*" element={<PortfolioApp />} />
+      </Routes>
     </Router>
   )
 }

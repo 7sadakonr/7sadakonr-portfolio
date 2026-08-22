@@ -9,6 +9,7 @@ export const loadNavbar = lazyLoader(() => import('../components/Navbar/Navbar')
 export const loadCommandMenu = lazyLoader(() => import('../components/CommandMenu/CommandMenu'))
 export const loadAboutPage = lazyLoader(() => import('../pages/AboutPage'))
 export const loadProjectPage = lazyLoader(() => import('../features/projects/ProjectPage'))
+export const loadProjectData = lazyLoader(() => import('../features/projects/api/projectRepository'))
 export const loadContactPage = lazyLoader(() => import('../features/contact/ContactPage'))
 export const loadPageEnd = lazyLoader(() => import('../components/PageEnd/PageEnd'))
 
