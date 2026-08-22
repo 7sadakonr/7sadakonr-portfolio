@@ -752,6 +752,62 @@
   justify-content: center;
 }
 
+.project-preview-inner--mockup {
+  background: radial-gradient(circle at 76% 18%, rgba(132, 91, 255, .40), transparent 29%), radial-gradient(circle at 18% 84%, rgba(32, 153, 184, .18), transparent 36%), linear-gradient(135deg, #090d1c, #191532 58%, #352448);
+}
+
+.project-image-mockup {
+  display: grid;
+  place-items: center;
+  gap: 13px;
+  width: min(58%, 220px);
+  aspect-ratio: 1.25 / 1;
+  border: 1px solid rgba(226, 222, 255, .22);
+  border-radius: 14px;
+  color: #ddd7ff;
+  background: linear-gradient(145deg, rgba(255, 255, 255, .12), rgba(255, 255, 255, .035));
+  box-shadow: 0 20px 46px rgba(0, 0, 0, .27), inset 0 1px rgba(255, 255, 255, .12);
+  backdrop-filter: blur(8px);
+}
+
+.project-image-mockup svg { width: clamp(38px, 5vw, 56px); height: auto; color: #baa8ff; }
+.project-image-mockup span { font: 800 clamp(9px, 1vw, 11px)/1 "Outfit", sans-serif; letter-spacing: .18em; }
+
+.project-status-badge {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  z-index: 2;
+  padding: 6px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 999px;
+  background: rgba(124, 58, 237, 0.88);
+  color: #fff;
+  font: 700 12px/1 "Outfit", sans-serif;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28);
+}
+
+.projects-state {
+  display: grid;
+  min-height: 180px;
+  place-items: center;
+  gap: 12px;
+  color: rgba(255, 255, 255, 0.82);
+  font-family: "Outfit", sans-serif;
+  text-align: center;
+}
+
+.projects-state--error button {
+  border: 1px solid rgba(168, 85, 247, 0.75);
+  border-radius: 999px;
+  padding: 8px 14px;
+  background: rgba(168, 85, 247, 0.18);
+  color: #fff;
+  cursor: pointer;
+}
+
 .project-preview-image {
   position: absolute;
   width: 100%;

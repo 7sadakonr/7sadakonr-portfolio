@@ -227,7 +227,7 @@ const LineSidebar = ({
 
                             return (
                               <div key={i} className="tech-pill" title={t}>
-                                {iconId && <img src={`https://skillicons.dev/icons?i=${iconId}`} alt={t} loading="lazy" decoding="async" style={{ width: '16px', height: '16px' }} />}
+                                {iconId && <img src={`/tech-icons/${iconId}.svg`} alt={t} loading="lazy" decoding="async" style={{ width: '16px', height: '16px' }} />}
                                 <span>{t}</span>
                               </div>
                             );

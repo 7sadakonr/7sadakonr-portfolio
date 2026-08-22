@@ -1,10 +1,10 @@
 import type { RefCallback } from 'react'
-import type { ProjectItem } from '../data/projects'
+import type { PublicProjectItem } from '../types'
 import ImageMagnifier from './ImageMagnifier'
 import ProjectTech from './ProjectTech'
 
 interface ProjectCardProps {
-  project: ProjectItem
+  project: PublicProjectItem
   index: number
   projectRef: RefCallback<HTMLDivElement>
   onMouseProjectEnter: (index: number) => void
@@ -19,8 +19,15 @@ const ProjectCard = ({ project, index, projectRef, onMouseProjectEnter }: Projec
   >
     <div className="project-card">
       <div className="project-preview">
-        <div className="project-preview-inner" style={{ background: project.image ? 'transparent' : project.gradient }}>
+        <div className={`project-preview-inner${project.image ? '' : ' project-preview-inner--mockup'}`}>
           {project.image && <ImageMagnifier src={project.image} alt={project.title} />}
+          {!project.image && (
+            <div className="project-image-mockup" role="img" aria-label={`${project.title} project preview`}>
+              <svg viewBox="0 0 64 64" fill="none" aria-hidden="true"><rect x="8" y="11" width="48" height="42" rx="6" stroke="currentColor" strokeWidth="3" /><circle cx="23" cy="25" r="5" fill="currentColor" /><path d="m13 47 14-14 9 8 7-7 8 13" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" /></svg>
+              <span>PROJECT COVER</span>
+            </div>
+          )}
+          {project.isInProgress && <span className="project-status-badge">In Progress</span>}
         </div>
       </div>
       <div className="project-info mobile-only-info">
