@@ -57,7 +57,6 @@ const AboutSection = () => {
                         <div className="about-bento-grid">
 
                         {/* Main Biography Card */}
-                        <AnimatedContent distance={40} direction="vertical" duration={0.8} initialOpacity={0} delay={0.1}>
                             <div className="bento-card bento-main">
                                 <div className="bento-header">
                                     <svg className="bento-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -80,10 +79,8 @@ const AboutSection = () => {
                                     </p>
                                 </div>
                             </div>
-                        </AnimatedContent>
 
                         {/* Focus Card */}
-                        <AnimatedContent distance={40} direction="vertical" duration={0.8} initialOpacity={0} delay={0.2}>
                             <div className="bento-card bento-focus">
                                 <div className="bento-header">
                                     <svg className="bento-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -100,10 +97,8 @@ const AboutSection = () => {
                                     </p>
                                 </div>
                             </div>
-                        </AnimatedContent>
 
                         {/* Skills Card */}
-                        <AnimatedContent distance={40} direction="vertical" duration={0.8} initialOpacity={0} delay={0.3}>
                             <div className="bento-card bento-skills" id="skills">
                                 <DotPattern
                                     className="bento-skills-dot-pattern"
@@ -184,18 +179,15 @@ const AboutSection = () => {
                                     </div>
                                 </div>
                             </div>
-                        </AnimatedContent>
 
                         </div>
 
-                        <AnimatedContent distance={40} direction="horizontal" duration={0.8} initialOpacity={0} delay={0.4}>
                             <div className="bento-card bento-github">
                                 <GithubCalendar
                                     username="7sadakonr"
                                     colorSchema="purple"
                                 />
                             </div>
-                        </AnimatedContent>
                     </div>
                 </section>
             </div>

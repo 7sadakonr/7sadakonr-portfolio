@@ -108,7 +108,8 @@ export const Preloader: React.FC<PreloaderProps> = ({ onReveal, onComplete }) =>
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     if (prefersReducedMotion) {
-      setProgress(100);
+      progressRef.current = 100;
+      progressTargetRef.current = 100;
       onRevealRef.current?.();
       onCompleteRef.current?.();
       setIsComplete(true);
