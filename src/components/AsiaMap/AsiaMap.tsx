@@ -4,7 +4,7 @@ const AsiaMap = () => (
             <div className="asia-map-pointer-inner">
                 {/* Text Box */}
                 <div className="asia-map-pill">
-                    We are here
+                    I’m here
                     <span className="asia-map-pill-glow"></span>
                 </div>
 
