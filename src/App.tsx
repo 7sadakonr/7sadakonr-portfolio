@@ -1,6 +1,5 @@
 import { Suspense, useEffect, useState, lazy } from 'react'
 import { BrowserRouter as Router } from 'react-router-dom'
-import Navbar from './components/Navbar/Navbar'
 import Preloader from './components/Preloader/Preloader'
 import { SpaceBackground } from './components/SpaceBackground/SpaceBackground'
 import SmoothScroll from './components/SmoothScroll/SmoothScroll'
@@ -8,6 +7,7 @@ import LazySection from './components/LazySection/LazySection'
 import {
   loadAboutPage,
   loadContactPage,
+  loadNavbar,
   loadPageEnd,
   loadProjectPage,
 } from './utils/runtimeWarmup'
@@ -23,6 +23,7 @@ const AboutPage = lazy(loadAboutPage)
 const ProjectPage = lazy(loadProjectPage)
 const ContactPage = lazy(loadContactPage)
 const PageEnd = lazy(loadPageEnd)
+const Navbar = lazy(loadNavbar)
 const Analytics = lazy(() => import('@vercel/analytics/react').then(({ Analytics: Component }) => ({ default: Component })))
 
 function App() {
@@ -68,7 +69,11 @@ function App() {
             <Analytics />
           </Suspense>
         )}
-        <Navbar isInteractive={isInteractive} />
+        {isCriticalReady && (
+          <Suspense fallback={null}>
+            <Navbar isInteractive={isInteractive} />
+          </Suspense>
+        )}
         
         <div className="landing-page-container">
           <div className="landing-content-flow">
