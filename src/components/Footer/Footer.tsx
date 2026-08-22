@@ -1,8 +1,13 @@
 import logo from '../../assets/img/logo.svg'
+import { useEffect, useState } from 'react'
 import ResumeDownloadMenu from '../ResumeDownload/ResumeDownloadMenu'
+import { getProjectCatalog, subscribeToProjectCatalog } from '../../features/projects/data/projectCatalogStore'
 import './Footer.css'
 
-const Footer = () => (
+const Footer = () => {
+  const [projects, setProjects] = useState(getProjectCatalog)
+  useEffect(() => subscribeToProjectCatalog(setProjects), [])
+  return (
   <footer className="site-footer" aria-label="Site footer">
     <div className="site-footer__inner">
       <div className="site-footer__top">
@@ -30,9 +35,7 @@ const Footer = () => (
           <section className="site-footer__column">
             <h2>Selected work</h2>
             <ul>
-              <li><a href="#project-0">Todo List</a></li>
-              <li><a href="#project-1">Portfolio</a></li>
-              <li><a href="#project-2">Zendix</a></li>
+              {(projects ?? []).slice(0, 3).map((project, index) => <li key={project.id}><a href={`#project-${index}`}>{project.title}</a></li>)}
               <li><a href="#projects">All projects</a></li>
             </ul>
           </section>
@@ -57,6 +60,7 @@ const Footer = () => (
       <p className="site-footer__wordmark" aria-hidden="true">7SADAKONR</p>
     </div>
   </footer>
-)
+  )
+}
 
 export default Footer

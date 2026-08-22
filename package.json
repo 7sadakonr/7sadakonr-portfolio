@@ -9,10 +9,14 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "projects:migrate": "node scripts/migrate-projects.mjs",
+    "projects:verify": "node scripts/verify-project-migration.mjs",
     "images:convert": "node scripts/convert-webp.js"
   },
   "dependencies": {
     "@emailjs/browser": "^4.4.1",
+    "@supabase/supabase-js": "^2.112.3",
     "@vercel/analytics": "^1.6.1",
     "lenis": "^1.3.25",
     "liquid-gooey": "^0.1.0",

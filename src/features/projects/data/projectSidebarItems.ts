@@ -1,20 +1,20 @@
-import type { ProjectItem } from './projects'
+import type { PublicProjectItem } from '../types'
 
 export interface ProjectSidebarItem {
   label: string
   description: string
   tech: string[]
-  liveUrl: string
-  githubUrl: string
+  liveUrl?: string
+  githubUrl?: string
 }
 
 export const createProjectSidebarItems = (
-  projects: readonly ProjectItem[],
+  projects: readonly PublicProjectItem[],
 ): ProjectSidebarItem[] =>
   projects.map(({ title, description, tech, liveUrl, githubUrl }) => ({
     label: title,
     description,
     tech: [...tech],
-    liveUrl,
-    githubUrl,
+    liveUrl: liveUrl ?? undefined,
+    githubUrl: githubUrl ?? undefined,
   }))
