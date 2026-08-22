@@ -1,4 +1,5 @@
 import AnimatedContent from '../components/Animation/AnimatedContent'
+import './LandingPage.css'
 import TextReveal from '../components/Animation/TextReveal'
 import DotPattern from '../components/DotPattern/DotPattern'
 import GithubCalendar from '../components/GithubCalendar/GithubCalendar'

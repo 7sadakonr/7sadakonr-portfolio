@@ -15,7 +15,7 @@ import { getRouteForSection } from './features/navigation/navigation.config'
 import { publishSectionChange } from './features/navigation/navigationEvents'
 import { isNavigationInProgress } from './features/navigation/navigationState'
 
-import './pages/LandingPage.css'
+import './pages/LandingPageShell.css'
 
 // Lazy load components for code splitting
 import HeroPage from './pages/HeroPage'
