@@ -23,7 +23,7 @@ const conversions = [
   }
 ];
 
-const heroWidths = [120, 160, 240, 320, 480];
+const heroWidths = [120, 160, 240, 320, 360, 480];
 
 async function run() {
   console.log('--- Converting images to WebP ---');

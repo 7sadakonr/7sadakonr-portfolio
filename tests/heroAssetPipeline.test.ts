@@ -11,12 +11,14 @@ const getHeroAssetNames = (source: string) => [
 ].filter((name): name is string => Boolean(name))
 
 describe('hero asset pipeline', () => {
-  it('generates the 120px responsive variants', async () => {
+  it('generates responsive variants including the 360px mobile DPR candidate', async () => {
     const script = await read('../scripts/convert-webp.js')
 
-    expect(script).toContain('const heroWidths = [120, 160, 240, 320, 480]')
+    expect(script).toContain('const heroWidths = [120, 160, 240, 320, 360, 480]')
     await expect(access(resolve(process.cwd(), 'public', 'hero-120.avif'))).resolves.toBeUndefined()
     await expect(access(resolve(process.cwd(), 'public', 'hero-120.webp'))).resolves.toBeUndefined()
+    await expect(access(resolve(process.cwd(), 'public', 'hero-360.avif'))).resolves.toBeUndefined()
+    await expect(access(resolve(process.cwd(), 'public', 'hero-360.webp'))).resolves.toBeUndefined()
   })
 
   it('keeps every declared hero candidate available to the browser', async () => {
@@ -26,7 +28,7 @@ describe('hero asset pipeline', () => {
     ])
     const assetNames = getHeroAssetNames(`${hero}\n${html}`)
 
-    expect(assetNames).toHaveLength(10)
+    expect(assetNames).toHaveLength(12)
     expect(hero).toContain('fetchPriority="high"')
     expect(hero).toContain('loading="eager"')
     expect(hero).toContain('width="519"')
