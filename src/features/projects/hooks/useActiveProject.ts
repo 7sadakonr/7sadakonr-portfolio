@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { scrollToTarget } from '../../../components/SmoothScroll/scrollController'
 import { subscribeToProjectTargets } from '../../navigation/navigationEvents'
 
-export const useActiveProject = () => {
+export const useActiveProject = (projectCount: number) => {
   const [activeProjectIndex, setActiveProjectIndex] = useState(0)
   const projectRefs = useRef<(HTMLDivElement | null)[]>([])
   const isScrollingRef = useRef(false)
@@ -12,6 +12,10 @@ export const useActiveProject = () => {
   const setProjectRef = useCallback((index: number) => (element: HTMLDivElement | null) => {
     projectRefs.current[index] = element
   }, [])
+
+  useEffect(() => {
+    setActiveProjectIndex((index) => Math.max(0, Math.min(index, Math.max(projectCount - 1, 0))))
+  }, [projectCount])
 
   useEffect(() => {
     const handleProjectScroll = (index: number) => {
@@ -53,7 +57,7 @@ export const useActiveProject = () => {
     })
     projectRefs.current.forEach((ref) => { if (ref) observer.observe(ref) })
     return () => observer.disconnect()
-  }, [])
+  }, [projectCount])
 
   const scrollToProject = useCallback((index: number) => {
     setActiveProjectIndex(index)
