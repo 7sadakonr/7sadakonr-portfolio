@@ -1,22 +1,9 @@
-import AnimatedContent from '../../../components/Animation/AnimatedContent'
 import { useContactForm } from '../hooks/useContactForm'
 
 const ContactForm = () => {
   const { form, isSubmitting, submitStatus, clearSubmitStatus, handleSubmit } = useContactForm()
-  const disableEntranceMotion =
-    typeof window !== 'undefined' &&
-    window.matchMedia('(hover: none) and (pointer: coarse)').matches
-
   return (
     <div className="contact-form-col">
-      <AnimatedContent
-        distance={50}
-        direction="horizontal"
-        duration={0.8}
-        initialOpacity={0}
-        delay={0.4}
-        disabled={disableEntranceMotion}
-      >
         <div className="glass-card contact-form-card">
           {submitStatus === 'success' ? (
             <div className="form-success">
@@ -86,7 +73,6 @@ const ContactForm = () => {
             </>
           )}
         </div>
-      </AnimatedContent>
     </div>
   )
 }

@@ -4,12 +4,13 @@ import { scrollToTarget } from '../components/SmoothScroll/scrollController';
 import TextReveal from '../components/Animation/TextReveal';
 
 interface HeroPageProps {
+  effectsEnabled?: boolean;
   onCriticalReady?: () => void;
 }
 
 const BackgroundBeams = lazy(() => import('../components/BackgroundBeams/BackgroundBeams'))
 
-const HeroPage = ({ onCriticalReady }: HeroPageProps) => {
+const HeroPage = ({ effectsEnabled = true, onCriticalReady }: HeroPageProps) => {
   const heroRef = useRef<HTMLElement>(null);
   const criticalReadyRef = useRef(false);
   const [isImageReady, setIsImageReady] = useState(false);
@@ -42,7 +43,12 @@ const HeroPage = ({ onCriticalReady }: HeroPageProps) => {
     };
   }, []);
 
-  const isEffectActive = isImageReady && isInView && isDocumentVisible && !prefersReducedMotion;
+  const isEffectActive =
+    effectsEnabled &&
+    isImageReady &&
+    isInView &&
+    isDocumentVisible &&
+    !prefersReducedMotion;
 
   const markCriticalReady = () => {
     if (criticalReadyRef.current) return;
