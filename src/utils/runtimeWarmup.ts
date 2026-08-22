@@ -5,6 +5,7 @@ const lazyLoader = <T>(loader: () => Promise<T>) => {
 
 export const loadLenis = lazyLoader(() => import('lenis'))
 export const loadFireflies = lazyLoader(() => import('../components/Animation/Fireflies'))
+export const loadNavbar = lazyLoader(() => import('../components/Navbar/Navbar'))
 export const loadCommandMenu = lazyLoader(() => import('../components/CommandMenu/CommandMenu'))
 export const loadAboutPage = lazyLoader(() => import('../pages/AboutPage'))
 export const loadProjectPage = lazyLoader(() => import('../features/projects/ProjectPage'))
