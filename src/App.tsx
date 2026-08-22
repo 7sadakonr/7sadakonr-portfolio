@@ -10,7 +10,6 @@ import {
   loadContactPage,
   loadPageEnd,
   loadProjectPage,
-  warmBackgroundRuntime,
 } from './utils/runtimeWarmup'
 import { getRouteForSection } from './features/navigation/navigation.config'
 import { publishSectionChange } from './features/navigation/navigationEvents'
@@ -30,13 +29,6 @@ function App() {
   const [isCriticalReady, setIsCriticalReady] = useState(false)
   const [isPreloaderVisible, setIsPreloaderVisible] = useState(true)
   const isInteractive = isCriticalReady && !isPreloaderVisible
-
-  // The hero owns the critical rendering window. Every nonessential download
-  // begins only after its image has painted.
-  useEffect(() => {
-    if (!isInteractive) return
-    return warmBackgroundRuntime()
-  }, [isInteractive])
 
   // Set up IntersectionObserver to update Navbar based on scroll position
   useEffect(() => {
@@ -82,7 +74,7 @@ function App() {
           <div className="landing-content-flow">
             <SpaceBackground motion="none" showPlanet={true} isActive={isInteractive}>
               <section id="home">
-                <HeroPage onCriticalReady={() => setIsCriticalReady(true)} />
+                <HeroPage effectsEnabled={isInteractive} onCriticalReady={() => setIsCriticalReady(true)} />
               </section>
             </SpaceBackground>
             <LazySection id="about" canLoad={isInteractive}>

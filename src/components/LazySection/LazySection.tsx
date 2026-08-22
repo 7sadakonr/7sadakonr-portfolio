@@ -52,7 +52,7 @@ const LazySection = ({ id, children, canLoad = true }: LazySectionProps) => {
         prefetchSection(id)
         prefetchObserver.disconnect()
       },
-      { rootMargin: '800px 0px', threshold: 0 },
+      { rootMargin: '0px 0px -64px 0px', threshold: 0 },
     )
     
     const mountObserver = new IntersectionObserver(
@@ -62,7 +62,7 @@ const LazySection = ({ id, children, canLoad = true }: LazySectionProps) => {
         void ensureTargetReady(id)
         mountObserver.disconnect()
       },
-      { rootMargin: '300px 0px', threshold: 0 },
+      { rootMargin: '0px 0px -180px 0px', threshold: 0 },
     )
 
     prefetchObserver.observe(element)
