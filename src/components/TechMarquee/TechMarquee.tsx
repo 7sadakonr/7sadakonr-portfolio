@@ -10,11 +10,13 @@ function MarqueeRow({ children, direction = 'left' }: MarqueeRowProps) {
   const rowRef = useRef<HTMLDivElement>(null);
   
   useEffect(() => {
-    let reqId: number;
+    let reqId: number | null = null;
     let progress = 0; // 0 to 1
     let velocity = 0;
     let lastScrollY = window.scrollY;
     let scrollDirectionMult = 1; // 1 for down, -1 for up
+    let isVisible = false;
+    let isDocHidden = document.hidden;
     
     const dirMult = direction === 'left' ? 1 : -1;
     const baseSpeed = 0.0005; 
@@ -43,11 +45,38 @@ function MarqueeRow({ children, direction = 'left' }: MarqueeRowProps) {
         rowRef.current.style.transform = `translateX(calc( (-50% - 6px) * ${progress} ))`;
       }
       
-      reqId = requestAnimationFrame(loop);
+      if (isVisible && !isDocHidden) {
+        reqId = requestAnimationFrame(loop);
+      } else {
+        reqId = null;
+      }
     };
     
-    reqId = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(reqId);
+    const startLoop = () => {
+      if (reqId === null && isVisible && !isDocHidden) {
+        lastScrollY = window.scrollY;
+        reqId = requestAnimationFrame(loop);
+      }
+    };
+
+    const observer = new IntersectionObserver(([entry]) => {
+      isVisible = entry?.isIntersecting ?? false;
+      if (isVisible) startLoop();
+    }, { rootMargin: '50px 0px' });
+    
+    if (rowRef.current) observer.observe(rowRef.current);
+    
+    const handleVisibility = () => {
+      isDocHidden = document.hidden;
+      if (!isDocHidden) startLoop();
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      if (reqId !== null) cancelAnimationFrame(reqId);
+      observer.disconnect();
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
   }, [direction]);
 
   return (
