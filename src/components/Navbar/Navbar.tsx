@@ -251,7 +251,7 @@ const Navbar = ({ isInteractive = true }: NavbarProps) => {
     }
   }, [activePath, hasInitialized, updateIndicatorPosition, isIPad])
 
-  const navigateToTarget = useCallback(async (path: string, targetId: string, updateHistory: boolean) => {
+  const navigateToTarget = useCallback(async (path: string, targetId: string, updateHistory: boolean, options?: import('lenis').ScrollToOptions) => {
     const navigationRequest = ++navigationRequestRef.current
 
     if (getOwningSection(targetId)) {
@@ -270,7 +270,13 @@ const Navbar = ({ isInteractive = true }: NavbarProps) => {
       beginNavigation()
 
       const offset = targetId.startsWith('project-') || targetId === 'skills' ? -window.innerHeight / 4 : 0;
-      scrollToTarget(element, { offset });
+      scrollToTarget(element, { 
+        offset, 
+        ...options,
+        onComplete: () => {
+          resetNavigation()
+        }
+      });
       if (updateHistory) {
         skipLocationScrollRef.current = path
         navigate(path)
@@ -290,6 +296,8 @@ const Navbar = ({ isInteractive = true }: NavbarProps) => {
     await navigateToTarget(path, explicitTargetId ?? getNavigationTarget(path).targetId, true)
   }
 
+  const [hasInitialNavigated, setHasInitialNavigated] = useState(false)
+
   useEffect(() => {
     if (!isInteractive) return
     if (skipLocationScrollRef.current === location.pathname) {
@@ -297,8 +305,15 @@ const Navbar = ({ isInteractive = true }: NavbarProps) => {
       return
     }
     const target = getNavigationTarget(location.pathname)
-    void navigateToTarget(target.path, target.targetId, false)
-  }, [isInteractive, location.pathname, navigateToTarget])
+    const isFirstNav = !hasInitialNavigated
+    if (isFirstNav) setHasInitialNavigated(true)
+    
+    if (isFirstNav && target.path === '/' && window.scrollY < 10) {
+      return
+    }
+    
+    void navigateToTarget(target.path, target.targetId, false, { immediate: isFirstNav })
+  }, [isInteractive, location.pathname, navigateToTarget, hasInitialNavigated])
 
   useEffect(() => resetNavigation, [])
 

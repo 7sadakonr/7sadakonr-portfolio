@@ -3,13 +3,12 @@ let timeoutId: number | undefined
 
 export const isNavigationInProgress = () => isNavigating
 
-export const beginNavigation = (duration = 1000) => {
+export const beginNavigation = () => {
   isNavigating = true
-  if (timeoutId !== undefined) window.clearTimeout(timeoutId)
-  timeoutId = window.setTimeout(() => {
-    isNavigating = false
+  if (timeoutId !== undefined) {
+    window.clearTimeout(timeoutId)
     timeoutId = undefined
-  }, duration)
+  }
 }
 
 export const resetNavigation = () => {
