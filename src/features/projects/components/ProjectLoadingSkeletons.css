@@ -1,0 +1,201 @@
+/* Skeletons Container Fade */
+.projects-list-transition-wrapper {
+  position: relative;
+  min-height: 400px;
+}
+
+.projects-list-skeleton-wrapper,
+.projects-list-content-wrapper {
+  transition: opacity 0.25s ease-in-out;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(40px, 6vh, 70px);
+  width: 100%;
+}
+
+.projects-list-skeleton-wrapper.fade-out,
+.sidebar-fade-wrapper.fade-out {
+  opacity: 0;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  pointer-events: none;
+}
+
+.projects-list-content-wrapper.fade-in,
+.sidebar-fade-wrapper.fade-in {
+  opacity: 1;
+}
+.projects-list-content-wrapper.pre-fade-in,
+.sidebar-fade-wrapper.pre-fade-in {
+  opacity: 0;
+}
+
+.sidebar-fade-wrapper {
+  transition: opacity 0.25s ease-in-out;
+  width: 100%;
+}
+
+/* Base Pulse */
+@keyframes skeleton-pulse {
+  0% {
+    opacity: 0.6;
+  }
+  100% {
+    opacity: 0.3;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  @keyframes skeleton-pulse {
+    0% { opacity: 0.5; }
+    100% { opacity: 0.5; }
+  }
+  .projects-list-skeleton-wrapper,
+  .projects-list-content-wrapper {
+    transition: none;
+  }
+}
+
+.skeleton-item {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  animation: skeleton-pulse 1.5s ease-in-out infinite alternate;
+}
+
+/* Project Card Skeleton */
+.project-card-skeleton {
+  padding: clamp(24px, 3.5vw, 40px) 10px;
+}
+
+.project-card-skeleton .project-preview {
+  aspect-ratio: 16 / 9;
+  border-radius: clamp(14px, 2vw, 20px);
+  padding: 5px;
+}
+
+.project-card-skeleton .project-preview-inner {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: none;
+}
+
+.project-card-skeleton .project-info {
+  margin-top: clamp(25px, 4vw, 45px);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.project-card-skeleton .skeleton-desc-line {
+  height: clamp(14px, 1.8vw, 16px);
+  width: 100%;
+}
+.project-card-skeleton .skeleton-desc-line.short {
+  width: 80%;
+}
+.project-card-skeleton .skeleton-desc-line.shorter {
+  width: 60%;
+}
+
+.project-card-skeleton .skeleton-tech-badges {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+.project-card-skeleton .skeleton-badge {
+  height: 28px;
+  width: 80px;
+  border-radius: 999px;
+}
+.project-card-skeleton .skeleton-badge:nth-child(2) { width: 100px; }
+.project-card-skeleton .skeleton-badge:nth-child(3) { width: 60px; }
+
+.project-card-skeleton .skeleton-actions {
+  display: flex;
+  gap: 16px;
+  margin-top: 24px;
+}
+.project-card-skeleton .skeleton-button {
+  height: 48px;
+  width: 140px;
+  border-radius: 50px;
+}
+
+/* Project Sidebar Skeleton */
+.project-sidebar-skeleton {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 20px 0;
+  align-items: flex-end; /* Align right like real sidebar */
+}
+
+.project-sidebar-skeleton .skeleton-sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  height: 24px;
+  justify-content: flex-end;
+}
+
+.project-sidebar-skeleton .skeleton-sidebar-text {
+  height: 14px;
+  width: 100px;
+}
+.project-sidebar-skeleton .skeleton-sidebar-item:nth-child(2) .skeleton-sidebar-text { width: 130px; }
+.project-sidebar-skeleton .skeleton-sidebar-item:nth-child(3) .skeleton-sidebar-text { width: 80px; }
+.project-sidebar-skeleton .skeleton-sidebar-item:nth-child(4) .skeleton-sidebar-text { width: 110px; }
+
+.project-sidebar-skeleton .skeleton-sidebar-marker {
+  width: 60px;
+  height: 2px;
+}
+
+/* Admin Project Row Skeleton */
+.admin-project-row-skeleton {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 20px;
+  align-items: center;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  margin-bottom: 16px;
+}
+
+.admin-project-row-skeleton .skeleton-thumbnail {
+  width: 120px;
+  aspect-ratio: 16/9;
+  border-radius: 8px;
+}
+
+.admin-project-row-skeleton .skeleton-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.admin-project-row-skeleton .skeleton-title {
+  width: 200px;
+  height: 24px;
+}
+
+.admin-project-row-skeleton .skeleton-tech {
+  width: 300px;
+  height: 16px;
+}
+
+.admin-project-row-skeleton .skeleton-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.admin-project-row-skeleton .skeleton-btn {
+  width: 60px;
+  height: 32px;
+  border-radius: 4px;
+}
