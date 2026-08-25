@@ -3,13 +3,15 @@ import React, { useEffect, useRef, useState } from 'react'
 interface ImageMagnifierProps {
   src: string
   alt: string
+  onError?: () => void
 }
 
-const ImageMagnifier = React.memo(({ src, alt }: ImageMagnifierProps) => {
+const ImageMagnifier = React.memo(({ src, alt, onError }: ImageMagnifierProps) => {
   const [showMagnifier, setShowMagnifier] = useState(false)
   const [magnifierPos, setMagnifierPos] = useState({ x: 0, y: 0 })
   const [imgSize, setImgSize] = useState({ width: 0, height: 0 })
   const [isTouchDevice, setIsTouchDevice] = useState(false)
+  const [isLoaded, setIsLoaded] = useState(false)
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const containerRef = useRef<HTMLDivElement | null>(null)
 
@@ -102,8 +104,23 @@ const ImageMagnifier = React.memo(({ src, alt }: ImageMagnifierProps) => {
       onTouchCancel={handleTouchEnd}
       onContextMenu={(event) => event.preventDefault()}
     >
-      <img src={src} alt={alt} width="960" height="540" className="project-preview-image" loading="lazy" decoding="async" fetchPriority="low" />
-      {showMagnifier && (
+      <img
+        src={src}
+        alt={alt}
+        width="960"
+        height="540"
+        className="project-preview-image"
+        loading="lazy"
+        decoding="async"
+        fetchPriority="low"
+        onLoad={() => setIsLoaded(true)}
+        onError={onError}
+        style={{
+          opacity: isLoaded ? 1 : 0,
+          transition: 'opacity 0.3s ease-in-out',
+        }}
+      />
+      {showMagnifier && isLoaded && (
         <div
           className="magnifier-lens"
           style={{
