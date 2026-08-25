@@ -107,7 +107,14 @@ const LazySection = ({ id, children, canLoad = true }: LazySectionProps) => {
 
     let isActive = true
     void requestSection(id).then(() => {
-      if (isActive) setIsReady(true)
+      if (isActive) {
+        setIsReady(true)
+        requestAnimationFrame(() => {
+          import('../SmoothScroll/scrollController').then(({ triggerResize }) => {
+            triggerResize()
+          })
+        })
+      }
     })
 
     return () => {

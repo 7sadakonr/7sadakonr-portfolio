@@ -97,9 +97,33 @@ export default function SmoothScroll({ children, isPrepared, isEnabled }: Smooth
     document.addEventListener('visibilitychange', syncActivity)
     motionPreference.addEventListener('change', handleMotionPreferenceChange)
 
+    const handleUserInteraction = () => {
+      import('../../features/navigation/navigationState').then(({ isNavigationInProgress, resetNavigation }) => {
+        if (isNavigationInProgress()) {
+          import('./scrollController').then(({ cancelScrollAnimation }) => {
+            cancelScrollAnimation()
+            resetNavigation()
+          })
+        }
+      })
+    }
+    const handlePointerDown = (e: PointerEvent) => {
+      if (e.clientX >= document.documentElement.clientWidth - 20) {
+        handleUserInteraction()
+      }
+    }
+    window.addEventListener('wheel', handleUserInteraction, { passive: true })
+    window.addEventListener('touchstart', handleUserInteraction, { passive: true })
+    window.addEventListener('keydown', handleUserInteraction, { passive: true })
+    window.addEventListener('pointerdown', handlePointerDown, { passive: true })
+
     return () => {
       document.removeEventListener('visibilitychange', syncActivity)
       motionPreference.removeEventListener('change', handleMotionPreferenceChange)
+      window.removeEventListener('wheel', handleUserInteraction)
+      window.removeEventListener('touchstart', handleUserInteraction)
+      window.removeEventListener('keydown', handleUserInteraction)
+      window.removeEventListener('pointerdown', handlePointerDown)
       motionPreferenceRef.current = null
       destroyLenis()
     }
