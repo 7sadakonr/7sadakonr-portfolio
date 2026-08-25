@@ -5,7 +5,7 @@ import DotPattern from '../components/DotPattern/DotPattern'
 import GithubCalendar from '../components/GithubCalendar/GithubCalendar'
 import Scales from '../components/Scales/Scales'
 import ResumeDownloadMenu from '../components/ResumeDownload/ResumeDownloadMenu'
-
+import TechMarquee from '../components/TechMarquee/TechMarquee'
 const AboutSection = () => {
     return (
         <div className="about-page-wrapper landing-section">
@@ -116,69 +116,7 @@ const AboutSection = () => {
                                     </svg>
                                     <h3 className="bento-title">Core Stack</h3>
                                 </div>
-                                <div className="tech-marquee-container">
-                                    <div className="tech-marquee-row left">
-                                        {[
-                                            { id: 'html', name: 'HTML' },
-                                            { id: 'css', name: 'CSS' },
-                                            { id: 'js', name: 'JavaScript' },
-                                            { id: 'ts', name: 'TypeScript' },
-                                            { id: 'react', name: 'React' },
-                                            { id: 'nextjs', name: 'Next.js' },
-                                            { id: 'html', name: 'HTML' },
-                                            { id: 'css', name: 'CSS' },
-                                            { id: 'js', name: 'JavaScript' },
-                                            { id: 'ts', name: 'TypeScript' },
-                                            { id: 'react', name: 'React' },
-                                            { id: 'nextjs', name: 'Next.js' }
-                                        ].map((skill, i) => (
-                                            <div className="tech-pill" title={skill.name} key={`row1-${i}`}>
-                                                <img src={`/tech-icons/${skill.id}.svg`} alt={skill.name} loading="lazy" decoding="async" style={{ width: '16px', height: '16px' }} />
-                                                <span>{skill.name}</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                    <div className="tech-marquee-row right">
-                                        {[
-                                            { id: 'nodejs', name: 'Node.js' },
-                                            { id: 'express', name: 'Express' },
-                                            { id: 'postgres', name: 'PostgreSQL' },
-                                            { id: 'prisma', name: 'Prisma' },
-                                            { id: 'tailwind', name: 'Tailwind' },
-                                            { id: 'nodejs', name: 'Node.js' },
-                                            { id: 'express', name: 'Express' },
-                                            { id: 'postgres', name: 'PostgreSQL' },
-                                            { id: 'prisma', name: 'Prisma' },
-                                            { id: 'tailwind', name: 'Tailwind' }
-                                        ].map((skill, i) => (
-                                            <div className="tech-pill" title={skill.name} key={`row2-${i}`}>
-                                                <img src={`/tech-icons/${skill.id}.svg`} alt={skill.name} loading="lazy" decoding="async" style={{ width: '16px', height: '16px' }} />
-                                                <span>{skill.name}</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                    <div className="tech-marquee-row left">
-                                        {[
-                                            { id: 'figma', name: 'Figma' },
-                                            { id: 'git', name: 'Git' },
-                                            { id: 'github', name: 'GitHub' },
-                                            { id: 'vscode', name: 'VS Code' },
-                                            { id: 'vercel', name: 'Vercel' },
-                                            { id: 'postman', name: 'Postman' },
-                                            { id: 'figma', name: 'Figma' },
-                                            { id: 'git', name: 'Git' },
-                                            { id: 'github', name: 'GitHub' },
-                                            { id: 'vscode', name: 'VS Code' },
-                                            { id: 'vercel', name: 'Vercel' },
-                                            { id: 'postman', name: 'Postman' }
-                                        ].map((skill, i) => (
-                                            <div className="tech-pill" title={skill.name} key={`row3-${i}`}>
-                                                <img src={`/tech-icons/${skill.id}.svg`} alt={skill.name} loading="lazy" decoding="async" style={{ width: '16px', height: '16px' }} />
-                                                <span>{skill.name}</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
+                                <TechMarquee />
                             </div>
 
                         </div>
