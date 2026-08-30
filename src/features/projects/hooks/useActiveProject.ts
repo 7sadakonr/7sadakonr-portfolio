@@ -9,8 +9,17 @@ export const useActiveProject = (projectCount: number) => {
   const projectScrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const ratios = useRef<Record<number, number>>({})
 
+  const observerRef = useRef<IntersectionObserver | null>(null)
+
   const setProjectRef = useCallback((index: number) => (element: HTMLDivElement | null) => {
+    const prevElement = projectRefs.current[index]
+    if (prevElement && observerRef.current) {
+      observerRef.current.unobserve(prevElement)
+    }
     projectRefs.current[index] = element
+    if (element && observerRef.current) {
+      observerRef.current.observe(element)
+    }
   }, [])
 
   useEffect(() => {
@@ -55,8 +64,14 @@ export const useActiveProject = (projectCount: number) => {
       rootMargin: '-20% 0px -20% 0px',
       threshold: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
     })
+    
+    observerRef.current = observer
     projectRefs.current.forEach((ref) => { if (ref) observer.observe(ref) })
-    return () => observer.disconnect()
+    
+    return () => {
+      observer.disconnect()
+      observerRef.current = null
+    }
   }, [projectCount])
 
   const scrollToProject = useCallback((index: number) => {
