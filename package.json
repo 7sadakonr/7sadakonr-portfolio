@@ -22,6 +22,7 @@
     "liquid-gooey": "^0.1.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "react-rough-notation": "^1.0.8",
     "react-router-dom": "^7.7.0"
   },
   "devDependencies": {
