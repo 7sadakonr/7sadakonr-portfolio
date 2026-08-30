@@ -14,6 +14,7 @@ import {
 import { getRouteForSection } from './features/navigation/navigation.config'
 import { publishSectionChange } from './features/navigation/navigationEvents'
 import { isNavigationInProgress } from './features/navigation/navigationState'
+import { Seo } from './components/Seo/Seo'
 
 import './pages/LandingPageShell.css'
 
@@ -63,6 +64,7 @@ function PortfolioApp() {
 
   return (
       <SmoothScroll isPrepared={isInteractive} isEnabled={isInteractive}>
+        <Seo />
         {isPreloaderVisible && <Preloader onComplete={() => setIsPreloaderVisible(false)} />}
         {isInteractive && (
           <Suspense fallback={null}>
