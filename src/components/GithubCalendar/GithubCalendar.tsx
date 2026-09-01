@@ -240,7 +240,7 @@ const toRepositories = (
 
 const GithubCalendar = ({ username, className = '', colorSchema = 'green' }: GithubCalendarProps) => {
     const contributionCacheKey = `gh_contrib_${username}`
-    const repositoryCacheKey = `gh_activity_repos_v2_${username}`
+    const repositoryCacheKey = `gh_activity_repos_v3_${username}`
     const statsCacheKey = `gh_stats_${username}`
 
     const [data, setData] = useState<GithubContributionData | null>(() => getCachedData<GithubContributionData>(contributionCacheKey))
