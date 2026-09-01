@@ -29,6 +29,47 @@
   background: rgba(15, 15, 18, 0.4);
 }
 
+.github-calendar-main--activity {
+  --foreground: #fff;
+  --background: #0d0d0f;
+  --card: #202024;
+  display: block;
+  width: 100%;
+  min-height: 224px;
+  padding: clamp(20px, 2.4vw, 28px) !important;
+  overflow: hidden;
+  border: 1px solid var(--about-outline-color);
+  border-radius: 14px !important;
+  background: rgba(15, 15, 18, 0.4) !important;
+  color: #fff;
+}
+
+.github-calendar-main--activity[data-has-repositories="true"] {
+  padding-bottom: max(76px, clamp(20px, 2.4vw, 28px)) !important;
+}
+
+.github-calendar-main--activity p,
+.github-calendar-main--activity ul {
+  margin-top: 0;
+}
+
+.github-calendar-main--activity ul {
+  margin-bottom: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.github-calendar-main--activity button {
+  border: 0;
+  padding: 0;
+  font: inherit;
+}
+
+.github-calendar-main--activity img,
+.github-calendar-main--activity svg {
+  display: block;
+}
+
 .github-calendar--purple {
   --calendar-level-1: #34204b;
   --calendar-level-2: #562e7d;
@@ -700,6 +741,15 @@
   .github-calendar-stat-watermark > svg {
     width: 52px;
     height: 52px;
+  }
+
+  .github-calendar-main--activity {
+    min-height: 210px;
+    padding: 18px 16px !important;
+  }
+
+  .github-calendar-main--activity[data-has-repositories="true"] {
+    padding-bottom: 76px !important;
   }
 }
 
