@@ -54,6 +54,7 @@ type GitHubOwnedRepository = {
 }
 
 const CACHE_TTL_MS = 30 * 60 * 1000
+const REPOSITORY_LIMIT = 3
 
 const COLOR_SCALES: Record<ColorSchema, [string, string, string, string, string]> = {
     green: ['#202024', '#273f32', '#2f6b46', '#3ea060', '#56d477'],
@@ -234,6 +235,7 @@ const toRepositories = (
 
     return [...repositories.values()]
         .sort((left, right) => right.count - left.count || left.name.localeCompare(right.name))
+        .slice(0, REPOSITORY_LIMIT)
 }
 
 const GithubCalendar = ({ username, className = '', colorSchema = 'green' }: GithubCalendarProps) => {

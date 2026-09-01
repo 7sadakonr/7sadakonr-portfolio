@@ -161,7 +161,7 @@ describe('GitHub activity card', () => {
         expect(await screen.findByRole('button', { name: 'Show top repositories' })).not.toBeNull()
     })
 
-    it('includes every owned public repository in the expanded activity panel', async () => {
+    it('shows only the top three repositories in the expanded activity panel', async () => {
         vi.stubGlobal('fetch', vi.fn((input: string | URL | Request) => {
             const url = String(input)
 
@@ -170,7 +170,14 @@ describe('GitHub activity card', () => {
             }
 
             if (url.endsWith('/events/public?per_page=100')) {
-                return Promise.resolve({ ok: true, json: async () => [] })
+                return Promise.resolve({
+                    ok: true,
+                    json: async () => [
+                        { type: 'PushEvent', repo: { name: '7sadakonr/portfolio' }, payload: { commits: [{}, {}, {}] } },
+                        { type: 'PushEvent', repo: { name: '7sadakonr/nyeta' }, payload: { commits: [{}, {}] } },
+                        { type: 'PushEvent', repo: { name: '7sadakonr/inventory' }, payload: { commits: [{}] } },
+                    ],
+                })
             }
 
             if (url.endsWith('/repos?per_page=100&type=owner')) {
@@ -192,9 +199,9 @@ describe('GitHub activity card', () => {
 
         fireEvent.click(await screen.findByRole('button', { name: 'Show top repositories' }))
 
-        const repositoryLink = await screen.findByRole('link', { name: /other-project/ })
-        expect(repositoryLink.getAttribute('href')).toBe(
-            'https://github.com/7sadakonr/other-project',
-        )
+        expect(await screen.findByRole('link', { name: /portfolio/ })).not.toBeNull()
+        expect(await screen.findByRole('link', { name: /nyeta/ })).not.toBeNull()
+        expect(await screen.findByRole('link', { name: /inventory/ })).not.toBeNull()
+        expect(screen.queryByRole('link', { name: /other-project/ })).toBeNull()
     })
 })
