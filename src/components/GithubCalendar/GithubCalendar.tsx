@@ -44,8 +44,16 @@ type GitHubPushEvent = {
     payload?: { commits?: unknown[] }
 }
 
+type GitHubOwnedRepository = {
+    full_name: string
+    name: string
+    owner?: {
+        login: string
+        avatar_url?: string
+    }
+}
+
 const CACHE_TTL_MS = 30 * 60 * 1000
-const REPOSITORY_LIMIT = 3
 
 const COLOR_SCALES: Record<ColorSchema, [string, string, string, string, string]> = {
     green: ['#202024', '#273f32', '#2f6b46', '#3ea060', '#56d477'],
@@ -183,7 +191,11 @@ const normalizeContributions = (contributions: Contribution[]): ActivityContribu
     }))
 }
 
-const toRepositories = (events: GitHubPushEvent[], username: string): CachedRepository[] => {
+const toRepositories = (
+    events: GitHubPushEvent[],
+    ownedRepositories: GitHubOwnedRepository[],
+    username: string,
+): CachedRepository[] => {
     const counts = new Map<string, number>()
 
     events.forEach((event) => {
@@ -193,25 +205,40 @@ const toRepositories = (events: GitHubPushEvent[], username: string): CachedRepo
         counts.set(event.repo.name, (counts.get(event.repo.name) ?? 0) + commits)
     })
 
-    return [...counts.entries()]
-        .sort(([, left], [, right]) => right - left)
-        .slice(0, REPOSITORY_LIMIT)
-        .map(([fullName, count]) => {
-            const [owner = '', name = fullName] = fullName.split('/')
-            return {
-                name,
-                count,
-                href: `https://github.com/${fullName}`,
-                avatarUrl: owner.toLowerCase() === username.toLowerCase()
-                    ? undefined
-                    : `https://github.com/${owner}.png?size=64`,
-            }
+    const repositories = new Map<string, CachedRepository>()
+
+    ownedRepositories.forEach((repository) => {
+        repositories.set(repository.full_name, {
+            name: repository.name,
+            count: counts.get(repository.full_name) ?? 0,
+            href: `https://github.com/${repository.full_name}`,
+            avatarUrl: repository.owner?.login.toLowerCase() === username.toLowerCase()
+                ? undefined
+                : repository.owner?.avatar_url,
         })
+    })
+
+    counts.forEach((count, fullName) => {
+        if (repositories.has(fullName)) return
+
+        const [owner = '', name = fullName] = fullName.split('/')
+        repositories.set(fullName, {
+            name,
+            count,
+            href: `https://github.com/${fullName}`,
+            avatarUrl: owner.toLowerCase() === username.toLowerCase()
+                ? undefined
+                : `https://github.com/${owner}.png?size=64`,
+        })
+    })
+
+    return [...repositories.values()]
+        .sort((left, right) => right.count - left.count || left.name.localeCompare(right.name))
 }
 
 const GithubCalendar = ({ username, className = '', colorSchema = 'green' }: GithubCalendarProps) => {
     const contributionCacheKey = `gh_contrib_${username}`
-    const repositoryCacheKey = `gh_activity_repos_${username}`
+    const repositoryCacheKey = `gh_activity_repos_v2_${username}`
     const statsCacheKey = `gh_stats_${username}`
 
     const [data, setData] = useState<GithubContributionData | null>(() => getCachedData<GithubContributionData>(contributionCacheKey))
@@ -294,13 +321,24 @@ const GithubCalendar = ({ username, className = '', colorSchema = 'green' }: Git
 
         const fetchRepositories = async () => {
             try {
-                const response = await fetch(`https://api.github.com/users/${username}/events/public?per_page=100`, {
-                    signal: controller.signal,
-                })
-                if (!response.ok) throw new Error('Unable to load GitHub repository activity')
+                const headers = { Accept: 'application/vnd.github+json' }
+                const [eventsResponse, ownedRepositoriesResponse] = await Promise.all([
+                    fetch(`https://api.github.com/users/${username}/events/public?per_page=100`, {
+                        headers,
+                        signal: controller.signal,
+                    }),
+                    fetch(`https://api.github.com/users/${username}/repos?per_page=100&type=owner`, {
+                        headers,
+                        signal: controller.signal,
+                    }),
+                ])
+                if (!eventsResponse.ok || !ownedRepositoriesResponse.ok) {
+                    throw new Error('Unable to load GitHub repository activity')
+                }
 
-                const events = await response.json() as GitHubPushEvent[]
-                const nextRepositories = toRepositories(events, username)
+                const events = await eventsResponse.json() as GitHubPushEvent[]
+                const ownedRepositories = await ownedRepositoriesResponse.json() as GitHubOwnedRepository[]
+                const nextRepositories = toRepositories(events, ownedRepositories, username)
                 setCachedData(repositoryCacheKey, nextRepositories)
                 setRepositories(nextRepositories)
             } catch (fetchError) {

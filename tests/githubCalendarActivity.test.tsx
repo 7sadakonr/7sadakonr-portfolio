@@ -160,4 +160,41 @@ describe('GitHub activity card', () => {
 
         expect(await screen.findByRole('button', { name: 'Show top repositories' })).not.toBeNull()
     })
+
+    it('includes every owned public repository in the expanded activity panel', async () => {
+        vi.stubGlobal('fetch', vi.fn((input: string | URL | Request) => {
+            const url = String(input)
+
+            if (url.includes('github-contributions-api.jogruber.de')) {
+                return Promise.resolve({ ok: true, json: async () => contributionResponse })
+            }
+
+            if (url.endsWith('/events/public?per_page=100')) {
+                return Promise.resolve({ ok: true, json: async () => [] })
+            }
+
+            if (url.endsWith('/repos?per_page=100&type=owner')) {
+                return Promise.resolve({
+                    ok: true,
+                    json: async () => [
+                        { full_name: '7sadakonr/portfolio', name: 'portfolio', owner: { login: '7sadakonr' }, stargazers_count: 0 },
+                        { full_name: '7sadakonr/nyeta', name: 'nyeta', owner: { login: '7sadakonr' }, stargazers_count: 0 },
+                        { full_name: '7sadakonr/inventory', name: 'inventory', owner: { login: '7sadakonr' }, stargazers_count: 0 },
+                        { full_name: '7sadakonr/other-project', name: 'other-project', owner: { login: '7sadakonr' }, stargazers_count: 0 },
+                    ],
+                })
+            }
+
+            return Promise.resolve({ ok: true, json: async () => ({ followers: 4, public_repos: 4 }) })
+        }))
+
+        render(<GithubCalendar username="7sadakonr" colorSchema="purple" />)
+
+        fireEvent.click(await screen.findByRole('button', { name: 'Show top repositories' }))
+
+        const repositoryLink = await screen.findByRole('link', { name: /other-project/ })
+        expect(repositoryLink.getAttribute('href')).toBe(
+            'https://github.com/7sadakonr/other-project',
+        )
+    })
 })

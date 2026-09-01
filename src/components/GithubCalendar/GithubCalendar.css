@@ -36,13 +36,25 @@
 }
 
 .github-calendar-activity {
+  --github-activity-padding-block: clamp(20px, 2.4vw, 28px);
+  --github-activity-padding-inline: clamp(20px, 2.4vw, 28px);
   min-width: 0;
   min-height: 224px;
-  padding: clamp(20px, 2.4vw, 28px) !important;
+  padding: var(--github-activity-padding-block) var(--github-activity-padding-inline) !important;
   overflow: hidden;
   border: 1px solid var(--about-outline-color);
   border-radius: 14px !important;
   background: rgba(15, 15, 18, 0.4) !important;
+}
+
+.github-calendar-activity [data-slot="github-activity-panel"] {
+  inset-inline: var(--github-activity-padding-inline) !important;
+  bottom: var(--github-activity-padding-block) !important;
+  border-radius: 14px !important;
+}
+
+.github-calendar-activity [data-slot="github-activity-panel"][data-state="open"] {
+  top: var(--github-activity-padding-block) !important;
 }
 
 /* The Rare UI registry component assumes Tailwind Preflight. Keep that reset
@@ -726,8 +738,9 @@
   }
 
   .github-calendar-activity {
+    --github-activity-padding-block: 18px;
+    --github-activity-padding-inline: 16px;
     min-height: 210px;
-    padding: 18px 16px !important;
   }
 
   .github-calendar-footer {
