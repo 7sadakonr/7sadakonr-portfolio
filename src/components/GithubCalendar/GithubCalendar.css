@@ -53,6 +53,14 @@
   border-radius: 14px !important;
 }
 
+.github-calendar-activity [data-slot="github-activity-panel"] > div:first-child {
+  padding: 14px 18px !important;
+}
+
+.github-calendar-activity [data-slot="github-activity-panel"] > ul {
+  padding: 0 8px 8px !important;
+}
+
 .github-calendar-activity [data-slot="github-activity-panel"][data-state="open"] {
   top: var(--github-activity-padding-block) !important;
 }
