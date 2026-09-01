@@ -282,7 +282,7 @@ const Tooltip = ({
     >
       <motion.div
         ref={ref}
-        className="whitespace-nowrap rounded-lg bg-foreground px-2 py-1 text-[11px] font-medium text-background shadow-md"
+        className="github-activity-tooltip whitespace-nowrap rounded-full border border-white/10 bg-[#18181b] px-3 py-1.5 text-[11px] font-medium text-white shadow-lg"
         initial={reduceMotion ? false : { opacity: 0, scale: 0.94 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.94 }}
@@ -338,7 +338,7 @@ const ContributionGrid = ({
     >
       {showMonths && (
         <motion.div
-          className="flex justify-center"
+          className="flex justify-start"
           style={{ gap, marginBottom: gap }}
           initial={
             reduceMotion
@@ -368,7 +368,7 @@ const ContributionGrid = ({
       )}
 
       <div
-        className="flex justify-center overflow-hidden"
+        className="flex justify-start overflow-hidden"
         style={{ gap }}
         onPointerLeave={() => setHovered(undefined)}
       >
@@ -590,7 +590,7 @@ const GitHubActivity = ({
       style={{ width, ...style }}
       {...props}
     >
-      <p className="mb-4 text-base font-medium text-foreground px-1.5">
+      <p className="mb-4 text-base font-medium text-foreground">
         {heading}
       </p>
 
