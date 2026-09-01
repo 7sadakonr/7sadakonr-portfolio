@@ -47,6 +47,14 @@ type GitHubPushEvent = {
 const CACHE_TTL_MS = 30 * 60 * 1000
 const REPOSITORY_LIMIT = 3
 
+const COLOR_SCALES: Record<ColorSchema, [string, string, string, string, string]> = {
+    green: ['#202024', '#273f32', '#2f6b46', '#3ea060', '#56d477'],
+    purple: ['#202024', '#34204b', '#562e7d', '#7a3fc0', '#a66df4'],
+    blue: ['#202024', '#1c3355', '#25568e', '#347ec4', '#58a6ff'],
+    orange: ['#202024', '#4a2a1b', '#824322', '#c5642c', '#f58a4c'],
+    gray: ['#202024', '#34343a', '#55555e', '#81818d', '#b8b8c2'],
+}
+
 interface CacheEntry<T> {
     timestamp: number
     data: T
@@ -103,6 +111,24 @@ const setCachedData = <T,>(key: string, data: T): void => {
     }
 }
 
+const getCellSize = () => {
+    if (typeof window === 'undefined') return 11
+    if (window.innerWidth <= 600) return 10
+    return Math.min(14, Math.max(11, window.innerWidth * 0.009))
+}
+
+const useCalendarCellSize = () => {
+    const [cellSize, setCellSize] = useState(getCellSize)
+
+    useEffect(() => {
+        const updateCellSize = () => setCellSize(getCellSize())
+        window.addEventListener('resize', updateCellSize)
+        return () => window.removeEventListener('resize', updateCellSize)
+    }, [])
+
+    return cellSize
+}
+
 const normalizeContributions = (contributions: Contribution[]): ActivityContribution[] => {
     const firstSunday = contributions.findIndex(
         (contribution) => new Date(`${contribution.date}T00:00:00Z`).getUTCDay() === 0,
@@ -153,6 +179,7 @@ const GithubCalendar = ({ username, className = '', colorSchema = 'green' }: Git
     const [error, setError] = useState(false)
     const [isVisible, setIsVisible] = useState(false)
     const containerRef = useRef<HTMLDivElement>(null)
+    const cellSize = useCalendarCellSize()
 
     useEffect(() => {
         if (typeof IntersectionObserver === 'undefined') {
@@ -332,6 +359,10 @@ const GithubCalendar = ({ username, className = '', colorSchema = 'green' }: Git
                     contributions={activityContributions}
                     repos={activityRepositories}
                     className="dark"
+                    accent={COLOR_SCALES[colorSchema]}
+                    cellSize={cellSize}
+                    cellGap={3}
+                    style={{ width: '100%', minHeight: 224 }}
                 />
             )}
 
