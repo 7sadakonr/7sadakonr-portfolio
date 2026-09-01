@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import GitHubActivity, {
     type Contribution as ActivityContribution,
     type RepoContribution,
@@ -54,6 +54,17 @@ const COLOR_SCALES: Record<ColorSchema, [string, string, string, string, string]
     orange: ['#202024', '#4a2a1b', '#824322', '#c5642c', '#f58a4c'],
     gray: ['#202024', '#34343a', '#55555e', '#81818d', '#b8b8c2'],
 }
+
+const ACTIVITY_THEME = {
+    '--foreground': '#fff',
+    '--color-foreground': '#fff',
+    '--card': '#202024',
+    '--color-card': '#202024',
+    '--background': '#0d0d0f',
+    '--color-background': '#0d0d0f',
+    '--color-neutral-200': '#202024',
+    backgroundColor: 'rgba(15, 15, 18, 0.4)',
+} as CSSProperties
 
 interface CacheEntry<T> {
     timestamp: number
@@ -111,22 +122,46 @@ const setCachedData = <T,>(key: string, data: T): void => {
     }
 }
 
-const getCellSize = () => {
-    if (typeof window === 'undefined') return 11
-    if (window.innerWidth <= 600) return 10
-    return Math.min(14, Math.max(11, window.innerWidth * 0.009))
+const ACTIVITY_WEEKS = 53
+const ACTIVITY_CARD_PADDING = 32
+const MIN_ACTIVITY_CELL_SIZE = 11
+const MAX_ACTIVITY_CELL_SIZE = 64
+const ACTIVITY_CELL_STEP = 0.25
+
+const activityCellGap = (cellSize: number) => Math.max(2, Math.round(cellSize / 4))
+
+const activityWidthFor = (cellSize: number) => {
+    const gap = activityCellGap(cellSize)
+    return ACTIVITY_WEEKS * (cellSize + gap) - gap + ACTIVITY_CARD_PADDING
 }
 
-const useCalendarCellSize = () => {
-    const [cellSize, setCellSize] = useState(getCellSize)
+const fitActivityCell = (availableWidth: number) => {
+    let best = MIN_ACTIVITY_CELL_SIZE
+
+    for (let cell = MIN_ACTIVITY_CELL_SIZE; cell <= MAX_ACTIVITY_CELL_SIZE && activityWidthFor(cell) <= availableWidth - 1; cell += ACTIVITY_CELL_STEP) {
+        best = cell
+    }
+
+    return best
+}
+
+const useFittedActivityCell = () => {
+    const ref = useRef<HTMLDivElement>(null)
+    const [cellSize, setCellSize] = useState(MIN_ACTIVITY_CELL_SIZE)
 
     useEffect(() => {
-        const updateCellSize = () => setCellSize(getCellSize())
-        window.addEventListener('resize', updateCellSize)
-        return () => window.removeEventListener('resize', updateCellSize)
+        const element = ref.current
+        if (!element) return
+
+        const measure = () => setCellSize(fitActivityCell(element.clientWidth))
+        measure()
+
+        const observer = new ResizeObserver(measure)
+        observer.observe(element)
+        return () => observer.disconnect()
     }, [])
 
-    return cellSize
+    return [ref, cellSize] as const
 }
 
 const normalizeContributions = (contributions: Contribution[]): ActivityContribution[] => {
@@ -179,7 +214,7 @@ const GithubCalendar = ({ username, className = '', colorSchema = 'green' }: Git
     const [error, setError] = useState(false)
     const [isVisible, setIsVisible] = useState(false)
     const containerRef = useRef<HTMLDivElement>(null)
-    const cellSize = useCalendarCellSize()
+    const [activityRef, cellSize] = useFittedActivityCell()
 
     useEffect(() => {
         if (typeof IntersectionObserver === 'undefined') {
@@ -355,15 +390,17 @@ const GithubCalendar = ({ username, className = '', colorSchema = 'green' }: Git
                     </div>
                 </section>
             ) : (
-                <GitHubActivity
-                    contributions={activityContributions}
-                    repos={activityRepositories}
-                    className="dark"
-                    accent={COLOR_SCALES[colorSchema]}
-                    cellSize={cellSize}
-                    cellGap={3}
-                    style={{ width: '100%', minHeight: 224 }}
-                />
+                <div ref={activityRef} className="github-calendar-activity-frame">
+                    <GitHubActivity
+                        contributions={activityContributions}
+                        repos={activityRepositories}
+                        className="dark"
+                        accent={COLOR_SCALES[colorSchema]}
+                        cellSize={cellSize}
+                        showMonths
+                        style={ACTIVITY_THEME}
+                    />
+                </div>
             )}
 
             <aside className="github-calendar-stats" aria-label={`GitHub statistics for ${username}`}>

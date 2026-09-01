@@ -6,7 +6,8 @@
   --calendar-level-2: #2f6b46;
   --calendar-level-3: #3ea060;
   --calendar-level-4: #56d477;
-  display: block;
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(190px, 1fr);
   min-width: 0;
   width: 100%;
   gap: var(--bento-grid-gap, clamp(16px, 1.6vw, 20px));
@@ -26,6 +27,12 @@
   border: 1px solid var(--about-outline-color);
   border-radius: 14px;
   background: rgba(15, 15, 18, 0.4);
+}
+
+.github-calendar-activity-frame {
+  display: flex;
+  min-width: 0;
+  width: 100%;
 }
 
 /* The Rare UI registry component assumes Tailwind Preflight. Keep that reset
@@ -330,7 +337,7 @@
 }
 
 .github-calendar-stats {
-  display: none;
+  display: flex;
   min-width: 0;
   flex-direction: column;
   gap: 8px;
@@ -685,6 +692,11 @@
 @media (max-width: 900px) {
   .github-calendar {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .github-calendar-stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .github-calendar-stat {
