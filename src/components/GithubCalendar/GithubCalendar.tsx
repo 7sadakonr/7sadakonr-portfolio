@@ -153,7 +153,14 @@ const useFittedActivityCell = () => {
         const element = ref.current
         if (!element) return
 
-        const measure = () => setCellSize(fitActivityCell(element.clientWidth))
+        const measure = () => {
+            const activity = element.querySelector<HTMLElement>('[data-slot="github-activity"]')
+            if (!activity) return
+
+            const styles = window.getComputedStyle(activity)
+            const horizontalPadding = Number.parseFloat(styles.paddingLeft) + Number.parseFloat(styles.paddingRight)
+            setCellSize(fitActivityCell(activity.clientWidth - horizontalPadding))
+        }
         measure()
 
         const observer = new ResizeObserver(measure)
@@ -394,11 +401,11 @@ const GithubCalendar = ({ username, className = '', colorSchema = 'green' }: Git
                     <GitHubActivity
                         contributions={activityContributions}
                         repos={activityRepositories}
-                        className="dark"
+                        className="github-calendar-activity dark"
                         accent={COLOR_SCALES[colorSchema]}
                         cellSize={cellSize}
                         showMonths
-                        style={ACTIVITY_THEME}
+                        style={{ ...ACTIVITY_THEME, width: '100%' }}
                     />
                 </div>
             )}
