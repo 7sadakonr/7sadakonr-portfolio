@@ -57,12 +57,36 @@
   padding: 14px 18px !important;
 }
 
+.github-calendar-activity [data-slot="github-activity-panel"] > div:first-child > span:first-child {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
 .github-calendar-activity [data-slot="github-activity-panel"] > ul {
   padding: 0 8px 8px !important;
 }
 
 .github-calendar-activity [data-slot="github-activity-panel"][data-state="open"] {
-  top: var(--github-activity-padding-block) !important;
+  inset: 0 !important;
+  background: rgba(32, 32, 36, 0.98) !important;
+}
+
+.github-calendar-activity [data-slot="github-activity-panel"][data-state="open"] > div:first-child {
+  padding: var(--github-activity-padding-block) var(--github-activity-padding-inline) !important;
+}
+
+.github-calendar-activity [data-slot="github-activity-panel"][data-state="open"] > ul {
+  padding: 0 var(--github-activity-padding-inline) var(--github-activity-padding-block) !important;
+}
+
+.github-calendar-activity [data-slot="github-activity-panel"][data-state="open"] > ul a,
+.github-calendar-activity [data-slot="github-activity-panel"][data-state="open"] > ul > li > div {
+  margin: 0 !important;
+  padding: 10px 0 !important;
 }
 
 /* The Rare UI registry component assumes Tailwind Preflight. Keep that reset
