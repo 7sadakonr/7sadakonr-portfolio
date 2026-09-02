@@ -48,8 +48,8 @@
 }
 
 .github-calendar-activity [data-slot="github-activity-panel"] {
-  inset-inline: var(--github-activity-padding-inline) !important;
-  bottom: var(--github-activity-padding-block) !important;
+  inset-inline: 12px !important;
+  bottom: 12px !important;
   border-radius: 14px !important;
 }
 
@@ -62,7 +62,6 @@
 }
 
 .github-calendar-activity [data-slot="github-activity-panel"][data-state="closed"] {
-  bottom: 8px !important;
   border-radius: 14px !important;
 }
 
@@ -71,16 +70,15 @@
 }
 
 .github-calendar-activity [data-slot="github-activity-panel"][data-state="open"] > div:first-child {
-  padding: var(--github-activity-padding-block) var(--github-activity-padding-inline) !important;
+  padding: 16px !important;
 }
 
 .github-calendar-activity [data-slot="github-activity-panel"][data-state="open"] > ul {
-  padding: 0 var(--github-activity-padding-inline) var(--github-activity-padding-block) !important;
+  padding: 0 16px 16px !important;
 }
 
 .github-calendar-activity [data-slot="github-activity-panel"][data-state="open"] {
-  top: auto !important;
-  bottom: 12px !important;
+  inset: 12px !important;
   background: rgba(32, 32, 36, 0.98) !important;
 }
 
