@@ -1,9 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
+import GitHubActivity, {
+    type Contribution as ActivityContribution,
+    type RepoContribution,
+} from '../ui/github-activity'
 import DotPattern from '../DotPattern/DotPattern'
 import './GithubCalendar.css'
 
-type CalendarVariant = 'default' | 'city-lights' | 'minimal'
-type CalendarShape = 'square' | 'rounded' | 'circle' | 'squircle'
 type ColorSchema = 'green' | 'blue' | 'purple' | 'orange' | 'gray'
 
 type Contribution = {
@@ -23,20 +25,60 @@ type GithubStats = {
     stars: number
 }
 
+type CachedRepository = {
+    name: string
+    count: number
+    href: string
+    avatarUrl?: string
+}
+
 type GithubCalendarProps = {
     username: string
-    variant?: CalendarVariant
-    shape?: CalendarShape
     className?: string
-    showTotal?: boolean
     colorSchema?: ColorSchema
 }
 
-const GithubIcon = () => (
-    <svg aria-hidden="true" viewBox="0 0 16 16">
-        <path d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z" />
-    </svg>
-)
+type GitHubPushEvent = {
+    type: string
+    repo?: { name: string }
+    payload?: { commits?: unknown[] }
+}
+
+type GitHubOwnedRepository = {
+    full_name: string
+    name: string
+    owner?: {
+        login: string
+        avatar_url?: string
+    }
+}
+
+const CACHE_TTL_MS = 30 * 60 * 1000
+const REPOSITORY_LIMIT = 3
+
+const COLOR_SCALES: Record<ColorSchema, [string, string, string, string, string]> = {
+    green: ['#202024', '#273f32', '#2f6b46', '#3ea060', '#56d477'],
+    purple: ['#202024', '#34204b', '#562e7d', '#7a3fc0', '#a66df4'],
+    blue: ['#202024', '#1c3355', '#25568e', '#347ec4', '#58a6ff'],
+    orange: ['#202024', '#4a2a1b', '#824322', '#c5642c', '#f58a4c'],
+    gray: ['#202024', '#34343a', '#55555e', '#81818d', '#b8b8c2'],
+}
+
+const ACTIVITY_THEME = {
+    '--foreground': '#fff',
+    '--color-foreground': '#fff',
+    '--card': '#202024',
+    '--color-card': '#202024',
+    '--background': '#0d0d0f',
+    '--color-background': '#0d0d0f',
+    '--color-neutral-200': '#202024',
+    backgroundColor: 'rgba(15, 15, 18, 0.4)',
+} as CSSProperties
+
+interface CacheEntry<T> {
+    timestamp: number
+    data: T
+}
 
 const FollowersIcon = () => (
     <svg aria-hidden="true" viewBox="0 0 640 512" fill="currentColor">
@@ -58,93 +100,180 @@ const StarsIcon = () => (
 )
 
 const SparkleStar = ({ size = 14, className = '' }: { size?: number; className?: string }) => (
-    <svg
-        width={size}
-        height={size}
-        viewBox="0 0 24 24"
-        fill="currentColor"
-        className={className}
-        aria-hidden="true"
-    >
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
         <path d="M12 0C12 6.627 17.373 12 24 12C17.373 12 12 17.373 12 24C12 17.373 6.627 12 0 12C6.627 12 12 6.627 12 0Z" />
     </svg>
 )
-
-const CACHE_TTL_MS = 30 * 60 * 1000 // 30 minutes
-
-interface CacheEntry<T> {
-    timestamp: number
-    data: T
-}
 
 const getCachedData = <T,>(key: string): T | null => {
     try {
         const raw = sessionStorage.getItem(key)
         if (!raw) return null
+
         const parsed = JSON.parse(raw) as CacheEntry<T>
         if (Date.now() - parsed.timestamp < CACHE_TTL_MS) {
             return parsed.data
         }
+
         sessionStorage.removeItem(key)
     } catch {
-        // Ignore storage errors (private mode, quota)
+        // Storage can be unavailable in private browsing mode.
     }
+
     return null
 }
 
 const setCachedData = <T,>(key: string, data: T): void => {
     try {
-        sessionStorage.setItem(
-            key,
-            JSON.stringify({ timestamp: Date.now(), data } as CacheEntry<T>),
-        )
+        sessionStorage.setItem(key, JSON.stringify({ timestamp: Date.now(), data } satisfies CacheEntry<T>))
     } catch {
-        // Ignore storage errors
+        // Storage quota errors must not block activity rendering.
     }
 }
 
-const GithubCalendar = ({
-    username,
-    variant = 'default',
-    shape = 'rounded',
-    className = '',
-    showTotal = true,
-    colorSchema = 'green',
-}: GithubCalendarProps) => {
-    const contribCacheKey = `gh_contrib_${username}`
+const ACTIVITY_WEEKS = 53
+const MIN_ACTIVITY_CELL_SIZE = 11
+const MAX_ACTIVITY_CELL_SIZE = 64
+const ACTIVITY_CELL_STEP = 0.25
+
+const activityCellGap = (cellSize: number) => Math.max(2, Math.round(cellSize / 4))
+
+const activityWidthFor = (cellSize: number) => {
+    const gap = activityCellGap(cellSize)
+    return ACTIVITY_WEEKS * (cellSize + gap) - gap
+}
+
+const fitActivityCell = (availableWidth: number) => {
+    let best = MIN_ACTIVITY_CELL_SIZE
+
+    for (let cell = MIN_ACTIVITY_CELL_SIZE; cell <= MAX_ACTIVITY_CELL_SIZE && activityWidthFor(cell) <= availableWidth - 1; cell += ACTIVITY_CELL_STEP) {
+        best = cell
+    }
+
+    return best
+}
+
+const useFittedActivityCell = (enabled: boolean) => {
+    const ref = useRef<HTMLDivElement>(null)
+    const [cellSize, setCellSize] = useState(MIN_ACTIVITY_CELL_SIZE)
+
+    useEffect(() => {
+        if (!enabled) return
+
+        const element = ref.current
+        if (!element) return
+
+        const measure = () => {
+            const activity = element.querySelector<HTMLElement>('[data-slot="github-activity"]')
+            if (!activity) return
+
+            const styles = window.getComputedStyle(activity)
+            const horizontalPadding = Number.parseFloat(styles.paddingLeft) + Number.parseFloat(styles.paddingRight)
+            setCellSize(fitActivityCell(activity.clientWidth - horizontalPadding))
+        }
+        measure()
+
+        const observer = new ResizeObserver(measure)
+        observer.observe(element)
+        return () => observer.disconnect()
+    }, [enabled])
+
+    return [ref, cellSize] as const
+}
+
+const normalizeContributions = (contributions: Contribution[]): ActivityContribution[] => {
+    const firstSunday = contributions.findIndex(
+        (contribution) => new Date(`${contribution.date}T00:00:00Z`).getUTCDay() === 0,
+    )
+
+    return contributions.slice(firstSunday < 0 ? 0 : firstSunday).map((contribution) => ({
+        date: contribution.date,
+        count: contribution.count,
+        level: Math.max(0, Math.min(4, contribution.level)) as ActivityContribution['level'],
+    }))
+}
+
+const toRepositories = (
+    events: GitHubPushEvent[],
+    ownedRepositories: GitHubOwnedRepository[],
+    username: string,
+): CachedRepository[] => {
+    const counts = new Map<string, number>()
+
+    events.forEach((event) => {
+        if (event.type !== 'PushEvent' || !event.repo) return
+
+        const commits = event.payload?.commits?.length ?? 1
+        counts.set(event.repo.name, (counts.get(event.repo.name) ?? 0) + commits)
+    })
+
+    const repositories = new Map<string, CachedRepository>()
+
+    ownedRepositories.forEach((repository) => {
+        repositories.set(repository.full_name, {
+            name: repository.name,
+            count: counts.get(repository.full_name) ?? 0,
+            href: `https://github.com/${repository.full_name}`,
+            avatarUrl: repository.owner?.login.toLowerCase() === username.toLowerCase()
+                ? undefined
+                : repository.owner?.avatar_url,
+        })
+    })
+
+    counts.forEach((count, fullName) => {
+        if (repositories.has(fullName)) return
+
+        const [owner = '', name = fullName] = fullName.split('/')
+        repositories.set(fullName, {
+            name,
+            count,
+            href: `https://github.com/${fullName}`,
+            avatarUrl: owner.toLowerCase() === username.toLowerCase()
+                ? undefined
+                : `https://github.com/${owner}.png?size=64`,
+        })
+    })
+
+    return [...repositories.values()]
+        .sort((left, right) => right.count - left.count || left.name.localeCompare(right.name))
+        .slice(0, REPOSITORY_LIMIT)
+}
+
+const GithubCalendar = ({ username, className = '', colorSchema = 'green' }: GithubCalendarProps) => {
+    const contributionCacheKey = `gh_contrib_${username}`
+    const repositoryCacheKey = `gh_activity_repos_v3_${username}`
     const statsCacheKey = `gh_stats_${username}`
 
-    const [data, setData] = useState<GithubContributionData | null>(() => getCachedData<GithubContributionData>(contribCacheKey))
+    const [data, setData] = useState<GithubContributionData | null>(() => getCachedData<GithubContributionData>(contributionCacheKey))
+    const [repositories, setRepositories] = useState<CachedRepository[]>(() => getCachedData<CachedRepository[]>(repositoryCacheKey) ?? [])
     const [stats, setStats] = useState<GithubStats | null>(() => getCachedData<GithubStats>(statsCacheKey))
-    const [loading, setLoading] = useState(() => !getCachedData<GithubContributionData>(contribCacheKey))
+    const [loading, setLoading] = useState(() => !getCachedData<GithubContributionData>(contributionCacheKey))
     const [error, setError] = useState(false)
     const [isVisible, setIsVisible] = useState(false)
-    const viewportRef = useRef<HTMLDivElement>(null)
     const containerRef = useRef<HTMLDivElement>(null)
+    const [activityRef, cellSize] = useFittedActivityCell(!loading)
 
     useEffect(() => {
         if (typeof IntersectionObserver === 'undefined') {
-            setIsVisible(true);
-            return;
+            setIsVisible(true)
+            return
         }
 
-        const observer = new IntersectionObserver(
-            ([entry]) => {
-                if (entry?.isIntersecting) {
-                    setIsVisible(true);
-                    observer.disconnect();
-                }
-            },
-            { rootMargin: '200px 0px' }
-        );
-        if (containerRef.current) observer.observe(containerRef.current);
-        return () => observer.disconnect();
-    }, []);
+        const observer = new IntersectionObserver(([entry]) => {
+            if (entry?.isIntersecting) {
+                setIsVisible(true)
+                observer.disconnect()
+            }
+        }, { rootMargin: '200px 0px' })
+
+        if (containerRef.current) observer.observe(containerRef.current)
+        return () => observer.disconnect()
+    }, [])
 
     useEffect(() => {
-        if (!isVisible) return;
+        if (!isVisible) return
 
-        const cached = getCachedData<GithubContributionData>(contribCacheKey)
+        const cached = getCachedData<GithubContributionData>(contributionCacheKey)
         if (cached) {
             setData(cached)
             setLoading(false)
@@ -158,43 +287,76 @@ const GithubCalendar = ({
             setError(false)
 
             try {
-                const response = await fetch(
-                    `https://github-contributions-api.jogruber.de/v4/${username}?y=last`,
-                    { signal: controller.signal },
-                )
+                const response = await fetch(`https://github-contributions-api.jogruber.de/v4/${username}?y=last`, {
+                    signal: controller.signal,
+                })
 
-                if (!response.ok) {
-                    throw new Error('Unable to load GitHub contributions')
-                }
+                if (!response.ok) throw new Error('Unable to load GitHub contributions')
 
                 const result = await response.json() as GithubContributionData
+                if (!Array.isArray(result.contributions)) throw new Error('Invalid GitHub contribution data')
 
-                if (!Array.isArray(result.contributions)) {
-                    throw new Error('Invalid GitHub contribution data')
-                }
-
-                setCachedData(contribCacheKey, result)
+                setCachedData(contributionCacheKey, result)
                 setData(result)
             } catch (fetchError) {
-                if (fetchError instanceof DOMException && fetchError.name === 'AbortError') {
-                    return
+                if (!(fetchError instanceof DOMException && fetchError.name === 'AbortError')) {
+                    setError(true)
                 }
-
-                setError(true)
             } finally {
-                if (!controller.signal.aborted) {
-                    setLoading(false)
-                }
+                if (!controller.signal.aborted) setLoading(false)
             }
         }
 
         fetchContributions()
-
         return () => controller.abort()
-    }, [username, contribCacheKey, isVisible])
+    }, [contributionCacheKey, isVisible, username])
 
     useEffect(() => {
-        if (!isVisible) return;
+        if (!isVisible) return
+
+        const cached = getCachedData<CachedRepository[]>(repositoryCacheKey)
+        if (cached) {
+            setRepositories(cached)
+            return
+        }
+
+        const controller = new AbortController()
+
+        const fetchRepositories = async () => {
+            try {
+                const headers = { Accept: 'application/vnd.github+json' }
+                const [eventsResponse, ownedRepositoriesResponse] = await Promise.all([
+                    fetch(`https://api.github.com/users/${username}/events/public?per_page=100`, {
+                        headers,
+                        signal: controller.signal,
+                    }),
+                    fetch(`https://api.github.com/users/${username}/repos?per_page=100&type=owner`, {
+                        headers,
+                        signal: controller.signal,
+                    }),
+                ])
+                if (!eventsResponse.ok || !ownedRepositoriesResponse.ok) {
+                    throw new Error('Unable to load GitHub repository activity')
+                }
+
+                const events = await eventsResponse.json() as GitHubPushEvent[]
+                const ownedRepositories = await ownedRepositoriesResponse.json() as GitHubOwnedRepository[]
+                const nextRepositories = toRepositories(events, ownedRepositories, username)
+                setCachedData(repositoryCacheKey, nextRepositories)
+                setRepositories(nextRepositories)
+            } catch (fetchError) {
+                if (!(fetchError instanceof DOMException && fetchError.name === 'AbortError')) {
+                    setRepositories([])
+                }
+            }
+        }
+
+        fetchRepositories()
+        return () => controller.abort()
+    }, [isVisible, repositoryCacheKey, username])
+
+    useEffect(() => {
+        if (!isVisible) return
 
         const cached = getCachedData<GithubStats>(statsCacheKey)
         if (cached) {
@@ -208,308 +370,101 @@ const GithubCalendar = ({
             try {
                 const headers = { Accept: 'application/vnd.github+json' }
                 const [profileResponse, repositoriesResponse] = await Promise.all([
-                    fetch(`https://api.github.com/users/${username}`, {
-                        headers,
-                        signal: controller.signal,
-                    }),
-                    fetch(`https://api.github.com/users/${username}/repos?per_page=100&type=owner`, {
-                        headers,
-                        signal: controller.signal,
-                    }),
+                    fetch(`https://api.github.com/users/${username}`, { headers, signal: controller.signal }),
+                    fetch(`https://api.github.com/users/${username}/repos?per_page=100&type=owner`, { headers, signal: controller.signal }),
                 ])
 
-                if (!profileResponse.ok || !repositoriesResponse.ok) {
-                    throw new Error('Unable to load GitHub stats')
-                }
+                if (!profileResponse.ok || !repositoriesResponse.ok) throw new Error('Unable to load GitHub stats')
 
-                const profile = await profileResponse.json() as {
-                    followers: number
-                    public_repos: number
-                }
-                const repositories = await repositoriesResponse.json() as Array<{
-                    stargazers_count: number
-                }>
-
-                const computedStats: GithubStats = {
+                const profile = await profileResponse.json() as { followers: number; public_repos: number }
+                const ownedRepositories = await repositoriesResponse.json() as Array<{ stargazers_count: number }>
+                const computedStats = {
                     followers: profile.followers,
                     repositories: profile.public_repos,
-                    stars: repositories.reduce(
-                        (total, repository) => total + repository.stargazers_count,
-                        0,
-                    ),
+                    stars: ownedRepositories.reduce((total, repository) => total + repository.stargazers_count, 0),
                 }
 
                 setCachedData(statsCacheKey, computedStats)
                 setStats(computedStats)
             } catch (fetchError) {
-                if (fetchError instanceof DOMException && fetchError.name === 'AbortError') {
-                    return
-                }
-
-                setStats(null)
+                if (!(fetchError instanceof DOMException && fetchError.name === 'AbortError')) setStats(null)
             }
         }
 
         fetchStats()
-
         return () => controller.abort()
-    }, [username, statsCacheKey, isVisible])
+    }, [isVisible, statsCacheKey, username])
 
-    const calendarCells = useMemo(() => {
-        if (!data?.contributions.length) {
-            return []
-        }
-
-        const firstContribution = data.contributions[0]
-        const firstDay = firstContribution ? new Date(`${firstContribution.date}T00:00:00Z`).getUTCDay() : 0
-        const cells: Array<Contribution | null> = [
-            ...Array<null>(firstDay).fill(null),
-            ...data.contributions,
-        ]
-
-        while (cells.length % 7 !== 0) {
-            cells.push(null)
-        }
-
-        return cells
-    }, [data])
-
-    const calendarMonths = useMemo(() => {
-        if (!data?.contributions.length) {
-            return []
-        }
-
-        const firstContribution = data.contributions[0]
-        const firstDay = firstContribution ? new Date(`${firstContribution.date}T00:00:00Z`).getUTCDay() : 0
-        const seenMonths = new Set<string>()
-
-        return data.contributions.flatMap((contribution, index) => {
-            const monthKey = contribution.date.slice(0, 7)
-
-            if (seenMonths.has(monthKey)) {
-                return []
-            }
-
-            seenMonths.add(monthKey)
-
-            return [{
-                label: new Intl.DateTimeFormat('en-US', {
-                    month: 'short',
-                    timeZone: 'UTC',
-                }).format(new Date(`${contribution.date}T00:00:00Z`)),
-                weekIndex: Math.floor((firstDay + index) / 7),
-            }]
-        })
-    }, [data])
-
-    useEffect(() => {
-        if (!data || !viewportRef.current) {
-            return
-        }
-
-        viewportRef.current.scrollLeft = viewportRef.current.scrollWidth
-    }, [data])
-
-    const totalContributions = data
-        ? data.total.lastYear
-            ?? data.contributions.reduce((total, contribution) => total + contribution.count, 0)
-        : 0
-    const currentYear = new Date().getUTCFullYear().toString()
-    const thisYearContributions = data
-        ? data.contributions.reduce(
-            (total, contribution) => contribution.date.startsWith(`${currentYear}-`)
-                ? total + contribution.count
-                : total,
-            0,
-        )
-        : 0
+    const activityContributions = useMemo(
+        () => normalizeContributions(data?.contributions ?? []),
+        [data],
+    )
+    const activityRepositories = useMemo<RepoContribution[]>(
+        () => repositories.map((repository) => ({
+            name: repository.name,
+            count: repository.count,
+            href: repository.href,
+            logo: repository.avatarUrl ? <img src={repository.avatarUrl} alt="" /> : undefined,
+        })),
+        [repositories],
+    )
+    const activityLoading = loading
     const statItems = [
-        {
-            label: 'Followers',
-            value: stats?.followers,
-            tone: 'followers',
-            icon: <FollowersIcon />,
-        },
-        {
-            label: 'Public Repos',
-            value: stats?.repositories,
-            tone: 'repositories',
-            icon: <RepositoriesIcon />,
-        },
-        {
-            label: 'GitHub Stars',
-            value: stats?.stars,
-            tone: 'stars',
-            icon: <StarsIcon />,
-        },
+        { label: 'Followers', value: stats?.followers, tone: 'followers', icon: <FollowersIcon /> },
+        { label: 'Public Repos', value: stats?.repositories, tone: 'repositories', icon: <RepositoriesIcon /> },
+        { label: 'GitHub Stars', value: stats?.stars, tone: 'stars', icon: <StarsIcon /> },
     ]
 
     return (
         <div
             ref={containerRef}
-            className={[
-                'github-calendar',
-                `github-calendar--${variant}`,
-                `github-calendar--${colorSchema}`,
-                className,
-            ].filter(Boolean).join(' ')}
-            aria-busy={loading}
+            className={['github-calendar', `github-calendar--${colorSchema}`, className].filter(Boolean).join(' ')}
+            aria-busy={activityLoading}
         >
-            <section className="github-calendar-main">
-                {loading ? (
+            {activityLoading ? (
+                <section className="github-calendar-main github-calendar-main--state">
                     <div className="github-calendar-loading" aria-label="Loading GitHub contributions">
                         <div className="github-calendar-loading-header" />
                         <div className="github-calendar-loading-grid" />
                     </div>
-                ) : error || !data ? (
+                </section>
+            ) : error || !data ? (
+                <section className="github-calendar-main github-calendar-main--state">
                     <div className="github-calendar-error" role="alert">
                         <span>GitHub activity is unavailable right now.</span>
                         <a href={`https://github.com/${username}`} target="_blank" rel="noreferrer">
                             View @{username} on GitHub
                         </a>
                     </div>
-                ) : (
-                    <>
-                        <div className="github-calendar-header">
-                            <div className="github-calendar-identity">
-                                <span className="github-calendar-icon">
-                                    <GithubIcon />
-                                </span>
-                                <div className="github-calendar-identity-copy">
-                                    <a
-                                        className="github-calendar-profile"
-                                        href={`https://github.com/${username}`}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        aria-label={`Open ${username} on GitHub`}
-                                    >
-                                        @{username}
-                                    </a>
-                                    <span>Contribution Graph</span>
-                                </div>
-                            </div>
-                            <div className="github-calendar-period">
-                                <strong>{thisYearContributions.toLocaleString()}</strong>
-                                <span>This year total</span>
-                            </div>
-                        </div>
-
-                        <div
-                            className="github-calendar-viewport"
-                            ref={viewportRef}
-                            role="region"
-                            tabIndex={0}
-                            aria-label={`GitHub contribution calendar for ${username}, ${totalContributions} contributions in the last year`}
-                        >
-                            <div className="github-calendar-track">
-                                <div
-                                    className="github-calendar-months"
-                                    style={{
-                                        gridTemplateColumns: `repeat(${calendarCells.length / 7}, var(--calendar-cell-size))`,
-                                    }}
-                                    aria-hidden="true"
-                                >
-                                    {calendarMonths.map((month) => (
-                                        <span
-                                            style={{ gridColumnStart: month.weekIndex + 1 }}
-                                            key={`${month.label}-${month.weekIndex}`}
-                                        >
-                                            {month.label}
-                                        </span>
-                                    ))}
-                                </div>
-                                <div className="github-calendar-grid" role="img" aria-hidden="true">
-                                    {calendarCells.map((contribution, index) => (
-                                        contribution ? (
-                                            <span
-                                                className="github-calendar-cell"
-                                                data-level={Math.max(0, Math.min(4, contribution.level))}
-                                                data-shape={shape}
-                                                title={`${contribution.count} contributions on ${contribution.date}`}
-                                                key={contribution.date}
-                                            />
-                                        ) : (
-                                            <span className="github-calendar-cell-placeholder" key={`placeholder-${index}`} />
-                                        )
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="github-calendar-footer">
-                            {showTotal && (
-                                <span className="github-calendar-summary">
-                                    <strong>{totalContributions.toLocaleString()}</strong> contributions in the last year
-                                </span>
-                            )}
-                            <div className="github-calendar-legend" aria-hidden="true">
-                                <span>Less</span>
-                                {[0, 1, 2, 3, 4].map((level) => (
-                                    <span className="github-calendar-cell" data-level={level} data-shape={shape} key={level} />
-                                ))}
-                                <span>More</span>
-                            </div>
-                        </div>
-                    </>
-                )}
-            </section>
+                </section>
+            ) : (
+                <div ref={activityRef} className="github-calendar-activity-frame">
+                    <GitHubActivity
+                        username={username}
+                        contributions={activityContributions}
+                        repos={activityRepositories}
+                        className="github-calendar-activity dark"
+                        accent={COLOR_SCALES[colorSchema]}
+                        cellSize={cellSize}
+                        showMonths
+                        style={{ ...ACTIVITY_THEME, width: '100%' }}
+                    />
+                </div>
+            )}
 
             <aside className="github-calendar-stats" aria-label={`GitHub statistics for ${username}`}>
                 {statItems.map((item) => (
-                    <div
-                        className={`github-calendar-stat github-calendar-stat--${item.tone}`}
-                        key={item.label}
-                    >
-                        <DotPattern
-                            className="github-calendar-stat-dot-pattern"
-                            width={14}
-                            height={14}
-                            cx={1.25}
-                            cy={1.25}
-                            cr={1.25}
-                        />
+                    <div className={`github-calendar-stat github-calendar-stat--${item.tone}`} key={item.label}>
+                        <DotPattern className="github-calendar-stat-dot-pattern" width={14} height={14} cx={1.25} cy={1.25} cr={1.25} />
                         <div className="github-calendar-stat-content">
                             <span className="github-calendar-stat-label">{item.label}</span>
                             <strong className="github-calendar-stat-value">{item.value?.toLocaleString() ?? '0'}</strong>
                         </div>
                         <div className="github-calendar-stat-watermark" aria-hidden="true">
                             {item.icon}
-                            {item.tone === 'followers' && (
-                                <>
-                                    <span className="github-calendar-stat-sparkle github-calendar-stat-sparkle--followers-1">
-                                        <SparkleStar size={13} />
-                                    </span>
-                                    <span className="github-calendar-stat-sparkle github-calendar-stat-sparkle--followers-2">
-                                        <SparkleStar size={9} />
-                                    </span>
-                                    <span className="github-calendar-stat-sparkle-dot github-calendar-stat-sparkle-dot--followers-1" />
-                                </>
-                            )}
-                            {item.tone === 'repositories' && (
-                                <>
-                                    <span className="github-calendar-stat-sparkle github-calendar-stat-sparkle--repos-1">
-                                        <SparkleStar size={11} />
-                                    </span>
-                                    <span className="github-calendar-stat-sparkle github-calendar-stat-sparkle--repos-2">
-                                        <SparkleStar size={14} />
-                                    </span>
-                                    <span className="github-calendar-stat-sparkle-dot github-calendar-stat-sparkle-dot--repos-1" />
-                                </>
-                            )}
-                            {item.tone === 'stars' && (
-                                <>
-                                    <span className="github-calendar-stat-sparkle github-calendar-stat-sparkle--stars-1">
-                                        <SparkleStar size={15} />
-                                    </span>
-                                    <span className="github-calendar-stat-sparkle github-calendar-stat-sparkle--stars-2">
-                                        <SparkleStar size={10} />
-                                    </span>
-                                    <span className="github-calendar-stat-sparkle github-calendar-stat-sparkle--stars-3">
-                                        <SparkleStar size={8} />
-                                    </span>
-                                    <span className="github-calendar-stat-sparkle-dot github-calendar-stat-sparkle-dot--stars-1" />
-                                </>
-                            )}
+                            {item.tone === 'followers' && <><span className="github-calendar-stat-sparkle github-calendar-stat-sparkle--followers-1"><SparkleStar size={13} /></span><span className="github-calendar-stat-sparkle github-calendar-stat-sparkle--followers-2"><SparkleStar size={9} /></span><span className="github-calendar-stat-sparkle-dot github-calendar-stat-sparkle-dot--followers-1" /></>}
+                            {item.tone === 'repositories' && <><span className="github-calendar-stat-sparkle github-calendar-stat-sparkle--repos-1"><SparkleStar size={11} /></span><span className="github-calendar-stat-sparkle github-calendar-stat-sparkle--repos-2"><SparkleStar size={14} /></span><span className="github-calendar-stat-sparkle-dot github-calendar-stat-sparkle-dot--repos-1" /></>}
+                            {item.tone === 'stars' && <><span className="github-calendar-stat-sparkle github-calendar-stat-sparkle--stars-1"><SparkleStar size={15} /></span><span className="github-calendar-stat-sparkle github-calendar-stat-sparkle--stars-2"><SparkleStar size={10} /></span><span className="github-calendar-stat-sparkle github-calendar-stat-sparkle--stars-3"><SparkleStar size={8} /></span><span className="github-calendar-stat-sparkle-dot github-calendar-stat-sparkle-dot--stars-1" /></>}
                         </div>
                     </div>
                 ))}
