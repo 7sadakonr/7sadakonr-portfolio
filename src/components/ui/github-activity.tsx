@@ -459,11 +459,17 @@ const RepoRow = ({
   );
 
   return repo.href ? (
-    <a href={repo.href} target="_blank" rel="noreferrer" className={className}>
+    <a
+      href={repo.href}
+      target="_blank"
+      rel="noreferrer"
+      className={className}
+      data-slot="github-activity-repo-row"
+    >
       {content}
     </a>
   ) : (
-    <div className={className}>{content}</div>
+    <div className={className} data-slot="github-activity-repo-row">{content}</div>
   );
 };
 
@@ -590,7 +596,7 @@ const GitHubActivity = ({
       style={{ width, ...style }}
       {...props}
     >
-      <p className="mb-4 text-base font-medium text-foreground">
+      <p data-slot="github-activity-heading" className="mb-4 text-base font-medium text-foreground">
         {heading}
       </p>
 
@@ -621,6 +627,7 @@ const GitHubActivity = ({
           <motion.div
             layout="position"
             transition={headerTransition}
+            data-slot="github-activity-panel-header"
             className="flex items-center justify-between gap-3 py-3 px-4"
           >
             <span className="truncate text-sm text-foreground">{label}</span>
@@ -662,6 +669,7 @@ const GitHubActivity = ({
                 layout="position"
                 {...listMotion}
                 transition={rowTransition}
+                data-slot="github-activity-panel-list"
                 className="px-0.5 pb-1"
               >
                 {repos.map((repo, index) => (
