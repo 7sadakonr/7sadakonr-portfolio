@@ -29,6 +29,188 @@
   background: rgba(15, 15, 18, 0.4);
 }
 
+.github-calendar-activity-frame {
+  display: flex;
+  min-width: 0;
+  width: 100%;
+}
+
+.github-calendar-activity {
+  --github-activity-padding-block: clamp(20px, 2.4vw, 28px);
+  --github-activity-padding-inline: clamp(20px, 2.4vw, 28px);
+  --github-activity-panel-inset: 12px;
+  --github-activity-panel-height: 52px;
+  --github-activity-panel-gap: 6px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  min-height: 224px;
+  padding:
+    var(--github-activity-padding-block)
+    var(--github-activity-padding-inline)
+    calc(
+      var(--github-activity-panel-height) +
+      var(--github-activity-panel-inset) +
+      var(--github-activity-panel-gap)
+    ) !important;
+  overflow: hidden;
+  border: 1px solid var(--about-outline-color);
+  border-radius: 14px !important;
+  background: rgba(15, 15, 18, 0.4) !important;
+}
+
+/* Keep the legacy card frame while using Rare UI's panel rhythm. */
+.github-calendar-activity [data-slot="github-activity-panel"] {
+  inset-inline: var(--github-activity-panel-inset) !important;
+  bottom: var(--github-activity-panel-inset) !important;
+  border-radius: 14px !important;
+  background: rgba(32, 32, 36, 0.98) !important;
+}
+
+.github-calendar-activity [data-slot="github-activity-panel"][data-state="open"] {
+  inset: var(--github-activity-panel-inset) !important;
+}
+
+.github-calendar-activity [data-slot="github-activity-heading"] {
+  margin: 0 !important;
+  font-size: 17px;
+  line-height: 1.25;
+  text-align: right;
+}
+
+.github-calendar-activity [data-slot="github-activity-summary"] {
+  margin-bottom: 14px;
+}
+
+.github-calendar-activity [data-slot="github-activity-profile"] {
+  gap: 10px;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.github-calendar-activity [data-slot="github-activity-profile-mark"] {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 50%;
+  background: #202024;
+  color: #f4f4f5;
+}
+
+.github-calendar-activity [data-slot="github-activity-profile-copy"],
+.github-calendar-activity [data-slot="github-activity-total"] {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.github-calendar-activity [data-slot="github-activity-profile-copy"] > strong {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.github-calendar-activity [data-slot="github-activity-profile-copy"] > span {
+  margin-top: 3px;
+  color: rgba(255, 255, 255, 0.56);
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.github-calendar-activity [data-slot="github-activity-profile-mark"] > svg {
+  width: 22px;
+  height: 22px;
+  flex: 0 0 auto;
+}
+
+.github-calendar-activity [data-slot="github-activity-total"] {
+  align-items: flex-end;
+  text-align: right;
+}
+
+.github-calendar-activity [data-slot="github-activity-total"] > strong {
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.github-calendar-activity [data-slot="github-activity-total"] > span {
+  margin-top: 5px;
+  color: rgba(255, 255, 255, 0.56);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.04em;
+}
+
+.github-calendar-activity [data-slot="github-activity-content"] {
+  width: 100%;
+  max-width: 100%;
+}
+
+.github-calendar-activity [data-slot="github-activity-panel-header"] {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 52px;
+  padding: 12px 16px;
+}
+
+.github-calendar-activity [data-slot="github-activity-panel-list"] {
+  margin: 0;
+  padding: 0 2px 4px;
+}
+
+.github-calendar-activity [data-slot="github-activity-repo-row"] {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  margin: 0 8px;
+  padding: 8px;
+  border-radius: 12px;
+}
+
+/* The Rare UI registry component assumes Tailwind Preflight. Keep that reset
+   local so it renders faithfully without changing the rest of the portfolio. */
+[data-slot="github-activity"],
+[data-slot="github-activity"] *,
+[data-slot="github-activity"] *::before,
+[data-slot="github-activity"] *::after {
+  box-sizing: border-box;
+}
+
+[data-slot="github-activity"] p,
+[data-slot="github-activity"] ul {
+  margin: 0;
+}
+
+[data-slot="github-activity"] ul {
+  padding: 0;
+  list-style: none;
+}
+
+[data-slot="github-activity"] a {
+  color: inherit;
+  text-decoration: none;
+}
+
+[data-slot="github-activity"] button {
+  padding: 0;
+  border: 0;
+  appearance: none;
+  color: inherit;
+  font: inherit;
+}
+
+[data-slot="github-activity"] img,
+[data-slot="github-activity"] svg {
+  display: block;
+}
+
 .github-calendar--purple {
   --calendar-level-1: #34204b;
   --calendar-level-2: #562e7d;
@@ -672,6 +854,56 @@
     padding: 18px 16px;
   }
 
+  .github-calendar-activity {
+    --github-activity-padding-block: 18px;
+    --github-activity-padding-inline: 16px;
+    --github-activity-panel-inset: 8px;
+    --github-activity-panel-gap: 6px;
+    min-height: 210px;
+  }
+
+  .github-calendar-activity [data-slot="github-activity-summary"] {
+    margin-bottom: 10px;
+    gap: 8px;
+  }
+
+  .github-calendar-activity [data-slot="github-activity-heading"] {
+    font-size: 14px;
+    line-height: 1.3;
+  }
+
+  .github-calendar-activity [data-slot="github-activity-profile"] {
+    gap: 8px;
+  }
+
+  .github-calendar-activity [data-slot="github-activity-profile-mark"] {
+    width: 34px;
+    height: 34px;
+  }
+
+  .github-calendar-activity [data-slot="github-activity-profile-mark"] > svg {
+    width: 19px;
+    height: 19px;
+  }
+
+  .github-calendar-activity [data-slot="github-activity-profile-copy"] > strong {
+    font-size: 13px;
+  }
+
+  .github-calendar-activity [data-slot="github-activity-profile-copy"] > span {
+    margin-top: 2px;
+    font-size: 10px;
+  }
+
+  .github-calendar-activity [data-slot="github-activity-total"] > strong {
+    font-size: 17px;
+  }
+
+  .github-calendar-activity [data-slot="github-activity-total"] > span {
+    margin-top: 4px;
+    font-size: 9px;
+  }
+
   .github-calendar-footer {
     align-items: flex-start;
     flex-direction: column;
@@ -701,6 +933,7 @@
     width: 52px;
     height: 52px;
   }
+
 }
 
 @media (prefers-reduced-motion: reduce) {
