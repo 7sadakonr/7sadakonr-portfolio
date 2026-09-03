@@ -439,6 +439,7 @@ const GithubCalendar = ({ username, className = '', colorSchema = 'green' }: Git
             ) : (
                 <div ref={activityRef} className="github-calendar-activity-frame">
                     <GitHubActivity
+                        username={username}
                         contributions={activityContributions}
                         repos={activityRepositories}
                         className="github-calendar-activity dark"

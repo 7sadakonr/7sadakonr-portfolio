@@ -214,4 +214,26 @@ describe('GitHub activity card', () => {
         expect(document.querySelector('[data-slot="github-activity-panel-list"]')).not.toBeNull()
         expect(document.querySelectorAll('[data-slot="github-activity-repo-row"]')).toHaveLength(1)
     })
+
+    it('keeps the heatmap in a centered content region', async () => {
+        render(<GithubCalendar username="7sadakonr" colorSchema="purple" />)
+
+        const graph = await screen.findByRole('img', { name: '3 contributions in 2026' })
+        const content = graph.closest('[data-slot="github-activity-content"]')
+
+        expect(content).not.toBeNull()
+        expect(content?.contains(graph)).toBe(true)
+    })
+
+    it('links the GitHub profile identity on the left of the activity heading', async () => {
+        render(<GithubCalendar username="7sadakonr" colorSchema="purple" />)
+
+        const profile = await screen.findByRole('link', { name: 'GitHub profile for 7sadakonr' })
+
+        expect(profile.getAttribute('href')).toBe('https://github.com/7sadakonr')
+        expect(screen.getByText('@7sadakonr')).not.toBeNull()
+        expect(screen.getByText('Contribution Graph')).not.toBeNull()
+        expect(screen.getByText('3')).not.toBeNull()
+        expect(screen.getByText('THIS YEAR TOTAL')).not.toBeNull()
+    })
 })

@@ -338,7 +338,7 @@ const ContributionGrid = ({
     >
       {showMonths && (
         <motion.div
-          className="flex justify-start"
+          className="flex justify-center"
           style={{ gap, marginBottom: gap }}
           initial={
             reduceMotion
@@ -368,7 +368,7 @@ const ContributionGrid = ({
       )}
 
       <div
-        className="flex justify-start overflow-hidden"
+        className="flex justify-center overflow-hidden"
         style={{ gap }}
         onPointerLeave={() => setHovered(undefined)}
       >
@@ -498,6 +498,12 @@ const Chevron = ({
   </motion.svg>
 );
 
+const GitHubMark = () => (
+  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+    <path d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.7c-2.78.6-3.37-1.18-3.37-1.18-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.61.07-.61 1 .07 1.54 1.04 1.54 1.04.9 1.54 2.35 1.1 2.92.84.09-.65.35-1.1.64-1.35-2.22-.25-4.56-1.11-4.56-4.95 0-1.1.39-2 1.03-2.7-.1-.26-.45-1.28.1-2.67 0 0 .84-.27 2.75 1.03A9.6 9.6 0 0 1 12 6.4c.85 0 1.7.11 2.5.34 1.91-1.3 2.75-1.03 2.75-1.03.55 1.39.2 2.41.1 2.67.64.7 1.03 1.6 1.03 2.7 0 3.85-2.34 4.69-4.57 4.94.36.31.68.9.68 1.81v2.68c0 .26.18.57.69.48A10 10 0 0 0 12 2Z" />
+  </svg>
+);
+
 export type GitHubActivityProps = React.ComponentProps<"div"> & {
   username?: string;
   contributions?: Contribution[];
@@ -574,6 +580,8 @@ const GitHubActivity = ({
   const parsedYear = Number(contributions[contributions.length - 1]?.date.slice(0, 4));
   const displayYear = year ?? (Number.isFinite(parsedYear) ? parsedYear : null);
   const heading = `${total} contributions${displayYear ? ` in ${displayYear}` : ""}`;
+  const profileHref = username ? `https://github.com/${username}` : undefined;
+  const displayTotal = total.toLocaleString();
 
   const gap = cellGap ?? gapFor(cellSize);
   const columns = Math.min(
@@ -596,20 +604,41 @@ const GitHubActivity = ({
       style={{ width, ...style }}
       {...props}
     >
-      <p data-slot="github-activity-heading" className="mb-4 text-base font-medium text-foreground">
-        {heading}
-      </p>
+      <div data-slot="github-activity-summary" className="mb-3 flex items-center justify-between gap-3">
+        {profileHref && (
+          <a
+            href={profileHref}
+            target="_blank"
+            rel="noreferrer"
+            aria-label={`GitHub profile for ${username}`}
+            data-slot="github-activity-profile"
+            className="inline-flex min-w-0 items-center transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/70"
+          >
+            <span data-slot="github-activity-profile-mark"><GitHubMark /></span>
+            <span data-slot="github-activity-profile-copy">
+              <strong>@{username}</strong>
+              <span>Contribution Graph</span>
+            </span>
+          </a>
+        )}
+        <div data-slot="github-activity-total" aria-label={heading}>
+          <strong>{displayTotal}</strong>
+          <span>THIS YEAR TOTAL</span>
+        </div>
+      </div>
 
-      <ContributionGrid
-        contributions={contributions}
-        scale={scale}
-        cellSize={cellSize}
-        cellGap={cellGap}
-        months={months}
-        showMonths={showMonths}
-        label={heading}
-        reduceMotion={reduceMotion}
-      />
+      <div data-slot="github-activity-content" className="w-full">
+        <ContributionGrid
+          contributions={contributions}
+          scale={scale}
+          cellSize={cellSize}
+          cellGap={cellGap}
+          months={months}
+          showMonths={showMonths}
+          label={heading}
+          reduceMotion={reduceMotion}
+        />
+      </div>
 
       {repos.length > 0 && (
         <motion.div
