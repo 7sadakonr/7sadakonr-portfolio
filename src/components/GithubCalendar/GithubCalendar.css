@@ -47,6 +47,19 @@
   background: rgba(15, 15, 18, 0.4) !important;
 }
 
+/* Keep the Rare UI panel's internal spacing, but align its shell with this
+   card's original 14px border and dark surface. */
+.github-calendar-activity [data-slot="github-activity-panel"] {
+  inset-inline: 12px !important;
+  bottom: 12px !important;
+  border-radius: 14px !important;
+  background: rgba(32, 32, 36, 0.98) !important;
+}
+
+.github-calendar-activity [data-slot="github-activity-panel"][data-state="open"] {
+  inset: 12px !important;
+}
+
 /* The Rare UI registry component assumes Tailwind Preflight. Keep that reset
    local so it renders faithfully without changing the rest of the portfolio. */
 [data-slot="github-activity"],
