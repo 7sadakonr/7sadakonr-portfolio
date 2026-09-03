@@ -132,7 +132,6 @@ const setCachedData = <T,>(key: string, data: T): void => {
 }
 
 const ACTIVITY_WEEKS = 53
-const ACTIVITY_CARD_PADDING = 32
 const MIN_ACTIVITY_CELL_SIZE = 11
 const MAX_ACTIVITY_CELL_SIZE = 64
 const ACTIVITY_CELL_STEP = 0.25
@@ -141,7 +140,7 @@ const activityCellGap = (cellSize: number) => Math.max(2, Math.round(cellSize / 
 
 const activityWidthFor = (cellSize: number) => {
     const gap = activityCellGap(cellSize)
-    return ACTIVITY_WEEKS * (cellSize + gap) - gap + ACTIVITY_CARD_PADDING
+    return ACTIVITY_WEEKS * (cellSize + gap) - gap
 }
 
 const fitActivityCell = (availableWidth: number) => {

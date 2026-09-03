@@ -40,7 +40,7 @@
   --github-activity-padding-inline: clamp(20px, 2.4vw, 28px);
   --github-activity-panel-inset: 12px;
   --github-activity-panel-height: 52px;
-  --github-activity-panel-gap: 10px;
+  --github-activity-panel-gap: 6px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -858,7 +858,7 @@
     --github-activity-padding-block: 18px;
     --github-activity-padding-inline: 16px;
     --github-activity-panel-inset: 8px;
-    --github-activity-panel-gap: 8px;
+    --github-activity-panel-gap: 6px;
     min-height: 210px;
   }
 
