@@ -47,47 +47,6 @@
   background: rgba(15, 15, 18, 0.4) !important;
 }
 
-.github-calendar-activity [data-slot="github-activity-panel"] {
-  inset-inline: 12px !important;
-  bottom: 12px !important;
-  border-radius: 14px !important;
-}
-
-.github-calendar-activity [data-slot="github-activity-panel"] > div:first-child {
-  padding: 14px 18px !important;
-}
-
-.github-calendar-activity [data-slot="github-activity-panel"] > ul {
-  padding: 0 8px 8px !important;
-}
-
-.github-calendar-activity [data-slot="github-activity-panel"][data-state="closed"] {
-  border-radius: 14px !important;
-}
-
-.github-calendar-activity [data-slot="github-activity-panel"][data-state="closed"] > div:first-child {
-  padding: 8px 12px !important;
-}
-
-.github-calendar-activity [data-slot="github-activity-panel"][data-state="open"] > div:first-child {
-  padding: 16px !important;
-}
-
-.github-calendar-activity [data-slot="github-activity-panel"][data-state="open"] > ul {
-  padding: 0 16px 16px !important;
-}
-
-.github-calendar-activity [data-slot="github-activity-panel"][data-state="open"] {
-  inset: 12px !important;
-  background: rgba(32, 32, 36, 0.98) !important;
-}
-
-.github-calendar-activity [data-slot="github-activity-panel"][data-state="open"] > ul a,
-.github-calendar-activity [data-slot="github-activity-panel"][data-state="open"] > ul > li > div {
-  margin: 0 !important;
-  padding: 10px 0 !important;
-}
-
 /* The Rare UI registry component assumes Tailwind Preflight. Keep that reset
    local so it renders faithfully without changing the rest of the portfolio. */
 [data-slot="github-activity"],
