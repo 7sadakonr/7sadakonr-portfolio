@@ -161,6 +161,24 @@ describe('GitHub activity card', () => {
         expect(await screen.findByRole('button', { name: 'Show top repositories' })).not.toBeNull()
     })
 
+    it('measures the activity card after the loading skeleton is replaced', async () => {
+        const observed: Element[] = []
+        vi.stubGlobal('ResizeObserver', class {
+            observe(element: Element) {
+                observed.push(element)
+            }
+            disconnect() {}
+        })
+
+        render(<GithubCalendar username="7sadakonr" colorSchema="purple" />)
+
+        await screen.findByRole('img', { name: '3 contributions in 2026' })
+
+        await waitFor(() => {
+            expect(observed.some((element) => element.getAttribute('data-slot') === 'github-activity')).toBe(true)
+        })
+    })
+
     it('shows only the top three repositories in the expanded activity panel', async () => {
         vi.stubGlobal('fetch', vi.fn((input: string | URL | Request) => {
             const url = String(input)
