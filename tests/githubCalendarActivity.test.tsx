@@ -204,4 +204,14 @@ describe('GitHub activity card', () => {
         expect(await screen.findByRole('link', { name: /inventory/ })).not.toBeNull()
         expect(screen.queryByRole('link', { name: /other-project/ })).toBeNull()
     })
+
+    it('exposes dedicated layout slots for the expanded contributions panel', async () => {
+        render(<GithubCalendar username="7sadakonr" colorSchema="purple" />)
+
+        fireEvent.click(await screen.findByRole('button', { name: 'Show top repositories' }))
+
+        expect(document.querySelector('[data-slot="github-activity-panel-header"]')).not.toBeNull()
+        expect(document.querySelector('[data-slot="github-activity-panel-list"]')).not.toBeNull()
+        expect(document.querySelectorAll('[data-slot="github-activity-repo-row"]')).toHaveLength(1)
+    })
 })
