@@ -153,11 +153,13 @@ const fitActivityCell = (availableWidth: number) => {
     return best
 }
 
-const useFittedActivityCell = () => {
+const useFittedActivityCell = (enabled: boolean) => {
     const ref = useRef<HTMLDivElement>(null)
     const [cellSize, setCellSize] = useState(MIN_ACTIVITY_CELL_SIZE)
 
     useEffect(() => {
+        if (!enabled) return
+
         const element = ref.current
         if (!element) return
 
@@ -174,7 +176,7 @@ const useFittedActivityCell = () => {
         const observer = new ResizeObserver(measure)
         observer.observe(element)
         return () => observer.disconnect()
-    }, [])
+    }, [enabled])
 
     return [ref, cellSize] as const
 }
@@ -249,7 +251,7 @@ const GithubCalendar = ({ username, className = '', colorSchema = 'green' }: Git
     const [error, setError] = useState(false)
     const [isVisible, setIsVisible] = useState(false)
     const containerRef = useRef<HTMLDivElement>(null)
-    const [activityRef, cellSize] = useFittedActivityCell()
+    const [activityRef, cellSize] = useFittedActivityCell(!loading)
 
     useEffect(() => {
         if (typeof IntersectionObserver === 'undefined') {
