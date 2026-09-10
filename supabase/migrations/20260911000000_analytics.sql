@@ -617,3 +617,42 @@ grant execute on function public.analytics_recent_sessions(int) to authenticated
 
 revoke execute on function public.analytics_session_detail(uuid) from public, anon;
 grant execute on function public.analytics_session_detail(uuid) to authenticated;
+
+-- 9. Retention cleanup (Deletes events & sessions older than p_days, default 90 days)
+create or replace function public.analytics_cleanup_old_data(
+  p_retention_days int default 90
+)
+returns json
+language plpgsql
+security invoker
+set search_path = ''
+as $$
+declare
+  v_deleted_events bigint;
+  v_deleted_sessions bigint;
+  v_cutoff timestamptz;
+begin
+  if not exists (select 1 from public.portfolio_admins where user_id = (select auth.uid())) then
+    raise exception 'Admin access required';
+  end if;
+
+  v_cutoff := now() - (p_retention_days || ' days')::interval;
+
+  delete from public.analytics_events
+  where created_at < v_cutoff;
+  get diagnostics v_deleted_events = row_count;
+
+  delete from public.analytics_sessions
+  where last_seen_at < v_cutoff;
+  get diagnostics v_deleted_sessions = row_count;
+
+  return json_build_object(
+    'cutoff_date', v_cutoff,
+    'deleted_events', v_deleted_events,
+    'deleted_sessions', v_deleted_sessions
+  );
+end;
+$$;
+
+revoke execute on function public.analytics_cleanup_old_data(int) from public, anon;
+grant execute on function public.analytics_cleanup_old_data(int) to authenticated;
