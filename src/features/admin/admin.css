@@ -621,3 +621,25 @@
   font-weight: 600;
   color: #69746e;
 }
+
+/* Shared Admin responsive layout foundation */
+@media (max-width: 768px) {
+  .admin-page { width: min(100% - 32px, 1120px); padding: 32px 0 48px; }
+  .admin-page-heading { align-items: flex-start; gap: 16px; margin-bottom: 24px; }
+  .admin-project-form, .admin-settings-form { gap: 16px; padding: 24px; }
+  .admin-form-actions, .admin-row-actions { gap: 8px; }
+}
+
+@media (max-width: 580px) {
+  .admin-page-heading { flex-direction: column; }
+  .admin-page-heading > .admin-button, .admin-add-contact { width: 100%; }
+  .admin-form-actions { flex-direction: column; }
+  .admin-form-actions .admin-button { width: 100%; }
+}
+
+@media (max-width: 430px) {
+  .admin-page { width: min(100% - 24px, 1120px); padding: 24px 0 40px; }
+  .admin-page h1 { font-size: 28px; }
+  .admin-project-form, .admin-settings-form { gap: 14px; padding: 16px; }
+  .admin-button { min-height: 44px; }
+}
