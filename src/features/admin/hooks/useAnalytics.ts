@@ -140,6 +140,8 @@ export function useAnalytics() {
   const [funnel, setFunnel] = useState<FunnelData | null>(null)
   const [recentSessions, setRecentSessions] = useState<RecentSessionItem[]>([])
 
+  const [isVercelSynced, setIsVercelSynced] = useState<boolean>(false)
+
   const fetchData = useCallback(async () => {
     if (!supabase) {
       setError('Supabase is not configured.')
@@ -164,6 +166,7 @@ export function useAnalytics() {
         topRes,
         funnelRes,
         recentRes,
+        vercelData,
       ] = await Promise.all([
         supabase.rpc('analytics_overview', { p_from, p_to }),
         supabase.rpc('analytics_timeseries', { p_from, p_to, p_metric: metric }),
@@ -172,6 +175,9 @@ export function useAnalytics() {
         supabase.rpc('analytics_top_interactions', { p_from, p_to }),
         supabase.rpc('analytics_funnel', { p_from, p_to }),
         supabase.rpc('analytics_recent_sessions', { p_limit: 30 }),
+        fetch(`/api/vercel-traffic?days=${days}`)
+          .then(async (r) => (r.ok ? r.json() : null))
+          .catch(() => null),
       ])
 
       if (overviewRes.error) throw overviewRes.error
@@ -182,9 +188,114 @@ export function useAnalytics() {
       if (funnelRes.error) throw funnelRes.error
       if (recentRes.error) throw recentRes.error
 
-      setOverview(overviewRes.data as AnalyticsOverviewData)
-      setTimeseries((timeseriesRes.data as TimeSeriesPoint[]) || [])
-      setUtmCampaigns((utmRes.data as UtmCampaignRow[]) || [])
+      const rawOverview = (overviewRes.data as AnalyticsOverviewData) || {
+        visitors: 0,
+        visitors_prev: 0,
+        visitors_today: 0,
+        visitors_yesterday: 0,
+        interactions: 0,
+        interactions_prev: 0,
+        interactions_today: 0,
+        interactions_yesterday: 0,
+        project_opens: 0,
+        external_clicks: 0,
+        resume_downloads: 0,
+        sessions: 0,
+        avg_session_events: 0,
+      }
+
+      interface VercelPayload {
+        configured?: boolean
+        totalVisitors?: number
+        totalPageviews?: number
+        topReferrers?: Array<{ referrer: string; count: number }>
+        dailyTimeSeries?: Array<{ date: string; pageviews: number; visitors: number }>
+      }
+
+      const vercelTraffic = vercelData && (vercelData as VercelPayload).configured ? (vercelData as VercelPayload) : null
+      setIsVercelSynced(!!vercelTraffic)
+
+      // 1. Unified Overview Cards: Merge Vercel macro audience into Supabase behavioral metrics
+      let mergedOverview = { ...rawOverview }
+      if (vercelTraffic) {
+        const vVisitors = Number(vercelTraffic.totalVisitors) || 0
+        const vPageviews = Number(vercelTraffic.totalPageviews) || 0
+
+        // Total Visitors: take the maximum of Supabase unique visitor count and Vercel total visitors
+        const unifiedVisitors = Math.max(rawOverview.visitors, vVisitors)
+
+        // Visitors Today: if Vercel has today's count, merge with Supabase
+        const todayIso = new Date().toISOString().slice(0, 10)
+        const vToday = vercelTraffic.dailyTimeSeries?.find((d) => d.date === todayIso)?.visitors || 0
+        const unifiedToday = Math.max(rawOverview.visitors_today, vToday)
+
+        // Total Interactions: combine behavioral events with Vercel pageviews
+        const unifiedInteractions = rawOverview.interactions + vPageviews
+
+        // Sessions: at least match visitor count
+        const unifiedSessions = Math.max(rawOverview.sessions, vVisitors)
+
+        mergedOverview = {
+          ...rawOverview,
+          visitors: unifiedVisitors,
+          visitors_today: unifiedToday,
+          interactions: unifiedInteractions,
+          sessions: unifiedSessions,
+        }
+      }
+      setOverview(mergedOverview)
+
+      // 2. Unified Activity Time Series: Merge Vercel daily visitor/pageview trends with Supabase
+      let mergedTimeseries = (timeseriesRes.data as TimeSeriesPoint[]) || []
+      if (vercelTraffic?.dailyTimeSeries && vercelTraffic.dailyTimeSeries.length > 0) {
+        const vMap = new Map<string, { visitors: number; pageviews: number }>()
+        for (const item of vercelTraffic.dailyTimeSeries) {
+          if (item?.date) {
+            vMap.set(item.date, {
+              visitors: Number(item.visitors) || 0,
+              pageviews: Number(item.pageviews) || 0,
+            })
+          }
+        }
+
+        mergedTimeseries = mergedTimeseries.map((pt) => {
+          const v = vMap.get(pt.date)
+          if (!v) return pt
+          if (metric === 'visitors') {
+            return {
+              ...pt,
+              count: Math.max(pt.count, v.visitors),
+            }
+          }
+          if (metric === 'interactions') {
+            return {
+              ...pt,
+              count: pt.count + v.pageviews,
+            }
+          }
+          return pt
+        })
+      }
+      setTimeseries(mergedTimeseries)
+
+      // 3. Unified Referral Sources: Merge Vercel top referrers into UTM Campaign table
+      const mergedUtm = (utmRes.data as UtmCampaignRow[]) || []
+      if (vercelTraffic?.topReferrers && vercelTraffic.topReferrers.length > 0) {
+        const existingSources = new Set(mergedUtm.map((u) => (u.source || '').toLowerCase()))
+        for (const ref of vercelTraffic.topReferrers) {
+          if (ref.referrer && !existingSources.has(ref.referrer.toLowerCase())) {
+            mergedUtm.push({
+              source: ref.referrer,
+              campaign: '(direct / vercel referrer)',
+              sessions: ref.count,
+              interactions: ref.count,
+              conversions: 0,
+            })
+          }
+        }
+      }
+      setUtmCampaigns(mergedUtm)
+
       setProjectPerformance((projectRes.data as ProjectPerformanceRow[]) || [])
       setTopInteractions((topRes.data as TopInteractionRow[]) || [])
       setFunnel(funnelRes.data as FunnelData)
@@ -226,6 +337,7 @@ export function useAnalytics() {
     topInteractions,
     funnel,
     recentSessions,
+    isVercelSynced,
     refetch: fetchData,
     fetchSessionDetail,
   }
