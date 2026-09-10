@@ -7,7 +7,7 @@ import {
   Tooltip,
   CartesianGrid,
 } from 'recharts'
-import type { TimeSeriesMetric, TimeSeriesPoint } from '../../hooks/useAnalytics'
+import type { DateRangeDays, TimeSeriesMetric, TimeSeriesPoint, TrafficInsights } from '../../hooks/useAnalytics'
 
 interface InteractionChartProps {
   data: TimeSeriesPoint[]
@@ -15,6 +15,8 @@ interface InteractionChartProps {
   onMetricChange: (metric: TimeSeriesMetric) => void
   isLoading: boolean
   metricTotal?: number
+  days?: DateRangeDays
+  insights?: TrafficInsights
 }
 
 const METRIC_CONFIG: Record<TimeSeriesMetric, { label: string; color: string; fillGradient: string }> = {
@@ -46,9 +48,13 @@ const METRIC_CONFIG: Record<TimeSeriesMetric, { label: string; color: string; fi
 }
 
 function formatDate(dateStr: string): string {
+  if (!dateStr) return ''
+  if (dateStr.includes(':')) {
+    return dateStr
+  }
   try {
     const d = new Date(dateStr)
-    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+    return isNaN(d.getTime()) ? dateStr : d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
   } catch {
     return dateStr
   }
@@ -60,6 +66,8 @@ const InteractionChart = ({
   onMetricChange,
   isLoading,
   metricTotal,
+  days = 30,
+  insights,
 }: InteractionChartProps) => {
   const chartData = data.map((d) => ({
     date: formatDate(d.date),
@@ -84,7 +92,9 @@ const InteractionChart = ({
             )}
           </div>
           <p className="analytics-section-subtitle">
-            Daily engagement distribution across selected period
+            {days === 1
+              ? 'Hourly engagement distribution across the last 24 hours'
+              : `Daily engagement distribution across the last ${days} days`}
           </p>
         </div>
 
@@ -106,11 +116,49 @@ const InteractionChart = ({
         </div>
       </div>
 
+      {/* Vercel-style Deep Traffic Insights Banner */}
+      {!isLoading && insights && (
+        <div className="analytics-insights-bar">
+          <div className="analytics-insight-pill">
+            <span className="analytics-insight-label">
+              {days === 1 ? '🔥 Peak Hour' : '🔥 Peak Day'}
+            </span>
+            <div className="analytics-insight-content">
+              <span className="analytics-insight-val">{insights.peakTimeLabel}</span>
+              {insights.peakCount > 0 && (
+                <span className="analytics-insight-sub">
+                  ({insights.peakCount.toLocaleString()} {metric === 'visitors' ? 'visitors' : 'events'})
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className="analytics-insight-pill">
+            <span className="analytics-insight-label">📊 Average</span>
+            <div className="analytics-insight-content">
+              <span className="analytics-insight-val">
+                {insights.average.toLocaleString()}
+              </span>
+              <span className="analytics-insight-sub">{insights.unitLabel}</span>
+            </div>
+          </div>
+
+          {days === 1 && (
+            <div className="analytics-insight-pill">
+              <span className="analytics-insight-label">⏰ Busiest Window</span>
+              <div className="analytics-insight-content">
+                <span className="analytics-insight-val">{insights.busiestPeriodLabel}</span>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="analytics-chart-container">
         {isLoading && (
           <div className="analytics-chart-loading">
             <div className="analytics-spinner" aria-hidden="true" />
-            <span>Calculating daily timeline…</span>
+            <span>{days === 1 ? 'Calculating hourly timeline…' : 'Calculating daily timeline…'}</span>
           </div>
         )}
         {!isLoading && (
@@ -129,6 +177,7 @@ const InteractionChart = ({
                 fontSize={12}
                 tickLine={false}
                 axisLine={{ stroke: '#d9ddd5' }}
+                interval={days === 1 ? 2 : 'preserveStartEnd'}
                 dy={6}
               />
               <YAxis
@@ -151,6 +200,19 @@ const InteractionChart = ({
                 }}
                 itemStyle={{ color: '#ffffff', fontWeight: 700 }}
                 labelStyle={{ fontWeight: 600, color: '#a8b9ae', marginBottom: '4px' }}
+                labelFormatter={(label) => {
+                  const str = String(label ?? '')
+                  if (str.includes(':')) {
+                    const parts = str.split(':')
+                    const first = parts[0]
+                    const h = first ? parseInt(first, 10) : NaN
+                    if (!isNaN(h)) {
+                      const nextH = (h + 1) % 24
+                      return `Time: ${String(h).padStart(2, '0')}:00 - ${String(nextH).padStart(2, '0')}:00`
+                    }
+                  }
+                  return `Date: ${str}`
+                }}
                 formatter={(value) => [
                   `${Number(value ?? 0).toLocaleString()} ${metric === 'visitors' ? 'visitors' : 'events'}`,
                   activeConfig.label,

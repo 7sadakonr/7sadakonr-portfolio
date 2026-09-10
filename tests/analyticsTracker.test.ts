@@ -1,5 +1,11 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { trackEvent, initAnalytics, _resetAnalyticsForTesting } from '../src/lib/analytics/tracker'
+import {
+  trackEvent,
+  initAnalytics,
+  isAdminOptOut,
+  setAdminOptOut,
+  _resetAnalyticsForTesting,
+} from '../src/lib/analytics/tracker'
 
 describe('Analytics Tracker', () => {
   beforeEach(() => {
@@ -60,5 +66,36 @@ describe('Analytics Tracker', () => {
         destination_host: 'github.com',
       })
     }).not.toThrow()
+  })
+
+  it('opts out admin when setAdminOptOut(true) is called and cleans session meta', () => {
+    initAnalytics()
+    expect(localStorage.getItem('portfolio_session_meta')).not.toBeNull()
+
+    setAdminOptOut(true)
+    expect(isAdminOptOut()).toBe(true)
+    expect(localStorage.getItem('portfolio_admin_opt_out')).toBe('true')
+    expect(localStorage.getItem('portfolio_session_meta')).toBeNull()
+
+    const fetchMock = vi.fn()
+    global.fetch = fetchMock
+
+    trackEvent('page_view', { page: '/' })
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it('opts out automatically when visiting /admin routes', () => {
+    const originalLocation = window.location
+    delete (window as unknown as { location?: unknown }).location
+    window.location = { ...originalLocation, pathname: '/admin/analytics' } as Location
+
+    expect(isAdminOptOut()).toBe(true)
+
+    const fetchMock = vi.fn()
+    global.fetch = fetchMock
+    trackEvent('project_open', { project_slug: 'test' })
+    expect(fetchMock).not.toHaveBeenCalled()
+
+    window.location = originalLocation
   })
 })

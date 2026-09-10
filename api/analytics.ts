@@ -5,6 +5,7 @@ const ALLOWED_EVENTS = new Set([
   'page_view',
   'section_view',
   'scroll_depth',
+  'heartbeat',
   'project_open',
   'project_github_click',
   'project_demo_click',
@@ -138,10 +139,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     }
 
     const rawEvents = Array.isArray(payload.events) ? payload.events : []
-    if (rawEvents.length === 0) {
-      res.status(204).end()
-      return
-    }
 
     if (rawEvents.length > MAX_BATCH_SIZE) {
       res.status(400).json({ error: `Exceeded max batch size of ${MAX_BATCH_SIZE}` })
@@ -159,6 +156,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     const supabase = createClient(supabaseUrl, supabaseServiceKey, {
       auth: { persistSession: false },
     })
+
+    // Check if visitor is an excluded admin
+    const { data: isExcluded } = await supabase
+      .from('analytics_admin_exclusions')
+      .select('visitor_id')
+      .eq('visitor_id', visitorId)
+      .maybeSingle()
+
+    if (isExcluded) {
+      res.setHeader('X-Analytics-Status', 'admin-opt-out')
+      res.status(204).end()
+      return
+    }
 
     const nowIso = new Date().toISOString()
 
