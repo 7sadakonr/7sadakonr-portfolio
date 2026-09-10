@@ -740,3 +740,137 @@
   .admin-page, .analytics-page { width: calc(100% - 24px); }
   .analytics-mobile-metrics { grid-template-columns: 1fr; }
 }
+
+/* Admin palette: aligned with the portfolio's charcoal glass and coral-to-violet accent. */
+.admin-login-page, .admin-shell {
+  --admin-bg: #0d0d0f;
+  --admin-surface: rgba(15, 15, 18, 0.82);
+  --admin-surface-raised: #17171c;
+  --admin-border: rgba(255, 255, 255, 0.14);
+  --admin-text: #f8f7ff;
+  --admin-muted: #aaa8b3;
+  --admin-accent: #8a38f5;
+  --admin-accent-warm: #ff7777;
+  background:
+    radial-gradient(circle at 85% -10%, rgba(138, 56, 245, 0.17), transparent 34rem),
+    radial-gradient(circle at 0 0, rgba(255, 119, 119, 0.10), transparent 26rem),
+    var(--admin-bg);
+  color: var(--admin-text);
+}
+
+.admin-login-card, .admin-project-form, .admin-settings-form,
+.admin-project-row, .admin-contact-row, .admin-resume-row,
+.analytics-card-panel, .analytics-chart-panel, .analytics-kpi-card,
+.analytics-journey-card, .analytics-drawer {
+  background: var(--admin-surface);
+  border-color: var(--admin-border);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.admin-header, .admin-nav {
+  background: rgba(13, 13, 15, 0.78);
+  border-color: var(--admin-border);
+  backdrop-filter: blur(18px) saturate(1.2);
+  -webkit-backdrop-filter: blur(18px) saturate(1.2);
+}
+
+.admin-brand, .admin-login-card h1, .admin-page h1, .analytics-page-title,
+.analytics-section-title, .analytics-project-name, .analytics-kpi-number,
+.analytics-subtile-val, .analytics-pipeline-title, .analytics-pipeline-count,
+.analytics-ranked-label, .analytics-ranked-count, .analytics-intent-card-title,
+.analytics-intent-rate, .analytics-retention-label, .analytics-retention-rate,
+.analytics-journey-source, .analytics-stat-val, .analytics-drawer-title,
+.analytics-tile-value, .analytics-drawer-section h3, .analytics-breakdown-row strong,
+.admin-project-meta h2, .admin-contact-row h2, .admin-resume-row h2 {
+  color: var(--admin-text);
+}
+
+.admin-login-card p, .admin-project-meta p, .admin-contact-row p, .admin-resume-row p,
+.admin-image-field small, .analytics-page-description, .analytics-section-subtitle,
+.analytics-kpi-title, .analytics-kpi-desc, .analytics-growth-label,
+.analytics-subtile-title, .analytics-subtile-desc, .analytics-substat-label,
+.analytics-substat-hint, .analytics-pipeline-sub, .analytics-retention-count,
+.analytics-intent-sessions, .analytics-intent-events, .analytics-intent-subtitle,
+.analytics-journey-time, .analytics-stat-lbl, .analytics-tile-label,
+.analytics-mobile-metrics dt, .analytics-mobile-card-state {
+  color: var(--admin-muted);
+}
+
+.admin-eyebrow, .analytics-subtile-icon, .analytics-ranked-pct, .analytics-inspect-link,
+.analytics-view-action, .analytics-pipeline-badge-overall {
+  color: #d9baff;
+}
+
+.admin-button {
+  background: linear-gradient(105deg, var(--admin-accent-warm), var(--admin-accent));
+  box-shadow: 0 10px 24px rgba(138, 56, 245, 0.24);
+}
+
+.admin-button--quiet, .admin-row-actions button, .admin-row-actions a,
+.analytics-action-refresh, .analytics-mobile-inspect, .admin-menu-toggle {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--admin-border);
+  color: var(--admin-text);
+}
+
+.admin-nav a { color: var(--admin-muted); }
+.admin-nav a.active { background: linear-gradient(105deg, rgba(255, 119, 119, 0.20), rgba(138, 56, 245, 0.24)); color: #fff; }
+.admin-statuses span, .admin-tag { background: rgba(138, 56, 245, 0.18); color: #dfc8ff; }
+.admin-form-error { color: #ff9b9b; }
+.admin-form-warning { color: #ffd18b; }
+.admin-empty { border-color: rgba(255, 255, 255, 0.25); color: var(--admin-muted); }
+
+.admin-login-card label, .admin-project-form > label, .admin-project-form fieldset,
+.admin-settings-form label { color: #e5e3ec; }
+.admin-login-card input, .admin-project-form input, .admin-project-form textarea,
+.admin-tags input, .admin-settings-form input, .admin-settings-form textarea,
+.admin-settings-form select, .analytics-metric-select {
+  background: rgba(0, 0, 0, 0.28);
+  border-color: var(--admin-border);
+  color: var(--admin-text);
+}
+.admin-login-card input:focus, .admin-project-form input:focus,
+.admin-project-form textarea:focus, .admin-tags input:focus {
+  outline-color: rgba(138, 56, 245, 0.35);
+  border-color: #b376ff;
+}
+
+.analytics-range-segmented, .analytics-metric-segmented, .analytics-intent-toggle {
+  background: rgba(255, 255, 255, 0.07);
+}
+.analytics-range-pill, .analytics-segment-btn, .analytics-intent-tab { color: var(--admin-muted); }
+.analytics-range-pill.active, .analytics-segment-btn.active, .analytics-intent-tab.active {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+.analytics-action-refresh:hover, .admin-row-actions button:hover, .admin-row-actions a:hover,
+.analytics-mobile-inspect:hover { border-color: #b376ff; background: rgba(138, 56, 245, 0.14); }
+
+.analytics-subtile, .analytics-substat-item, .analytics-pipeline-row,
+.analytics-ranked-row, .analytics-intent-card, .analytics-retention-row,
+.analytics-journey-metrics, .analytics-tile, .analytics-mobile-data-card,
+.analytics-mobile-card-state, .analytics-drawer-header {
+  background: var(--admin-surface-raised);
+  border-color: var(--admin-border);
+}
+.analytics-table th { background: rgba(255, 255, 255, 0.05); border-color: var(--admin-border); color: var(--admin-muted); }
+.analytics-table td, .analytics-breakdown-row { border-color: rgba(255, 255, 255, 0.08); color: var(--admin-text); }
+.analytics-table tbody tr:hover, .analytics-table--interactive tbody tr:hover td { background: rgba(138, 56, 245, 0.09); }
+.analytics-campaign-code, .analytics-slug-badge, .analytics-chip-id,
+.analytics-chip-device, .analytics-chip-geo, .analytics-rank-badge,
+.analytics-pipeline-badge-step, .analytics-intent-badge, .analytics-journey-badge.direct {
+  background: rgba(255, 255, 255, 0.08);
+  color: #dddbe4;
+}
+.analytics-mini-bar, .analytics-pipeline-track, .analytics-ranked-bar-bg,
+.analytics-intent-meter-track, .analytics-retention-track { background: rgba(255, 255, 255, 0.12); }
+.analytics-mini-fill, .analytics-ranked-bar-fill, .analytics-retention-fill {
+  background: linear-gradient(90deg, var(--admin-accent-warm), var(--admin-accent));
+}
+.analytics-pipeline-index, .analytics-kpi-active-tag { background: var(--admin-accent); }
+.analytics-drawer-backdrop { background: rgba(0, 0, 0, 0.68); }
+.analytics-drawer-close { background: rgba(255, 255, 255, 0.10); color: #fff; }
+.analytics-drawer-close:hover { background: rgba(255, 255, 255, 0.18); color: #fff; }
+.analytics-error-banner { background: rgba(111, 25, 33, 0.42); border-color: rgba(255, 119, 119, 0.50); color: #ffd0d0; }
+.admin-loading { background: var(--admin-bg); color: var(--admin-text); }
