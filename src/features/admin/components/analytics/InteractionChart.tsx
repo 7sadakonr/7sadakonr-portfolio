@@ -24,27 +24,27 @@ interface InteractionChartProps {
 const METRIC_CONFIG: Record<TimeSeriesMetric, { label: string; color: string; fillGradient: string }> = {
   visitors: {
     label: 'Unique Visitors',
-    color: '#10b981',
+    color: '#ff8a8a',
     fillGradient: 'colorVisitors',
   },
   interactions: {
     label: 'All Interactions',
-    color: '#1b6b50',
+    color: '#a96bff',
     fillGradient: 'colorInteractions',
   },
   project_opens: {
     label: 'Project Opens',
-    color: '#8b5cf6',
+    color: '#c797ff',
     fillGradient: 'colorProjects',
   },
   external_clicks: {
     label: 'External Clicks',
-    color: '#2563eb',
+    color: '#f3a0dc',
     fillGradient: 'colorClicks',
   },
   resume_downloads: {
     label: 'Resume Downloads',
-    color: '#d97706',
+    color: '#ffc58a',
     fillGradient: 'colorResume',
   },
 }
@@ -181,18 +181,18 @@ const InteractionChart = ({
                   <stop offset="95%" stopColor={activeConfig.color} stopOpacity={0.0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="4 4" stroke="#e6eae6" vertical={false} />
+              <CartesianGrid strokeDasharray="4 4" stroke="#34343d" vertical={false} />
               <XAxis
                 dataKey="date"
-                stroke="#69746e"
+                stroke="#a5a3ad"
                 fontSize={12}
                 tickLine={false}
-                axisLine={{ stroke: '#d9ddd5' }}
+                axisLine={{ stroke: '#4a4a54' }}
                 interval={days === 1 ? 2 : 'preserveStartEnd'}
                 dy={6}
               />
               <YAxis
-                stroke="#69746e"
+                stroke="#a5a3ad"
                 fontSize={12}
                 tickLine={false}
                 axisLine={false}
