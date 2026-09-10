@@ -357,10 +357,12 @@ export function useAnalytics() {
       }
 
       // 2.1 Process 'visitors' series
-      const processedVisitors: TimeSeriesPoint[] = dateKeys.map((key) => ({
-        date: key,
-        count: vercelVisitorsByDate.get(key) ?? 0,
-      }))
+      const processedVisitors: TimeSeriesPoint[] = vercelVisitorDataAvailable
+        ? dateKeys.map((key) => ({
+            date: key,
+            count: vercelVisitorsByDate.get(key) ?? 0,
+          }))
+        : []
 
       // 2.2 Process 'interactions' series
       const rawInteractionsArray = Array.isArray(tsInteractionsRes.data) ? (tsInteractionsRes.data as TimeSeriesPoint[]) : []
@@ -631,6 +633,7 @@ export function useAnalytics() {
     funnel,
     recentSessions,
     isVercelSynced,
+    isVisitorDataAvailable: isVercelSynced,
     refetch: fetchData,
     fetchSessionDetail,
   }

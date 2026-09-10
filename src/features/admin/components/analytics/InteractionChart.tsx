@@ -12,8 +12,9 @@ import type { DateRangeDays, TimeSeriesMetric, TimeSeriesPoint, TrafficInsights 
 interface InteractionChartProps {
   data: TimeSeriesPoint[]
   metric: TimeSeriesMetric
-  onMetricChange: (metric: TimeSeriesMetric) => void
+  onMetricChange?: (metric: TimeSeriesMetric) => void
   isLoading: boolean
+  isVisitorDataAvailable?: boolean
   metricTotal?: number
   days?: DateRangeDays
   insights?: TrafficInsights
@@ -63,8 +64,9 @@ function formatDate(dateStr: string): string {
 const InteractionChart = ({
   data,
   metric,
-  onMetricChange,
+  onMetricChange = () => {},
   isLoading,
+  isVisitorDataAvailable,
   metricTotal,
   days = 30,
   insights,
@@ -78,6 +80,13 @@ const InteractionChart = ({
   const totalCount = chartData.reduce((sum, pt) => sum + pt.count, 0)
   const displayedTotal = typeof metricTotal === 'number' ? metricTotal : totalCount
   const activeConfig = METRIC_CONFIG[metric]
+  const isVisitorUnavailable = metric === 'visitors' && isVisitorDataAvailable === false
+  const totalLabel = metric === 'visitors' ? 'Vercel Visitors' : activeConfig.label
+  const subtitle = metric === 'visitors'
+    ? `Vercel visitor data · ${days === 1 ? 'Hourly distribution across the last 24 hours' : `Daily distribution across the last ${days} days`}`
+    : days === 1
+      ? 'Hourly engagement distribution across the last 24 hours'
+      : `Daily engagement distribution across the last ${days} days`
 
   return (
     <div className="analytics-chart-panel">
@@ -87,14 +96,12 @@ const InteractionChart = ({
             <h2 className="analytics-section-title">Activity Timeline</h2>
             {!isLoading && (
               <span className="analytics-chart-total-pill" style={{ borderColor: activeConfig.color, color: activeConfig.color }}>
-                {displayedTotal.toLocaleString()} {activeConfig.label}
+                {displayedTotal.toLocaleString()} {totalLabel}
               </span>
             )}
           </div>
           <p className="analytics-section-subtitle">
-            {days === 1
-              ? 'Hourly engagement distribution across the last 24 hours'
-              : `Daily engagement distribution across the last ${days} days`}
+            {subtitle}
           </p>
         </div>
 
@@ -117,7 +124,7 @@ const InteractionChart = ({
       </div>
 
       {/* Vercel-style Deep Traffic Insights Banner */}
-      {!isLoading && insights && (
+      {!isLoading && insights && !isVisitorUnavailable && (
         <div className="analytics-insights-bar">
           <div className="analytics-insight-pill">
             <span className="analytics-insight-label">
@@ -161,7 +168,10 @@ const InteractionChart = ({
             <span>{days === 1 ? 'Calculating hourly timeline…' : 'Calculating daily timeline…'}</span>
           </div>
         )}
-        {!isLoading && (
+        {!isLoading && isVisitorUnavailable && (
+          <p role="status">Vercel visitor data is unavailable</p>
+        )}
+        {!isLoading && !isVisitorUnavailable && (
           <ResponsiveContainer width="100%" height={340} minWidth={0}>
             <AreaChart data={chartData} margin={{ top: 18, right: 16, left: -16, bottom: 4 }}>
               <defs>
