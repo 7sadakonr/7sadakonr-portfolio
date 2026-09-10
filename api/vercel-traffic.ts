@@ -2,6 +2,10 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 
 interface VercelAggregateRow {
   key?: string
+  date?: string
+  day?: string
+  timestamp?: string | number
+  time?: string | number
   referrer?: string
   country?: string
   pageViews?: number
@@ -13,6 +17,32 @@ interface VercelAggregateRow {
 interface VercelAggregateResponse {
   data?: VercelAggregateRow[]
   [key: string]: unknown
+}
+
+export function normalizeVisitorSeries(
+  rows: VercelAggregateRow[],
+  granularity: 'hour' | 'day',
+): Array<{ date: string; visitors: number }> {
+  const visitorsByDate = new Map<string, number>()
+
+  for (const row of rows) {
+    const dateValue = row.key ?? row.date ?? row.day ?? row.timestamp ?? row.time
+    if (dateValue === undefined || dateValue === null) continue
+
+    const date = new Date(dateValue)
+    if (isNaN(date.getTime())) continue
+
+    const visitors = Number(row.visitors)
+    if (!Number.isFinite(visitors)) continue
+
+    const normalizedDate = granularity === 'hour'
+      ? `${date.toISOString().slice(11, 13)}:00`
+      : date.toISOString().slice(0, 10)
+    visitorsByDate.set(normalizedDate, (visitorsByDate.get(normalizedDate) ?? 0) + visitors)
+  }
+
+  return Array.from(visitorsByDate, ([date, visitors]) => ({ date, visitors }))
+    .sort((a, b) => a.date.localeCompare(b.date))
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
@@ -91,6 +121,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     const aggTotalsUrl = `https://api.vercel.com/v1/query/web-analytics/visits/aggregate?${aggTotalsParams.toString()}`
     const aggTotalsPromise = fetch(aggTotalsUrl, { headers })
 
+    // Dedicated visitor series; hourly for a one-day range and daily otherwise.
+    const seriesParams = new URLSearchParams(baseParams)
+    const seriesGranularity = days === 1 ? 'hour' : 'day'
+    seriesParams.set('granularity', seriesGranularity)
+    const seriesUrl = `https://api.vercel.com/v1/query/web-analytics/visits/aggregate?${seriesParams.toString()}`
+    const seriesPromise = fetch(seriesUrl, { headers })
+
     // 2. Fetch top referrers
     const referrersParams = new URLSearchParams(baseParams)
     referrersParams.set('by', 'referrer')
@@ -105,9 +142,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     const countriesUrl = `https://api.vercel.com/v1/query/web-analytics/visits/aggregate?${countriesParams.toString()}`
     const countriesPromise = fetch(countriesUrl, { headers })
 
-    const [countRes, aggTotalsRes, refRes, countryRes] = await Promise.all([
+    const [countRes, aggTotalsRes, seriesRes, refRes, countryRes] = await Promise.all([
       countPromise,
       aggTotalsPromise,
+      seriesPromise,
       referrersPromise,
       countriesPromise,
     ])
@@ -126,6 +164,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
 
     const countData = countRes.ok ? await countRes.json().catch(() => null) : null
     const aggTotalsRaw = aggTotalsRes.ok ? await aggTotalsRes.json().catch(() => null) : null
+    const seriesRaw = seriesRes.ok ? await seriesRes.json().catch(() => null) : null
     const refDataRaw = refRes.ok ? await refRes.json().catch(() => null) : null
     const countryDataRaw = countryRes.ok ? await countryRes.json().catch(() => null) : null
 
@@ -219,6 +258,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       totalVisitors = aggVisitors
     }
 
+    const seriesRows: VercelAggregateRow[] = Array.isArray(seriesRaw)
+      ? (seriesRaw as VercelAggregateRow[])
+      : Array.isArray((seriesRaw as VercelAggregateResponse)?.data)
+        ? ((seriesRaw as VercelAggregateResponse).data ?? [])
+        : []
+    const visitorTimeSeries = normalizeVisitorSeries(seriesRows, seriesGranularity)
+
     // Process referrers
     const topReferrers: Array<{ referrer: string; count: number }> = []
     const refRows: VercelAggregateRow[] = Array.isArray(refDataRaw)
@@ -256,6 +302,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       topReferrers,
       topCountries,
       dailyTimeSeries,
+      visitorTimeSeries,
+      visitorDataAvailable: seriesRes.ok,
       periodDays: days,
     })
   } catch (err) {
