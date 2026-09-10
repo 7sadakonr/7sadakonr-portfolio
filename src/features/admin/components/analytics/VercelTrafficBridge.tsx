@@ -161,12 +161,13 @@ const VercelTrafficBridge = ({ days }: VercelTrafficBridgeProps) => {
               and click <strong>Create Token</strong> (Name: <code>portfolio-analytics</code>).
             </li>
             <li>
-              In your <strong>Vercel Project Settings ➔ Environment Variables</strong>, add:
+              In your <strong>Vercel Project Settings ➔ Environment Variables</strong>, add 2 separate variables:
               <div className="analytics-setup-env-box">
-                <code>VERCEL_TOKEN</code> = <i>(Your Personal Access Token)</i>
-                <br />
-                <code>VERCEL_PROJECT_ID</code> = <i>(Found under Project Settings ➔ General ➔ Project ID)</i>
+                <div><strong>Variable 1:</strong> Key: <code>VERCEL_TOKEN</code> | Value: <i>(Your Personal Access Token)</i></div>
+                <div><strong>Variable 2:</strong> Key: <code>VERCEL_PROJECT_ID</code> | Value: <i>(Project ID from Project Settings ➔ General)</i></div>
               </div>
+              <small>⚠️ In the <strong>Key</strong> box, enter ONLY <code>VERCEL_TOKEN</code> or <code>VERCEL_PROJECT_ID</code> (do not include spaces or "=").</small>
+              <br />
               <small>Make sure to check <strong>Preview</strong> and <strong>Production</strong>.</small>
             </li>
             <li>
