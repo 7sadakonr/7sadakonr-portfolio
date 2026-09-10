@@ -16,6 +16,9 @@ import { publishSectionChange } from './features/navigation/navigationEvents'
 import { isNavigationInProgress } from './features/navigation/navigationState'
 import { Seo } from './components/Seo/Seo'
 import { scheduleBelowFoldHydration } from './components/LazySection/sectionLoader'
+import { initAnalytics } from './lib/analytics/tracker'
+import { initSectionTracking } from './lib/analytics/sections'
+import { initScrollTracking } from './lib/analytics/scroll'
 
 import './pages/LandingPageShell.css'
 
@@ -45,70 +48,96 @@ function PortfolioApp() {
     return scheduleBelowFoldHydration()
   }, [isInteractive])
 
+  // Initialize hybrid analytics when page is interactive
+  useEffect(() => {
+    if (!isInteractive) return
+
+    let cleanupSections: (() => void) | undefined
+    let cleanupScroll: (() => void) | undefined
+
+    const idle = typeof window !== 'undefined' && typeof window.requestIdleCallback === 'function'
+      ? window.requestIdleCallback
+      : (cb: () => void) => setTimeout(cb, 100)
+
+    const idleHandle = idle(() => {
+      initAnalytics()
+      cleanupSections = initSectionTracking()
+      cleanupScroll = initScrollTracking()
+    })
+
+    return () => {
+      if (typeof window !== 'undefined' && typeof window.cancelIdleCallback === 'function' && typeof idleHandle === 'number') {
+        window.cancelIdleCallback(idleHandle)
+      }
+      cleanupSections?.()
+      cleanupScroll?.()
+    }
+  }, [isInteractive])
+
   // Set up IntersectionObserver to update Navbar based on scroll position
   useEffect(() => {
     const observerOptions = {
-        root: null,
-        rootMargin: '-49% 0px -49% 0px',
-        threshold: 0
+      root: null,
+      rootMargin: '-49% 0px -49% 0px',
+      threshold: 0,
     }
 
     const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                if (isNavigationInProgress()) return; // Prevent bouncing during manual navigation
-                
-                const id = entry.target.id
-                const route = getRouteForSection(id)
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          if (isNavigationInProgress()) return // Prevent bouncing during manual navigation
 
-                if (route) {
-                    publishSectionChange(route)
-                }
-            }
-        })
+          const id = entry.target.id
+          const route = getRouteForSection(id)
+
+          if (route) {
+            publishSectionChange(route)
+          }
+        }
+      })
     }, observerOptions)
 
     const sections = document.querySelectorAll('section[id]')
-    sections.forEach(sec => observer.observe(sec))
+    sections.forEach((sec) => observer.observe(sec))
 
     return () => observer.disconnect()
   }, [])
 
   return (
-      <SmoothScroll isPrepared={isInteractive} isEnabled={isInteractive}>
-        <Seo />
-        {isPreloaderVisible && <Preloader onComplete={() => setIsPreloaderVisible(false)} />}
-        {isInteractive && (
-          <Suspense fallback={null}>
-            <Analytics />
-          </Suspense>
-        )}
-        {isCriticalReady && (
-          <Suspense fallback={null}>
-            <Navbar isInteractive={isInteractive} />
-          </Suspense>
-        )}
-        
-        <div className="landing-page-container">
-          <div className="landing-content-flow">
-            <SpaceBackground motion="none" showPlanet={true} isActive={isInteractive}>
-              <section id="home">
-                <HeroPage effectsEnabled={isInteractive} onCriticalReady={() => setIsCriticalReady(true)} />
-              </section>
-            </SpaceBackground>
-            <LazySection id="about" canLoad={isInteractive}>
-                <AboutPage />
-            </LazySection>
-            <LazySection id="projects" canLoad={isInteractive}>
-                <ProjectPage />
-            </LazySection>
-            <LazySection id="contact" canLoad={isInteractive}>
-                <ContactPage />
-                <PageEnd />
-            </LazySection>
-          </div>
+    <SmoothScroll isPrepared={isInteractive} isEnabled={isInteractive}>
+      <Seo />
+      {isPreloaderVisible && <Preloader onComplete={() => setIsPreloaderVisible(false)} />}
+      {isInteractive && (
+        <Suspense fallback={null}>
+          <Analytics />
+        </Suspense>
+      )}
+      {isCriticalReady && (
+        <Suspense fallback={null}>
+          <Navbar isInteractive={isInteractive} />
+        </Suspense>
+      )}
+
+      <div className="landing-page-container">
+        <div className="landing-content-flow">
+          <SpaceBackground motion="none" showPlanet={true} isActive={isInteractive}>
+            <section id="home">
+              <HeroPage effectsEnabled={isInteractive} onCriticalReady={() => setIsCriticalReady(true)} />
+            </section>
+          </SpaceBackground>
+          <LazySection id="about" canLoad={isInteractive}>
+            <AboutPage />
+          </LazySection>
+          <LazySection id="projects" canLoad={isInteractive}>
+            <ProjectPage />
+          </LazySection>
+          <LazySection id="contact" canLoad={isInteractive}>
+            <ContactPage />
+            <PageEnd />
+          </LazySection>
         </div>
-      </SmoothScroll>
+      </div>
+    </SmoothScroll>
   )
 }
 

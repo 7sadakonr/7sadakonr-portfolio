@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { Liquid } from 'liquid-gooey'
 import { useSiteSettings } from '../../features/siteSettings/hooks/useSiteSettings'
+import { trackEvent } from '../../lib/analytics/trackEvent'
 import './ResumeDownloadMenu.css'
 
 type ResumeLanguage = 'th' | 'en'
@@ -61,7 +62,22 @@ const ResumeDownloadMenu = ({ variant }: ResumeDownloadMenuProps) => {
         className={`resume-download-menu__option${hero ? ' resume-download-menu__option--hero' : ''}`}
         tabIndex={hero && !isOpen ? -1 : undefined}
         aria-hidden={hero && !isOpen ? true : undefined}
-        onClick={() => closeMenu()}
+        onClick={() => {
+          let host: string | undefined
+          try {
+            if (option.href) host = new URL(option.href).hostname
+          } catch {
+            // Ignore URL parsing errors
+          }
+          trackEvent('resume_download', {
+            target_label: language === 'th' ? 'Resume (Thai)' : 'Resume (English)',
+            target_id: `resume-${language}`,
+            target_type: 'resume_link',
+            destination_host: host,
+            metadata: { language, variant },
+          })
+          closeMenu()
+        }}
       >
         {option.label}
       </a>
