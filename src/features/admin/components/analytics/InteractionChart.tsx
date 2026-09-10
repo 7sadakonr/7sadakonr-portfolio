@@ -160,7 +160,7 @@ const InteractionChart = ({
           <p role="status">Vercel visitor data is unavailable</p>
         )}
         {!isLoading && !isVisitorUnavailable && (
-          <ResponsiveContainer width="100%" height={340} minWidth={0}>
+          <ResponsiveContainer width="100%" height="100%" minWidth={0}>
             <AreaChart data={chartData} margin={{ top: 18, right: 16, left: -16, bottom: 4 }}>
               <defs>
                 <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
