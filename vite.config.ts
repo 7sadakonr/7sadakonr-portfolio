@@ -53,7 +53,8 @@ export default defineConfig(({ mode }) => {
         manualChunks: {
           // Separate vendor chunks for better caching
           vendor: ['react', 'react-dom', 'react-router-dom'],
-          animations: ['lenis']
+          animations: ['lenis'],
+          'admin-charts': ['recharts']
         }
       }
     },
