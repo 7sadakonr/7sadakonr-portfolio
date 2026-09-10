@@ -68,6 +68,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     const countUrl = `https://api.vercel.com/v1/query/web-analytics/visits/count?${baseParams.toString()}`
     const countPromise = fetch(countUrl, { headers }).then(async (r) => (r.ok ? r.json() : null)).catch(() => null)
 
+    // Fallback/parallel query to aggregate daily totals in case count returns different schema
+    const aggTotalsParams = new URLSearchParams(baseParams)
+    aggTotalsParams.set('granularity', 'day')
+    const aggTotalsUrl = `https://api.vercel.com/v1/query/web-analytics/visits/aggregate?${aggTotalsParams.toString()}`
+    const aggTotalsPromise = fetch(aggTotalsUrl, { headers }).then(async (r) => (r.ok ? r.json() : null)).catch(() => null)
+
     // 2. Fetch top referrers
     const referrersParams = new URLSearchParams(baseParams)
     referrersParams.set('by', 'referrer')
@@ -82,8 +88,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     const countriesUrl = `https://api.vercel.com/v1/query/web-analytics/visits/aggregate?${countriesParams.toString()}`
     const countriesPromise = fetch(countriesUrl, { headers }).then(async (r) => (r.ok ? r.json() : null)).catch(() => null)
 
-    const [countData, refDataRaw, countryDataRaw] = await Promise.all([
+    const [countData, aggTotalsRaw, refDataRaw, countryDataRaw] = await Promise.all([
       countPromise,
+      aggTotalsPromise,
       referrersPromise,
       countriesPromise,
     ])
@@ -91,10 +98,44 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     let totalPageviews = 0
     let totalVisitors = 0
 
-    if (countData && typeof countData === 'object') {
-      const c = countData as Record<string, unknown>
-      totalPageviews = typeof c.pageViews === 'number' ? c.pageViews : typeof c.total === 'number' ? c.total : typeof c.count === 'number' ? c.count : 0
-      totalVisitors = typeof c.visitors === 'number' ? c.visitors : typeof c.uniqueVisitors === 'number' ? c.uniqueVisitors : totalPageviews
+    const parseNum = (val: unknown): number => {
+      if (typeof val === 'number') return isNaN(val) ? 0 : val
+      if (typeof val === 'string') {
+        const p = parseFloat(val)
+        return isNaN(p) ? 0 : p
+      }
+      return 0
+    }
+
+    const extractMetricsFromObj = (obj: unknown): { pv: number; v: number } => {
+      if (!obj || typeof obj !== 'object') return { pv: 0, v: 0 }
+      const rec = obj as Record<string, unknown>
+      const inner = rec.data && typeof rec.data === 'object' && !Array.isArray(rec.data)
+        ? (rec.data as Record<string, unknown>)
+        : rec
+
+      const pv = parseNum(inner.pageviews ?? inner.pageViews ?? inner.total ?? inner.count ?? inner.value)
+      const v = parseNum(inner.visitors ?? inner.uniqueVisitors ?? inner.unique_visitors)
+      return { pv, v: v > 0 ? v : pv }
+    }
+
+    const countMetrics = extractMetricsFromObj(countData)
+    totalPageviews = countMetrics.pv
+    totalVisitors = countMetrics.v
+
+    // If count returned 0 or null, sum from aggregate breakdown
+    if (totalPageviews === 0 && aggTotalsRaw && typeof aggTotalsRaw === 'object') {
+      const rows: unknown[] = Array.isArray(aggTotalsRaw)
+        ? (aggTotalsRaw as unknown[])
+        : Array.isArray((aggTotalsRaw as Record<string, unknown>).data)
+          ? ((aggTotalsRaw as Record<string, unknown>).data as unknown[])
+          : []
+
+      for (const row of rows) {
+        const m = extractMetricsFromObj(row)
+        totalPageviews += m.pv
+        totalVisitors += m.v
+      }
     }
 
     // Process referrers
