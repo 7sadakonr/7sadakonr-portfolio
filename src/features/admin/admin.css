@@ -67,14 +67,45 @@
 .analytics-page { width: min(1280px, calc(100% - 48px)); margin: 0 auto; padding: 28px 0 64px; }
 
 /* Vercel Overview Callout Banner */
-.analytics-vercel-banner { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 20px; background: #17201d; color: #fff; border-radius: 14px; margin-bottom: 24px; box-shadow: 0 4px 16px rgba(23, 32, 29, 0.12); flex-wrap: wrap; }
+/* Vercel Web Analytics Bridge */
+.analytics-vercel-banner { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 20px; background: #17201d; color: #fff; border-radius: 14px; margin-bottom: 24px; box-shadow: 0 4px 16px rgba(23, 32, 29, 0.12); flex-wrap: wrap; }
 .analytics-vercel-left { display: flex; align-items: center; gap: 14px; }
-.analytics-vercel-triangle { font-size: 16px; color: #fff; line-height: 1; }
-.analytics-vercel-copy { display: grid; gap: 2px; font-size: 13px; }
+.analytics-vercel-triangle { font-size: 18px; color: #fff; line-height: 1; }
+.analytics-vercel-copy { display: grid; gap: 3px; font-size: 13px; }
+.analytics-vercel-banner-title { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .analytics-vercel-copy strong { font-size: 13px; color: #4ade80; font-weight: 800; letter-spacing: 0.02em; }
-.analytics-vercel-copy span { color: #cbd3ca; font-size: 12px; }
+.analytics-badge-optional { font-size: 10px; font-weight: 800; background: rgba(255, 255, 255, 0.15); color: #cbd3ca; padding: 2px 7px; border-radius: 5px; text-transform: uppercase; }
+.analytics-vercel-copy span { color: #cbd3ca; font-size: 12px; line-height: 1.4; }
+.analytics-vercel-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.analytics-vercel-toggle-btn { background: rgba(255, 255, 255, 0.12); color: #fff; border: 1px solid rgba(255, 255, 255, 0.2); padding: 8px 14px; border-radius: 8px; font: 700 12px/1 "Outfit", sans-serif; cursor: pointer; transition: all 0.15s ease; }
+.analytics-vercel-toggle-btn:hover { background: rgba(255, 255, 255, 0.2); }
 .analytics-vercel-btn { background: #fff; color: #17201d; padding: 8px 14px; border-radius: 8px; font: 800 12px/1 "Outfit", sans-serif; text-decoration: none; white-space: nowrap; transition: all 0.15s ease; }
 .analytics-vercel-btn:hover { background: #e7f1ea; transform: translateY(-1px); }
+
+.analytics-vercel-setup-card { width: 100%; margin-top: 14px; padding: 16px 18px; background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 10px; font-size: 13px; }
+.analytics-setup-title { margin: 0 0 10px; color: #4ade80; font-size: 13px; font-weight: 800; }
+.analytics-setup-list { margin: 0; padding-left: 20px; display: grid; gap: 8px; color: #e2e8e3; line-height: 1.45; }
+.analytics-setup-list a { color: #6ee7b7; font-weight: 700; text-decoration: underline; }
+.analytics-setup-env-box { margin: 6px 0; padding: 8px 12px; background: #0f1412; border: 1px solid #283630; border-radius: 6px; font-family: monospace; font-size: 12px; color: #4ade80; line-height: 1.6; }
+
+/* Connected Panel */
+.analytics-vercel-connected-panel { background: #17201d; color: #fff; border-radius: 14px; padding: 18px 20px; margin-bottom: 24px; box-shadow: 0 4px 16px rgba(23, 32, 29, 0.12); display: grid; gap: 16px; }
+.analytics-vercel-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.analytics-vercel-identity { display: flex; align-items: flex-start; gap: 14px; }
+.analytics-vercel-header-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 2px; }
+.analytics-badge-synced { font-size: 10px; font-weight: 800; background: rgba(74, 222, 128, 0.2); color: #4ade80; padding: 2px 7px; border-radius: 5px; text-transform: uppercase; letter-spacing: 0.04em; }
+.analytics-vercel-sub { font-size: 12px; color: #a3b2a7; }
+.analytics-vercel-metrics-grid { display: grid; grid-template-columns: 180px 180px 1fr; gap: 12px; }
+@media (max-width: 900px) { .analytics-vercel-metrics-grid { grid-template-columns: 1fr 1fr; } .analytics-vercel-metric-card--wide { grid-column: 1 / -1; } }
+@media (max-width: 540px) { .analytics-vercel-metrics-grid { grid-template-columns: 1fr; } }
+.analytics-vercel-metric-card { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px; padding: 12px 14px; display: grid; gap: 2px; }
+.analytics-vercel-metric-label { font-size: 11px; font-weight: 700; color: #a3b2a7; text-transform: uppercase; letter-spacing: 0.03em; }
+.analytics-vercel-metric-val { font-size: 22px; font-weight: 800; color: #fff; letter-spacing: -0.02em; }
+.analytics-vercel-metric-hint { font-size: 11px; color: #7f9185; }
+.analytics-vercel-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.analytics-vercel-pill { font-size: 11px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.15); padding: 3px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 6px; }
+.analytics-vercel-pill strong { color: #fff; }
+.analytics-vercel-pill small { color: #4ade80; font-weight: 800; }
 
 /* Header & Controls */
 .analytics-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; margin-bottom: 28px; flex-wrap: wrap; }

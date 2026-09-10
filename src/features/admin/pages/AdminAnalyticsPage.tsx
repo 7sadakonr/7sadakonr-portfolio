@@ -7,6 +7,7 @@ import ProjectPerformanceTable from '../components/analytics/ProjectPerformanceT
 import TopInteractions from '../components/analytics/TopInteractions'
 import ConversionFunnel from '../components/analytics/ConversionFunnel'
 import RecentSessions from '../components/analytics/RecentSessions'
+import VercelTrafficBridge from '../components/analytics/VercelTrafficBridge'
 
 const AdminAnalyticsPage = () => {
   const {
@@ -29,26 +30,8 @@ const AdminAnalyticsPage = () => {
 
   return (
     <div className="admin-page analytics-page">
-      {/* Vercel Web Analytics Banner */}
-      <div className="analytics-vercel-banner">
-        <div className="analytics-vercel-left">
-          <span className="analytics-vercel-triangle" aria-hidden="true">
-            ▲
-          </span>
-          <div className="analytics-vercel-copy">
-            <strong>Vercel Web Analytics Active</strong>
-            <span>Global traffic, pageviews, top referrers, and country distributions are hosted on Vercel.</span>
-          </div>
-        </div>
-        <a
-          href="https://vercel.com"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="analytics-vercel-btn"
-        >
-          View Traffic in Vercel ↗
-        </a>
-      </div>
+      {/* Vercel Web Analytics Bridge */}
+      <VercelTrafficBridge days={days} />
 
       {/* Page Header */}
       <header className="analytics-header">
