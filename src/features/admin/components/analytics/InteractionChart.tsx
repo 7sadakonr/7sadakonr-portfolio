@@ -14,6 +14,7 @@ interface InteractionChartProps {
   metric: TimeSeriesMetric
   onMetricChange: (metric: TimeSeriesMetric) => void
   isLoading: boolean
+  metricTotal?: number
 }
 
 const METRIC_CONFIG: Record<TimeSeriesMetric, { label: string; color: string; fillGradient: string }> = {
@@ -58,6 +59,7 @@ const InteractionChart = ({
   metric,
   onMetricChange,
   isLoading,
+  metricTotal,
 }: InteractionChartProps) => {
   const chartData = data.map((d) => ({
     date: formatDate(d.date),
@@ -66,6 +68,7 @@ const InteractionChart = ({
   }))
 
   const totalCount = chartData.reduce((sum, pt) => sum + pt.count, 0)
+  const displayedTotal = typeof metricTotal === 'number' ? metricTotal : totalCount
   const activeConfig = METRIC_CONFIG[metric]
 
   return (
@@ -76,7 +79,7 @@ const InteractionChart = ({
             <h2 className="analytics-section-title">Activity Timeline</h2>
             {!isLoading && (
               <span className="analytics-chart-total-pill" style={{ borderColor: activeConfig.color, color: activeConfig.color }}>
-                {totalCount.toLocaleString()} {activeConfig.label}
+                {displayedTotal.toLocaleString()} {activeConfig.label}
               </span>
             )}
           </div>

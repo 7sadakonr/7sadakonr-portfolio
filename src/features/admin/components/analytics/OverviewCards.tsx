@@ -1,9 +1,11 @@
-import type { AnalyticsOverviewData, DateRangeDays } from '../../hooks/useAnalytics'
+import type { AnalyticsOverviewData, DateRangeDays, TimeSeriesMetric } from '../../hooks/useAnalytics'
 
 interface OverviewCardsProps {
   data: AnalyticsOverviewData | null
   days: DateRangeDays
   isLoading: boolean
+  activeMetric?: TimeSeriesMetric
+  onSelectMetric?: (metric: TimeSeriesMetric) => void
 }
 
 interface GrowthInfo {
@@ -30,20 +32,37 @@ function calculateGrowth(current: number, previous: number): GrowthInfo {
   return { rateText: '0.0%', direction: 'neutral', symbol: '–' }
 }
 
-const OverviewCards = ({ data, days, isLoading }: OverviewCardsProps) => {
+const OverviewCards = ({
+  data,
+  days,
+  isLoading,
+  activeMetric,
+  onSelectMetric,
+}: OverviewCardsProps) => {
   const visitorsGrowth = calculateGrowth(data?.visitors ?? 0, data?.visitors_prev ?? 0)
   const todayGrowth = calculateGrowth(data?.visitors_today ?? 0, data?.visitors_yesterday ?? 0)
   const interactionsGrowth = calculateGrowth(data?.interactions ?? 0, data?.interactions_prev ?? 0)
 
-  const primaryCards = [
+  const primaryCards: Array<{
+    title: string
+    value: number
+    description: string
+    badge: string
+    growth: GrowthInfo | null
+    growthLabel: string | null
+    accent: string
+    metric?: TimeSeriesMetric
+    icon: React.ReactNode
+  }> = [
     {
       title: 'Total Visitors',
       value: data?.visitors ?? 0,
-      description: `Unique visitors across last ${days} days`,
+      description: days === 1 ? 'Unique visitors across last 24 hours' : `Unique visitors across last ${days} days`,
       badge: 'Audience',
       growth: visitorsGrowth,
-      growthLabel: `vs prev ${days}d`,
+      growthLabel: days === 1 ? 'vs prev 24h' : `vs prev ${days}d`,
       accent: 'emerald',
+      metric: 'visitors',
       icon: (
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
@@ -61,6 +80,7 @@ const OverviewCards = ({ data, days, isLoading }: OverviewCardsProps) => {
       growth: todayGrowth,
       growthLabel: 'vs yesterday',
       accent: 'blue',
+      metric: 'visitors',
       icon: (
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <circle cx="12" cy="12" r="10" />
@@ -71,11 +91,12 @@ const OverviewCards = ({ data, days, isLoading }: OverviewCardsProps) => {
     {
       title: 'Total Interactions',
       value: data?.interactions ?? 0,
-      description: 'Clicks, scrolls, navigation & opens',
+      description: 'Clicks, project views, downloads & links',
       badge: 'Engagement',
       growth: interactionsGrowth,
-      growthLabel: `vs prev ${days}d`,
+      growthLabel: days === 1 ? 'vs prev 24h' : `vs prev ${days}d`,
       accent: 'purple',
+      metric: 'interactions',
       icon: (
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
@@ -90,6 +111,7 @@ const OverviewCards = ({ data, days, isLoading }: OverviewCardsProps) => {
       growth: null,
       growthLabel: null,
       accent: 'amber',
+      metric: 'resume_downloads',
       icon: (
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
@@ -100,11 +122,18 @@ const OverviewCards = ({ data, days, isLoading }: OverviewCardsProps) => {
     },
   ]
 
-  const secondaryCards = [
+  const secondaryCards: Array<{
+    title: string
+    value: string | number
+    description: string
+    metric?: TimeSeriesMetric
+    icon: React.ReactNode
+  }> = [
     {
       title: 'Project Opens',
       value: data?.project_opens ?? 0,
       description: 'Project cards & details viewed',
+      metric: 'project_opens',
       icon: (
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
@@ -115,6 +144,7 @@ const OverviewCards = ({ data, days, isLoading }: OverviewCardsProps) => {
       title: 'External Outbound Clicks',
       value: data?.external_clicks ?? 0,
       description: 'GitHub, Live Demo & social links clicked',
+      metric: 'external_clicks',
       icon: (
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
@@ -153,48 +183,93 @@ const OverviewCards = ({ data, days, isLoading }: OverviewCardsProps) => {
     <div className="analytics-kpi-container">
       {/* 4 Primary Cards */}
       <div className="analytics-overview-grid">
-        {primaryCards.map((card) => (
-          <div key={card.title} className={`analytics-kpi-card analytics-kpi-card--${card.accent}`}>
-            <div className="analytics-kpi-top">
-              <span className="analytics-kpi-icon">{card.icon}</span>
-              <span className="analytics-kpi-badge">{card.badge}</span>
-            </div>
-            <div className="analytics-kpi-body">
-              <span className="analytics-kpi-title">{card.title}</span>
-              <div className="analytics-kpi-number-row">
-                <span className="analytics-kpi-number">
-                  {isLoading ? (
-                    <span className="analytics-kpi-skeleton">--</span>
-                  ) : typeof card.value === 'number' ? (
-                    isNaN(card.value) ? '0' : card.value.toLocaleString()
-                  ) : (
-                    card.value || '0'
-                  )}
-                </span>
-                {!isLoading && card.growth && (
-                  <span className={`analytics-growth-badge ${card.growth.direction}`}>
-                    {card.growth.symbol} {card.growth.rateText}
+        {primaryCards.map((card) => {
+          const isInteractive = Boolean(card.metric && onSelectMetric)
+          const isActive = Boolean(card.metric && activeMetric === card.metric)
+          return (
+            <div
+              key={card.title}
+              className={`analytics-kpi-card analytics-kpi-card--${card.accent} ${isInteractive ? 'analytics-kpi-card--interactive' : ''} ${isActive ? 'is-active' : ''}`}
+              onClick={isInteractive ? () => onSelectMetric!(card.metric!) : undefined}
+              role={isInteractive ? 'button' : undefined}
+              tabIndex={isInteractive ? 0 : undefined}
+              onKeyDown={
+                isInteractive
+                  ? (e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault()
+                        onSelectMetric!(card.metric!)
+                      }
+                    }
+                  : undefined
+              }
+              title={isInteractive ? `Click to switch timeline graph to ${card.title}` : undefined}
+            >
+              <div className="analytics-kpi-top">
+                <span className="analytics-kpi-icon">{card.icon}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  {isActive && <span className="analytics-kpi-active-tag">Active</span>}
+                  <span className="analytics-kpi-badge">{card.badge}</span>
+                </div>
+              </div>
+              <div className="analytics-kpi-body">
+                <span className="analytics-kpi-title">{card.title}</span>
+                <div className="analytics-kpi-number-row">
+                  <span className="analytics-kpi-number">
+                    {isLoading ? (
+                      <span className="analytics-kpi-skeleton">--</span>
+                    ) : typeof card.value === 'number' ? (
+                      isNaN(card.value) ? '0' : card.value.toLocaleString()
+                    ) : (
+                      card.value || '0'
+                    )}
                   </span>
-                )}
-              </div>
-              <div className="analytics-kpi-footer-row">
-                <p className="analytics-kpi-desc">{card.description}</p>
-                {!isLoading && card.growthLabel && (
-                  <small className="analytics-growth-label">{card.growthLabel}</small>
-                )}
+                  {!isLoading && card.growth && (
+                    <span className={`analytics-growth-badge ${card.growth.direction}`}>
+                      {card.growth.symbol} {card.growth.rateText}
+                    </span>
+                  )}
+                </div>
+                <div className="analytics-kpi-footer-row">
+                  <p className="analytics-kpi-desc">{card.description}</p>
+                  {!isLoading && card.growthLabel && (
+                    <small className="analytics-growth-label">{card.growthLabel}</small>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
 
       {/* 4 Supporting Metric Tiles */}
       <div className="analytics-kpi-secondary-grid">
-        {secondaryCards.map((sec) => (
-          <div key={sec.title} className="analytics-subtile">
+        {secondaryCards.map((sec) => {
+          const isInteractive = Boolean(sec.metric && onSelectMetric)
+          const isActive = Boolean(sec.metric && activeMetric === sec.metric)
+          return (
+            <div
+              key={sec.title}
+              className={`analytics-subtile ${isInteractive ? 'analytics-subtile--interactive' : ''} ${isActive ? 'is-active' : ''}`}
+              onClick={isInteractive ? () => onSelectMetric!(sec.metric!) : undefined}
+              role={isInteractive ? 'button' : undefined}
+              tabIndex={isInteractive ? 0 : undefined}
+              onKeyDown={
+                isInteractive
+                  ? (e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault()
+                      onSelectMetric!(sec.metric!)
+                    }
+                  }
+                : undefined
+            }
+            title={isInteractive ? `Click to switch timeline graph to ${sec.title}` : undefined}
+          >
             <div className="analytics-subtile-head">
               <span className="analytics-subtile-icon">{sec.icon}</span>
               <span className="analytics-subtile-title">{sec.title}</span>
+              {isActive && <span className="analytics-subtile-active-tag">Active</span>}
             </div>
             <div className="analytics-subtile-val">
               {isLoading ? (
@@ -207,7 +282,8 @@ const OverviewCards = ({ data, days, isLoading }: OverviewCardsProps) => {
             </div>
             <small className="analytics-subtile-desc">{sec.description}</small>
           </div>
-        ))}
+        )
+      })}
       </div>
     </div>
   )
