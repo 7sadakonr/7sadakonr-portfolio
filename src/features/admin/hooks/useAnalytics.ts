@@ -301,7 +301,7 @@ export function useAnalytics() {
       setIsVercelSynced(vercelVisitorDataAvailable)
 
       // 1. Overview cards: Vercel is the sole source for visitor metrics.
-      let mergedOverview: AnalyticsOverviewData = {
+      const mergedOverview: AnalyticsOverviewData = {
         visitors: vercelVisitors,
         visitors_prev: 0,
         visitors_today: vercelVisitorsByDate.get(todayIso) ?? 0,
