@@ -94,7 +94,7 @@ const InteractionChart = ({
         <div>
           <div className="analytics-chart-title-row">
             <h2 className="analytics-section-title">Activity Timeline</h2>
-            {!isLoading && (
+            {!isLoading && !isVisitorUnavailable && (
               <span className="analytics-chart-total-pill" style={{ borderColor: activeConfig.color, color: activeConfig.color }}>
                 {displayedTotal.toLocaleString()} {totalLabel}
               </span>
