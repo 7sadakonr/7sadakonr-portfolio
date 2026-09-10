@@ -508,5 +508,116 @@
   word-break: break-word;
 }
 
+/* Live Pulse & Real-time Indicator */
+.analytics-live-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  font-size: 11px;
+  font-weight: 700;
+  color: #065f46;
+  user-select: none;
+}
 
+.analytics-live-pulse-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #10b981;
+  position: relative;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  animation: livePulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
 
+@keyframes livePulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    transform: scale(0.95);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+    transform: scale(1);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+    transform: scale(0.95);
+  }
+}
+
+.analytics-kpi-badge-live-content {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.analytics-active-now-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+  vertical-align: middle;
+}
+
+/* Vercel-style Deep Traffic Insights Banner */
+.analytics-insights-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding: 10px 14px;
+  background: #f8faf8;
+  border: 1px solid #e2e7df;
+  border-radius: 12px;
+  flex-wrap: wrap;
+}
+
+.analytics-insight-pill {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 14px;
+  background: #fff;
+  border: 1px solid #e5eae3;
+  border-radius: 10px;
+  flex: 1;
+  min-width: 150px;
+  box-shadow: 0 1px 3px rgba(23, 32, 29, 0.03);
+}
+
+.analytics-insight-label {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #526058;
+}
+
+.analytics-insight-content {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.analytics-insight-val {
+  font-size: 14px;
+  font-weight: 800;
+  color: #17201d;
+}
+
+.analytics-insight-sub {
+  font-size: 11px;
+  font-weight: 600;
+  color: #69746e;
+}

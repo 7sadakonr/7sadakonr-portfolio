@@ -47,7 +47,7 @@ const OverviewCards = ({
     title: string
     value: number
     description: string
-    badge: string
+    badge: React.ReactNode
     growth: GrowthInfo | null
     growthLabel: string | null
     accent: string
@@ -75,8 +75,15 @@ const OverviewCards = ({
     {
       title: 'Visitors Today',
       value: data?.visitors_today ?? 0,
-      description: 'Active visitors since midnight (today)',
-      badge: 'Live',
+      description: data && data.active_now > 0
+        ? `${data.active_now} active online (last 5 min)`
+        : 'Active visitors since midnight (today)',
+      badge: (
+        <span className="analytics-kpi-badge-live-content">
+          <span className="analytics-live-pulse-dot" />
+          {data && data.active_now > 0 ? `${data.active_now} Online` : 'Live'}
+        </span>
+      ),
       growth: todayGrowth,
       growthLabel: 'vs yesterday',
       accent: 'blue',
@@ -224,6 +231,12 @@ const OverviewCards = ({
                       card.value || '0'
                     )}
                   </span>
+                  {card.title === 'Visitors Today' && !isLoading && (data?.active_now ?? 0) > 0 && (
+                    <span className="analytics-active-now-tag" title="Visitors currently browsing in the last 5 minutes">
+                      <span className="analytics-live-pulse-dot" />
+                      {data?.active_now} online
+                    </span>
+                  )}
                   {!isLoading && card.growth && (
                     <span className={`analytics-growth-badge ${card.growth.direction}`}>
                       {card.growth.symbol} {card.growth.rateText}
