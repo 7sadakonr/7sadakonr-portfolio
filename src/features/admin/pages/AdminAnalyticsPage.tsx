@@ -100,7 +100,7 @@ const AdminAnalyticsPage = () => {
 
       {/* 1. Key Performance Cards */}
       <section className="analytics-block" aria-label="Key behavioral metrics">
-        <OverviewCards data={overview} isLoading={isLoading} />
+        <OverviewCards data={overview} days={days} isLoading={isLoading} />
       </section>
 
       {/* 2. Interactive Activity Chart */}

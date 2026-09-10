@@ -103,14 +103,39 @@ set search_path = ''
 as $$
 declare
   v_result json;
+  v_period_length interval;
+  v_prev_from timestamptz;
+  v_prev_to timestamptz;
+  v_today_start timestamptz;
+  v_yesterday_start timestamptz;
 begin
   if not exists (select 1 from public.portfolio_admins where user_id = (select auth.uid())) then
     raise exception 'Admin access required';
   end if;
 
+  v_period_length := p_to - p_from;
+  v_prev_to := p_from;
+  v_prev_from := p_from - v_period_length;
+  v_today_start := date_trunc('day', now());
+  v_yesterday_start := v_today_start - interval '1 day';
+
   select json_build_object(
+    'visitors', (select count(distinct visitor_id) from public.analytics_sessions
+                 where started_at between p_from and p_to),
+    'visitors_prev', (select count(distinct visitor_id) from public.analytics_sessions
+                      where started_at between v_prev_from and v_prev_to),
+    'visitors_today', (select count(distinct visitor_id) from public.analytics_sessions
+                       where started_at >= v_today_start),
+    'visitors_yesterday', (select count(distinct visitor_id) from public.analytics_sessions
+                          where started_at >= v_yesterday_start and started_at < v_today_start),
     'interactions', (select count(*) from public.analytics_events
                      where created_at between p_from and p_to),
+    'interactions_prev', (select count(*) from public.analytics_events
+                          where created_at between v_prev_from and v_prev_to),
+    'interactions_today', (select count(*) from public.analytics_events
+                           where created_at >= v_today_start),
+    'interactions_yesterday', (select count(*) from public.analytics_events
+                               where created_at >= v_yesterday_start and created_at < v_today_start),
     'project_opens', (select count(*) from public.analytics_events
                       where event_name = 'project_open'
                       and created_at between p_from and p_to),
@@ -144,7 +169,7 @@ $$;
 create or replace function public.analytics_timeseries(
   p_from timestamptz default now() - interval '30 days',
   p_to   timestamptz default now(),
-  p_metric text default 'interactions'
+  p_metric text default 'visitors'
 )
 returns json
 language plpgsql stable
@@ -164,6 +189,10 @@ begin
     select
       day::date as date,
       case p_metric
+        when 'visitors' then
+          (select count(distinct visitor_id) from public.analytics_sessions
+           where started_at::date = day::date
+           and started_at between p_from and p_to)
         when 'project_opens' then
           (select count(*) from public.analytics_events
            where event_name = 'project_open'
