@@ -11,6 +11,7 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? env.VITE_SUPABASE_URL ?? env.SUPABASE_URL ?? ''
   const supabasePublishableKey = process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_PUBLISHABLE_KEY ?? env.VITE_SUPABASE_PUBLISHABLE_KEY ?? env.SUPABASE_PUBLISHABLE_KEY ?? ''
+  const projectsDataMode = process.env.VITE_PROJECTS_DATA_MODE ?? process.env.PROJECTS_DATA_MODE ?? env.VITE_PROJECTS_DATA_MODE ?? env.PROJECTS_DATA_MODE ?? ''
 
   return {
   define: {
@@ -18,6 +19,7 @@ export default defineConfig(({ mode }) => {
     // same client-safe values as SUPABASE_URL / SUPABASE_PUBLISHABLE_KEY.
     'import.meta.env.VITE_SUPABASE_URL': JSON.stringify(supabaseUrl),
     'import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY': JSON.stringify(supabasePublishableKey),
+    'import.meta.env.VITE_PROJECTS_DATA_MODE': JSON.stringify(projectsDataMode),
   },
   plugins: [react(), tailwindcss()],
   resolve: {
