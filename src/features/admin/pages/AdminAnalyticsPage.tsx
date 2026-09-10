@@ -26,6 +26,7 @@ const AdminAnalyticsPage = () => {
     funnel,
     recentSessions,
     isVercelSynced,
+    isVisitorDataAvailable,
     refetch,
     fetchSessionDetail,
   } = useAnalytics()
@@ -108,6 +109,7 @@ const AdminAnalyticsPage = () => {
           data={overview}
           days={days}
           isLoading={isLoading}
+          isVisitorDataAvailable={isVisitorDataAvailable}
           activeMetric={metric}
           onSelectMetric={setMetric}
         />
@@ -120,6 +122,7 @@ const AdminAnalyticsPage = () => {
           metric={metric}
           onMetricChange={setMetric}
           isLoading={isLoading}
+          isVisitorDataAvailable={isVisitorDataAvailable}
           metricTotal={metricTotal}
           days={days}
           insights={trafficInsights}

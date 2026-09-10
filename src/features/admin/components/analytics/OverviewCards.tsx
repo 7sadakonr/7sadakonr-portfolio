@@ -4,6 +4,7 @@ interface OverviewCardsProps {
   data: AnalyticsOverviewData | null
   days: DateRangeDays
   isLoading: boolean
+  isVisitorDataAvailable: boolean
   activeMetric?: TimeSeriesMetric
   onSelectMetric?: (metric: TimeSeriesMetric) => void
 }
@@ -36,16 +37,21 @@ const OverviewCards = ({
   data,
   days,
   isLoading,
+  isVisitorDataAvailable,
   activeMetric,
   onSelectMetric,
 }: OverviewCardsProps) => {
-  const visitorsGrowth = calculateGrowth(data?.visitors ?? 0, data?.visitors_prev ?? 0)
-  const todayGrowth = calculateGrowth(data?.visitors_today ?? 0, data?.visitors_yesterday ?? 0)
+  const visitorsGrowth = isVisitorDataAvailable && data?.visitors_prev != null
+    ? calculateGrowth(data.visitors, data.visitors_prev) : null
+  const todayAvailable = isVisitorDataAvailable && data?.visitors_today != null
+  // A rolling 24-hour query contains only part of yesterday.
+  const todayGrowth = days !== 1 && todayAvailable && data?.visitors_yesterday != null
+    ? calculateGrowth(data.visitors_today!, data.visitors_yesterday) : null
   const interactionsGrowth = calculateGrowth(data?.interactions ?? 0, data?.interactions_prev ?? 0)
 
   const primaryCards: Array<{
     title: string
-    value: number
+    value: number | string
     description: string
     badge: React.ReactNode
     growth: GrowthInfo | null
@@ -56,11 +62,11 @@ const OverviewCards = ({
   }> = [
     {
       title: 'Total Visitors',
-      value: data?.visitors ?? 0,
+      value: isVisitorDataAvailable ? data?.visitors ?? 0 : 'Unavailable',
       description: days === 1 ? 'Unique visitors across last 24 hours' : `Unique visitors across last ${days} days`,
-      badge: 'Audience',
+      badge: isVisitorDataAvailable ? 'Audience' : 'Unavailable',
       growth: visitorsGrowth,
-      growthLabel: days === 1 ? 'vs prev 24h' : `vs prev ${days}d`,
+      growthLabel: visitorsGrowth ? (days === 1 ? 'vs prev 24h' : `vs prev ${days}d`) : null,
       accent: 'emerald',
       metric: 'visitors',
       icon: (
@@ -74,18 +80,18 @@ const OverviewCards = ({
     },
     {
       title: 'Visitors Today',
-      value: data?.visitors_today ?? 0,
-      description: data && data.active_now > 0
+      value: todayAvailable ? data!.visitors_today! : 'Unavailable',
+      description: todayAvailable && data && data.active_now > 0
         ? `${data.active_now} active online (last 5 min)`
-        : 'Active visitors since midnight (today)',
-      badge: (
+        : 'Visitors since midnight (UTC)',
+      badge: todayAvailable ? (
         <span className="analytics-kpi-badge-live-content">
           <span className="analytics-live-pulse-dot" />
           {data && data.active_now > 0 ? `${data.active_now} Online` : 'Live'}
         </span>
-      ),
+      ) : 'Unavailable',
       growth: todayGrowth,
-      growthLabel: 'vs yesterday',
+      growthLabel: todayGrowth ? 'vs yesterday' : null,
       accent: 'blue',
       metric: 'visitors',
       icon: (
@@ -231,7 +237,7 @@ const OverviewCards = ({
                       card.value || '0'
                     )}
                   </span>
-                  {card.title === 'Visitors Today' && !isLoading && (data?.active_now ?? 0) > 0 && (
+                  {card.title === 'Visitors Today' && todayAvailable && !isLoading && (data?.active_now ?? 0) > 0 && (
                     <span className="analytics-active-now-tag" title="Visitors currently browsing in the last 5 minutes">
                       <span className="analytics-live-pulse-dot" />
                       {data?.active_now} online
