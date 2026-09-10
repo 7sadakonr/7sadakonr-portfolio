@@ -93,6 +93,19 @@ const InteractionChart = ({
           </p>
         </div>
 
+        <label className="analytics-metric-select-label">
+          <span className="admin-visually-hidden">Chart metric</span>
+          <select
+            className="analytics-metric-select"
+            aria-label="Chart metric"
+            value={metric}
+            onChange={(event) => onMetricChange(event.target.value as TimeSeriesMetric)}
+          >
+            {(Object.keys(METRIC_CONFIG) as TimeSeriesMetric[]).map((key) => (
+              <option key={key} value={key}>{METRIC_CONFIG[key].label}</option>
+            ))}
+          </select>
+        </label>
         <div className="analytics-metric-segmented" role="group" aria-label="Chart metric">
           {(Object.keys(METRIC_CONFIG) as TimeSeriesMetric[]).map((key) => {
             const cfg = METRIC_CONFIG[key]
