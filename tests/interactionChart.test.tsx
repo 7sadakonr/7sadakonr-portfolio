@@ -18,5 +18,6 @@ describe('InteractionChart', () => {
     render(<InteractionChart metric="visitors" data={[]} isLoading={false} isVisitorDataAvailable={false} />)
 
     expect(screen.getByText(/Vercel visitor data is unavailable/i)).toBeInTheDocument()
+    expect(screen.queryByText('0 Vercel Visitors')).toBeNull()
   })
 })
