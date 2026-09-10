@@ -188,20 +188,43 @@ export function useAnalytics() {
       if (funnelRes.error) throw funnelRes.error
       if (recentRes.error) throw recentRes.error
 
-      const rawOverview = (overviewRes.data as AnalyticsOverviewData) || {
-        visitors: 0,
-        visitors_prev: 0,
-        visitors_today: 0,
-        visitors_yesterday: 0,
-        interactions: 0,
-        interactions_prev: 0,
-        interactions_today: 0,
-        interactions_yesterday: 0,
-        project_opens: 0,
-        external_clicks: 0,
-        resume_downloads: 0,
-        sessions: 0,
-        avg_session_events: 0,
+      const rawData = (overviewRes.data && typeof overviewRes.data === 'object' ? overviewRes.data : {}) as Record<string, unknown>
+
+      const toSafeNum = (val: unknown, fallback = 0): number => {
+        if (typeof val === 'number') return isNaN(val) || !isFinite(val) ? fallback : val
+        if (typeof val === 'string') {
+          const p = parseFloat(val)
+          return isNaN(p) || !isFinite(p) ? fallback : p
+        }
+        return fallback
+      }
+
+      const rawVisitors = toSafeNum(rawData.visitors, 0)
+      const rawVisitorsPrev = toSafeNum(rawData.visitors_prev, 0)
+      const rawVisitorsToday = toSafeNum(rawData.visitors_today, 0)
+      const rawVisitorsYesterday = toSafeNum(rawData.visitors_yesterday, 0)
+      const rawInteractions = toSafeNum(rawData.interactions, 0)
+      const rawInteractionsPrev = toSafeNum(rawData.interactions_prev, 0)
+      const rawInteractionsToday = toSafeNum(rawData.interactions_today, 0)
+      const rawInteractionsYesterday = toSafeNum(rawData.interactions_yesterday, 0)
+      const rawProjectOpens = toSafeNum(rawData.project_opens, 0)
+      const rawExternalClicks = toSafeNum(rawData.external_clicks, 0)
+      const rawResumeDownloads = toSafeNum(rawData.resume_downloads, 0)
+      const rawSessions = toSafeNum(rawData.sessions, 0)
+      const rawAvgEvents = toSafeNum(rawData.avg_session_events, 0)
+
+      // Fallback derivation if visitors were missing from old Supabase RPC:
+      let effectiveVisitors = rawVisitors
+      if (effectiveVisitors === 0 && rawSessions > 0) {
+        effectiveVisitors = rawSessions
+      }
+      if (effectiveVisitors === 0 && Array.isArray(recentRes.data) && recentRes.data.length > 0) {
+        effectiveVisitors = new Set(recentRes.data.map((s: { visitor_short?: string; session_id?: string }) => s.visitor_short || s.session_id)).size
+      }
+
+      let effectiveToday = rawVisitorsToday
+      if (effectiveToday === 0 && rawInteractionsToday > 0) {
+        effectiveToday = Math.min(rawInteractionsToday, Math.max(1, effectiveVisitors))
       }
 
       interface VercelPayload {
@@ -213,30 +236,48 @@ export function useAnalytics() {
       }
 
       const vercelTraffic = vercelData && (vercelData as VercelPayload).configured ? (vercelData as VercelPayload) : null
-      setIsVercelSynced(!!vercelTraffic)
+      setIsVercelSynced(!!vercelTraffic && (toSafeNum(vercelTraffic.totalVisitors) > 0 || toSafeNum(vercelTraffic.totalPageviews) > 0))
 
       // 1. Unified Overview Cards: Merge Vercel macro audience into Supabase behavioral metrics
-      let mergedOverview = { ...rawOverview }
+      let mergedOverview: AnalyticsOverviewData = {
+        visitors: effectiveVisitors,
+        visitors_prev: rawVisitorsPrev,
+        visitors_today: effectiveToday,
+        visitors_yesterday: rawVisitorsYesterday,
+        interactions: rawInteractions,
+        interactions_prev: rawInteractionsPrev,
+        interactions_today: rawInteractionsToday,
+        interactions_yesterday: rawInteractionsYesterday,
+        project_opens: rawProjectOpens,
+        external_clicks: rawExternalClicks,
+        resume_downloads: rawResumeDownloads,
+        sessions: Math.max(rawSessions, effectiveVisitors),
+        avg_session_events: rawAvgEvents,
+      }
+
       if (vercelTraffic) {
-        const vVisitors = Number(vercelTraffic.totalVisitors) || 0
-        const vPageviews = Number(vercelTraffic.totalPageviews) || 0
+        const vVisitors = toSafeNum(vercelTraffic.totalVisitors, 0)
+        const vPageviews = toSafeNum(vercelTraffic.totalPageviews, 0)
 
         // Total Visitors: take the maximum of Supabase unique visitor count and Vercel total visitors
-        const unifiedVisitors = Math.max(rawOverview.visitors, vVisitors)
+        const unifiedVisitors = Math.max(effectiveVisitors, vVisitors)
 
         // Visitors Today: if Vercel has today's count, merge with Supabase
         const todayIso = new Date().toISOString().slice(0, 10)
-        const vToday = vercelTraffic.dailyTimeSeries?.find((d) => d.date === todayIso)?.visitors || 0
-        const unifiedToday = Math.max(rawOverview.visitors_today, vToday)
+        const vToday = toSafeNum(
+          vercelTraffic.dailyTimeSeries?.find((d) => d.date === todayIso)?.visitors,
+          0
+        )
+        const unifiedToday = Math.max(effectiveToday, vToday)
 
         // Total Interactions: combine behavioral events with Vercel pageviews
-        const unifiedInteractions = rawOverview.interactions + vPageviews
+        const unifiedInteractions = rawInteractions + vPageviews
 
         // Sessions: at least match visitor count
-        const unifiedSessions = Math.max(rawOverview.sessions, vVisitors)
+        const unifiedSessions = Math.max(mergedOverview.sessions, vVisitors)
 
         mergedOverview = {
-          ...rawOverview,
+          ...mergedOverview,
           visitors: unifiedVisitors,
           visitors_today: unifiedToday,
           interactions: unifiedInteractions,
@@ -246,14 +287,21 @@ export function useAnalytics() {
       setOverview(mergedOverview)
 
       // 2. Unified Activity Time Series: Merge Vercel daily visitor/pageview trends with Supabase
-      let mergedTimeseries = (timeseriesRes.data as TimeSeriesPoint[]) || []
+      let mergedTimeseries: TimeSeriesPoint[] = []
+      if (Array.isArray(timeseriesRes.data)) {
+        mergedTimeseries = (timeseriesRes.data as TimeSeriesPoint[]).map((pt) => ({
+          date: String(pt.date || ''),
+          count: toSafeNum(pt.count, 0),
+        }))
+      }
+
       if (vercelTraffic?.dailyTimeSeries && vercelTraffic.dailyTimeSeries.length > 0) {
         const vMap = new Map<string, { visitors: number; pageviews: number }>()
         for (const item of vercelTraffic.dailyTimeSeries) {
           if (item?.date) {
             vMap.set(item.date, {
-              visitors: Number(item.visitors) || 0,
-              pageviews: Number(item.pageviews) || 0,
+              visitors: toSafeNum(item.visitors, 0),
+              pageviews: toSafeNum(item.pageviews, 0),
             })
           }
         }

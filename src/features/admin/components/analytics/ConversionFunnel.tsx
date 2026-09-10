@@ -11,27 +11,30 @@ type ActiveView = 'goals' | 'retention'
 const ConversionFunnel = ({ data, isLoading }: ConversionFunnelProps) => {
   const [activeView, setActiveView] = useState<ActiveView>('goals')
 
-  const totalSessions = data?.sessions ?? 0
+  const toSafeNum = (v: unknown, fallback = 0): number =>
+    typeof v === 'number' && !isNaN(v) && isFinite(v) ? v : fallback
+
+  const totalSessions = toSafeNum(data?.sessions, 0)
 
   // 1. Recruiter Intent Goals
-  const resumeSessions = data?.goals?.resume_downloads?.sessions ?? (data?.converted ?? 0)
-  const resumeEvents = data?.goals?.resume_downloads?.events ?? resumeSessions
-  const resumeRate = data?.goals?.resume_downloads?.rate ?? (totalSessions > 0 ? (resumeSessions / totalSessions) * 100 : 0)
+  const resumeSessions = toSafeNum(data?.goals?.resume_downloads?.sessions, toSafeNum(data?.converted, 0))
+  const resumeEvents = toSafeNum(data?.goals?.resume_downloads?.events, resumeSessions)
+  const resumeRate = toSafeNum(data?.goals?.resume_downloads?.rate, totalSessions > 0 ? (resumeSessions / totalSessions) * 100 : 0)
 
-  const projectSessions = data?.goals?.project_engagement?.sessions ?? (data?.opened_project ?? 0)
-  const projectEvents = data?.goals?.project_engagement?.events ?? projectSessions
-  const projectRate = data?.goals?.project_engagement?.rate ?? (totalSessions > 0 ? (projectSessions / totalSessions) * 100 : 0)
+  const projectSessions = toSafeNum(data?.goals?.project_engagement?.sessions, toSafeNum(data?.opened_project, 0))
+  const projectEvents = toSafeNum(data?.goals?.project_engagement?.events, projectSessions)
+  const projectRate = toSafeNum(data?.goals?.project_engagement?.rate, totalSessions > 0 ? (projectSessions / totalSessions) * 100 : 0)
 
-  const demoSessions = data?.goals?.demo_views?.sessions ?? 0
-  const githubSessions = data?.goals?.github_inspects?.sessions ?? 0
-  const codeSessions = (demoSessions || githubSessions) ? demoSessions + githubSessions : (data?.clicked_link ?? 0)
+  const demoSessions = toSafeNum(data?.goals?.demo_views?.sessions, 0)
+  const githubSessions = toSafeNum(data?.goals?.github_inspects?.sessions, 0)
+  const codeSessions = (demoSessions || githubSessions) ? demoSessions + githubSessions : toSafeNum(data?.clicked_link, 0)
   const codeRate = (data?.goals?.demo_views?.rate !== undefined && data?.goals?.github_inspects?.rate !== undefined)
-    ? Math.min(100, data.goals.demo_views.rate + data.goals.github_inspects.rate)
+    ? Math.min(100, toSafeNum(data.goals.demo_views.rate) + toSafeNum(data.goals.github_inspects.rate))
     : (totalSessions > 0 ? (codeSessions / totalSessions) * 100 : 0)
 
-  const contactSessions = data?.goals?.contact_intents?.sessions ?? Math.max(0, (data?.converted ?? 0) - resumeSessions)
-  const contactEvents = data?.goals?.contact_intents?.events ?? contactSessions
-  const contactRate = data?.goals?.contact_intents?.rate ?? (totalSessions > 0 ? (contactSessions / totalSessions) * 100 : 0)
+  const contactSessions = toSafeNum(data?.goals?.contact_intents?.sessions, Math.max(0, toSafeNum(data?.converted, 0) - resumeSessions))
+  const contactEvents = toSafeNum(data?.goals?.contact_intents?.events, contactSessions)
+  const contactRate = toSafeNum(data?.goals?.contact_intents?.rate, totalSessions > 0 ? (contactSessions / totalSessions) * 100 : 0)
 
   const goals = [
     {
@@ -103,12 +106,16 @@ const ConversionFunnel = ({ data, isLoading }: ConversionFunnelProps) => {
 
   // 2. Section Retention Flow
   const retentionSteps = data?.section_retention && data.section_retention.length > 0
-    ? data.section_retention
+    ? data.section_retention.map((s) => ({
+        ...s,
+        sessions: toSafeNum(s.sessions, 0),
+        rate: toSafeNum(s.rate, 0),
+      }))
     : [
         { section: 'home', label: 'Hero / Landing', sessions: totalSessions, rate: 100 },
         { section: 'about', label: 'About & Skills', sessions: Math.round(totalSessions * 0.78), rate: totalSessions > 0 ? 78 : 0 },
-        { section: 'projects', label: 'Projects Showcase', sessions: data?.viewed_projects ?? 0, rate: totalSessions > 0 ? Math.round(((data?.viewed_projects ?? 0) / totalSessions) * 100) : 0 },
-        { section: 'contact', label: 'Contact & Footer', sessions: data?.converted ?? 0, rate: totalSessions > 0 ? Math.round(((data?.converted ?? 0) / totalSessions) * 100) : 0 },
+        { section: 'projects', label: 'Projects Showcase', sessions: toSafeNum(data?.viewed_projects, 0), rate: totalSessions > 0 ? Math.round((toSafeNum(data?.viewed_projects, 0) / totalSessions) * 100) : 0 },
+        { section: 'contact', label: 'Contact & Footer', sessions: toSafeNum(data?.converted, 0), rate: totalSessions > 0 ? Math.round((toSafeNum(data?.converted, 0) / totalSessions) * 100) : 0 },
       ]
 
   return (

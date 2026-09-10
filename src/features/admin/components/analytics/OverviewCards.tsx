@@ -13,11 +13,14 @@ interface GrowthInfo {
 }
 
 function calculateGrowth(current: number, previous: number): GrowthInfo {
-  if (previous === 0) {
-    if (current > 0) return { rateText: '+100%', direction: 'positive', symbol: '↑' }
+  const c = typeof current === 'number' && !isNaN(current) && isFinite(current) ? current : 0
+  const p = typeof previous === 'number' && !isNaN(previous) && isFinite(previous) ? previous : 0
+  if (p === 0) {
+    if (c > 0) return { rateText: '+100%', direction: 'positive', symbol: '↑' }
     return { rateText: '0.0%', direction: 'neutral', symbol: '–' }
   }
-  const pct = ((current - previous) / previous) * 100
+  const pct = ((c - p) / p) * 100
+  if (isNaN(pct) || !isFinite(pct)) return { rateText: '0.0%', direction: 'neutral', symbol: '–' }
   if (pct > 0) {
     return { rateText: `+${pct.toFixed(1)}%`, direction: 'positive', symbol: '↑' }
   }
@@ -160,7 +163,13 @@ const OverviewCards = ({ data, days, isLoading }: OverviewCardsProps) => {
               <span className="analytics-kpi-title">{card.title}</span>
               <div className="analytics-kpi-number-row">
                 <span className="analytics-kpi-number">
-                  {isLoading ? <span className="analytics-kpi-skeleton">--</span> : typeof card.value === 'number' ? card.value.toLocaleString() : card.value}
+                  {isLoading ? (
+                    <span className="analytics-kpi-skeleton">--</span>
+                  ) : typeof card.value === 'number' ? (
+                    isNaN(card.value) ? '0' : card.value.toLocaleString()
+                  ) : (
+                    card.value || '0'
+                  )}
                 </span>
                 {!isLoading && card.growth && (
                   <span className={`analytics-growth-badge ${card.growth.direction}`}>
@@ -188,7 +197,13 @@ const OverviewCards = ({ data, days, isLoading }: OverviewCardsProps) => {
               <span className="analytics-subtile-title">{sec.title}</span>
             </div>
             <div className="analytics-subtile-val">
-              {isLoading ? '--' : typeof sec.value === 'number' ? sec.value.toLocaleString() : sec.value}
+              {isLoading ? (
+                '--'
+              ) : typeof sec.value === 'number' ? (
+                isNaN(sec.value) ? '0' : sec.value.toLocaleString()
+              ) : (
+                sec.value || '0'
+              )}
             </div>
             <small className="analytics-subtile-desc">{sec.description}</small>
           </div>

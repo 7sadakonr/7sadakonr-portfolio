@@ -39,7 +39,9 @@ const TopInteractions = ({ data, isLoading }: TopInteractionsProps) => {
         )}
         {!isLoading &&
           data.slice(0, 10).map((item, idx) => {
-            const pct = totalInteractions > 0 ? ((item.total / totalInteractions) * 100).toFixed(1) : '0.0'
+            const itemTotal = typeof item.total === 'number' && !isNaN(item.total) ? item.total : 0
+            const pctNum = totalInteractions > 0 ? (itemTotal / totalInteractions) * 100 : 0
+            const pct = isNaN(pctNum) || !isFinite(pctNum) ? '0.0' : pctNum.toFixed(1)
             const badge = getEventBadge(item)
             const isTopThree = idx < 3
 
