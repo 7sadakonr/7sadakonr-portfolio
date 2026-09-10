@@ -10,6 +10,7 @@ import { requestProjectTarget, subscribeToSectionChanges } from '../../features/
 import { beginNavigation, resetNavigation } from '../../features/navigation/navigationState'
 import { loadCommandMenu, loadProjectData } from '../../utils/runtimeWarmup'
 import { getProjectCatalog, subscribeToProjectCatalog } from '../../features/projects/data/projectCatalogStore'
+import { trackEvent } from '../../lib/analytics/trackEvent'
 
 const CommandMenu = lazy(loadCommandMenu)
 
@@ -292,6 +293,11 @@ const Navbar = ({ isInteractive = true }: NavbarProps) => {
 
   const handleNavClick = async (e: React.MouseEvent<HTMLAnchorElement>, path: string, explicitTargetId?: string) => {
     e.preventDefault();
+    trackEvent('navbar_click', {
+      target_label: path,
+      target_id: explicitTargetId,
+      target_type: 'navbar_link',
+    });
     setIsCommandMenuOpen(false);
     await navigateToTarget(path, explicitTargetId ?? getNavigationTarget(path).targetId, true)
   }
