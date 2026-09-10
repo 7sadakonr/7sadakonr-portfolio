@@ -20,6 +20,11 @@ describe('Resume downloads', () => {
       unobserve() {}
       disconnect() {}
     })
+    vi.stubGlobal('IntersectionObserver', class {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    })
   })
 
   afterEach(() => {
