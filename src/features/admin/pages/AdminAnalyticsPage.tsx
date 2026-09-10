@@ -109,6 +109,7 @@ const AdminAnalyticsPage = () => {
           data={overview}
           days={days}
           isLoading={isLoading}
+          isVisitorDataAvailable={isVisitorDataAvailable}
           activeMetric={metric}
           onSelectMetric={setMetric}
         />

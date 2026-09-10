@@ -26,23 +26,32 @@ export function normalizeVisitorSeries(
   const visitorsByDate = new Map<string, number>()
 
   for (const row of rows) {
+    if (!row || typeof row !== 'object') continue
     const dateValue = row.key ?? row.date ?? row.day ?? row.timestamp ?? row.time
     if (dateValue === undefined || dateValue === null) continue
 
     const date = new Date(dateValue)
     if (isNaN(date.getTime())) continue
 
-    const visitors = Number(row.visitors)
-    if (!Number.isFinite(visitors)) continue
+    const visitors = row.visitors
+    if (typeof visitors !== 'number' || !Number.isFinite(visitors) || visitors < 0) continue
 
     const normalizedDate = granularity === 'hour'
-      ? `${date.toISOString().slice(11, 13)}:00`
+      ? `${date.toISOString().slice(0, 13)}:00:00.000Z`
       : date.toISOString().slice(0, 10)
     visitorsByDate.set(normalizedDate, (visitorsByDate.get(normalizedDate) ?? 0) + visitors)
   }
 
   return Array.from(visitorsByDate, ([date, visitors]) => ({ date, visitors }))
     .sort((a, b) => a.date.localeCompare(b.date))
+}
+
+function parseVisitorSeries(raw: unknown, granularity: 'hour' | 'day') {
+  const rows = Array.isArray(raw) ? raw
+    : raw && typeof raw === 'object' && Array.isArray((raw as VercelAggregateResponse).data)
+      ? (raw as VercelAggregateResponse).data! : null
+  if (!rows || rows.some((row) => normalizeVisitorSeries([row], granularity).length !== 1)) return null
+  return normalizeVisitorSeries(rows, granularity)
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
@@ -258,12 +267,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       totalVisitors = aggVisitors
     }
 
-    const seriesRows: VercelAggregateRow[] = Array.isArray(seriesRaw)
-      ? (seriesRaw as VercelAggregateRow[])
-      : Array.isArray((seriesRaw as VercelAggregateResponse)?.data)
-        ? ((seriesRaw as VercelAggregateResponse).data ?? [])
-        : []
-    const visitorTimeSeries = normalizeVisitorSeries(seriesRows, seriesGranularity)
+    const visitorTimeSeries = parseVisitorSeries(seriesRaw, seriesGranularity)
+    const visitorDailySeries = parseVisitorSeries(aggTotalsRaw, 'day')
 
     // Process referrers
     const topReferrers: Array<{ referrer: string; count: number }> = []
@@ -301,9 +306,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       totalVisitors,
       topReferrers,
       topCountries,
-      dailyTimeSeries,
-      visitorTimeSeries,
-      visitorDataAvailable: seriesRes.ok,
+      dailyTimeSeries: visitorDailySeries?.map((point) => ({
+        ...point,
+        pageviews: dailyTimeSeries.find((daily) => daily.date === point.date)?.pageviews ?? 0,
+      })) ?? [],
+      visitorDailyDataAvailable: visitorDailySeries !== null,
+      visitorTimeSeries: visitorTimeSeries ?? [],
+      visitorDataAvailable: visitorTimeSeries !== null,
       periodDays: days,
     })
   } catch (err) {
