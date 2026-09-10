@@ -12,6 +12,8 @@
     "typecheck": "tsc --noEmit",
     "projects:migrate": "node scripts/migrate-projects.mjs",
     "projects:verify": "node scripts/verify-project-migration.mjs",
+    "site-settings:migrate": "node scripts/migrate-site-settings.mjs",
+    "site-settings:verify": "node scripts/verify-site-settings-migration.mjs",
     "images:convert": "node scripts/convert-webp.js"
   },
   "dependencies": {

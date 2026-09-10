@@ -175,7 +175,7 @@ describe('GitHub activity card', () => {
         await screen.findByRole('img', { name: '3 contributions in 2026' })
 
         await waitFor(() => {
-            expect(observed.some((element) => element.getAttribute('data-slot') === 'github-activity')).toBe(true)
+            expect(observed.some((element) => element.classList.contains('github-calendar-activity-frame'))).toBe(true)
         })
     })
 

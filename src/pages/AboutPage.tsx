@@ -6,7 +6,11 @@ import GithubCalendar from '../components/GithubCalendar/GithubCalendar'
 import Scales from '../components/Scales/Scales'
 import ResumeDownloadMenu from '../components/ResumeDownload/ResumeDownloadMenu'
 import TechMarquee from '../components/TechMarquee/TechMarquee'
+import { useSiteSettings } from '../features/siteSettings/hooks/useSiteSettings'
+import { firstVisibleContact, githubUsernameFromLink } from '../features/siteSettings/validation/contactLinks'
 const AboutSection = () => {
+    const settings = useSiteSettings()
+    const githubUsername = githubUsernameFromLink(firstVisibleContact(settings.contactLinks, 'github'))
     return (
         <div className="about-page-wrapper landing-section">
             {/* Main Content */}
@@ -22,15 +26,15 @@ const AboutSection = () => {
                         <span>Hi,</span>
                         <span>I'm</span>
                         <span className="gradient-text">
-                            <span className="gradient-text-glow">Jetsadakorn</span>
-                            <span className="gradient-text-content">Jetsadakorn</span>
+                            <span className="gradient-text-glow">{settings.displayName}</span>
+                            <span className="gradient-text-content">{settings.displayName}</span>
                         </span>
                     </TextReveal>
 
                     <TextReveal
                         as="p"
                         className="about-hero-subtitle"
-                        text="A passionate Computer Science Student exploring the intersection of technology and creativity. Currently focused on web development, UI/UX design, and building meaningful digital experiences."
+                        text={settings.heroSubtitle}
                         delay={0.25}
                         stagger={0.025}
                     />
@@ -67,17 +71,8 @@ const AboutSection = () => {
                                     <h3 className="bento-title">Biography</h3>
                                 </div>
                                 <div className="about-me-text">
-                                    <p>
-                                        I'm a <span className="highlight-text">Computer Science student</span> with a deep passion for
-                                        creating elegant solutions to complex problems. My journey in tech started with curiosity
-                                        about how things work, and has evolved into a commitment to building
-                                        <span className="gradient-highlight"> innovative digital experiences</span>.
-                                    </p>
-                                    <p>
-                                        When I'm not coding, you can find me exploring new design trends, learning about emerging
-                                        technologies, or working on personal projects that challenge me to grow. I believe in the
-                                        power of continuous learning and pushing boundaries.
-                                    </p>
+                                    <p>{settings.bioParagraph1}</p>
+                                    <p>{settings.bioParagraph2}</p>
                                 </div>
                             </div>
 
@@ -92,10 +87,7 @@ const AboutSection = () => {
                                     <h3 className="bento-title">Current Focus</h3>
                                 </div>
                                 <div className="about-me-text">
-                                    <p>
-                                        Currently focused on <span className="highlight-text">full-stack web development</span> and
-                                        creating user-centric interfaces that are both beautiful and functional.
-                                    </p>
+                                    <p>{settings.currentFocus}</p>
                                 </div>
                             </div>
 
@@ -121,12 +113,12 @@ const AboutSection = () => {
 
                         </div>
 
-                            <div className="bento-card bento-github">
+                            {githubUsername && <div className="bento-card bento-github">
                                 <GithubCalendar
-                                    username="7sadakonr"
+                                    username={githubUsername}
                                     colorSchema="purple"
                                 />
-                            </div>
+                            </div>}
                     </div>
                 </section>
             </div>
