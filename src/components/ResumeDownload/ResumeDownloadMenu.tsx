@@ -1,7 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { Liquid } from 'liquid-gooey'
-import resumeEnglish from '../../assets/resume/Jetsadakorn_Muangwichit_Resume_EN.pdf'
-import resumeThai from '../../assets/resume/Jetsadakorn_Muangwichit_Resume_TH.pdf'
+import { useSiteSettings } from '../../features/siteSettings/hooks/useSiteSettings'
 import './ResumeDownloadMenu.css'
 
 type ResumeLanguage = 'th' | 'en'
@@ -10,18 +9,8 @@ type ResumeDownloadMenuProps = {
   variant: 'footer' | 'hero'
 }
 
-const resumeOptions: Record<ResumeLanguage, { label: string; href: string }> = {
-  th: {
-    label: 'ภาษาไทย',
-    href: resumeThai
-  },
-  en: {
-    label: 'English',
-    href: resumeEnglish
-  }
-}
-
 const ResumeDownloadMenu = ({ variant }: ResumeDownloadMenuProps) => {
+  const settings = useSiteSettings()
   const [isOpen, setIsOpen] = useState(false)
   const menuId = useId()
   const rootRef = useRef<HTMLDivElement>(null)
@@ -54,6 +43,11 @@ const ResumeDownloadMenu = ({ variant }: ResumeDownloadMenuProps) => {
       document.removeEventListener('keydown', handleKeyDown)
     }
   }, [isOpen])
+
+  const resumeOptions: Record<ResumeLanguage, { label: string; href: string }> = {
+    th: { label: 'ภาษาไทย', href: settings.resumeThUrl },
+    en: { label: 'English', href: settings.resumeEnUrl },
+  }
 
   const renderOption = (language: ResumeLanguage, hero = false) => {
     const option = resumeOptions[language]

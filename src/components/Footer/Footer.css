@@ -81,6 +81,7 @@
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: clamp(20px, 3vw, 38px);
 }
+.site-footer__links--without-email { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .site-footer__column h2 {
   margin: 0 0 15px;
   color: rgba(255, 255, 255, 0.84);
@@ -172,6 +173,7 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 32px 25px;
   }
+  .site-footer__links--without-email { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .site-footer__column ul {
     gap: 10px;
   }
@@ -193,6 +195,7 @@
     grid-template-columns: 1fr;
     gap: 30px;
   }
+  .site-footer__links--without-email { grid-template-columns: 1fr; }
   .site-footer__column h2 {
     margin-bottom: 12px;
   }
