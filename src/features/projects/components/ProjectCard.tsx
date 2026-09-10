@@ -25,19 +25,14 @@ const ProjectCard = ({ project, index, projectRef, onMouseProjectEnter }: Projec
     })
   }
 
-  const handleLiveClick = () => {
+  const handleLiveClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
     let host: string | undefined
     try {
       if (project.liveUrl) host = new URL(project.liveUrl).hostname
     } catch {
       // Ignore URL parse errors
     }
-    trackEvent('project_open', {
-      project_slug: project.id,
-      target_label: project.title,
-      target_type: 'demo_button',
-      destination_host: host,
-    })
     trackEvent('project_demo_click', {
       project_slug: project.id,
       target_label: project.title,
@@ -46,13 +41,8 @@ const ProjectCard = ({ project, index, projectRef, onMouseProjectEnter }: Projec
     })
   }
 
-  const handleGithubClick = () => {
-    trackEvent('project_open', {
-      project_slug: project.id,
-      target_label: project.title,
-      target_type: 'github_button',
-      destination_host: 'github.com',
-    })
+  const handleGithubClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
     trackEvent('project_github_click', {
       project_slug: project.id,
       target_label: project.title,

@@ -28,6 +28,16 @@ const AdminAnalyticsPage = () => {
     fetchSessionDetail,
   } = useAnalytics()
 
+  const metricTotal = overview
+    ? {
+        visitors: overview.visitors,
+        interactions: overview.interactions,
+        project_opens: overview.project_opens,
+        external_clicks: overview.external_clicks,
+        resume_downloads: overview.resume_downloads,
+      }[metric]
+    : undefined
+
   return (
     <div className="admin-page analytics-page">
       {/* Page Header */}
@@ -88,7 +98,13 @@ const AdminAnalyticsPage = () => {
 
       {/* 1. Key Performance Cards */}
       <section className="analytics-block" aria-label="Key behavioral metrics">
-        <OverviewCards data={overview} days={days} isLoading={isLoading} />
+        <OverviewCards
+          data={overview}
+          days={days}
+          isLoading={isLoading}
+          activeMetric={metric}
+          onSelectMetric={setMetric}
+        />
       </section>
 
       {/* 2. Interactive Activity Chart */}
@@ -98,6 +114,7 @@ const AdminAnalyticsPage = () => {
           metric={metric}
           onMetricChange={setMetric}
           isLoading={isLoading}
+          metricTotal={metricTotal}
         />
       </section>
 

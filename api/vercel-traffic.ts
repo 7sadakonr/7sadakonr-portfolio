@@ -157,8 +157,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     totalPageviews = countMetrics.pv
     totalVisitors = countMetrics.v
 
+    const normalizeDate = (val: unknown): string => {
+      if (!val) return ''
+      if (typeof val === 'number' || /^\d{10,13}$/.test(String(val))) {
+        const ms = Number(val) < 1e11 ? Number(val) * 1000 : Number(val)
+        return new Date(ms).toISOString().slice(0, 10)
+      }
+      const str = String(val)
+      if (/^\d{4}-\d{2}-\d{2}/.test(str)) {
+        return str.slice(0, 10)
+      }
+      try {
+        const d = new Date(str)
+        if (!isNaN(d.getTime())) return d.toISOString().slice(0, 10)
+      } catch {
+        // fallback
+      }
+      return str.slice(0, 10)
+    }
+
     // Process daily breakdown from aggregate
-    const dailyTimeSeries: Array<{ date: string; pageviews: number; visitors: number }> = []
+    const dailyMap = new Map<string, { pageviews: number; visitors: number }>()
     let aggPageviews = 0
     let aggVisitors = 0
 
@@ -172,19 +191,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       for (const row of rows) {
         if (!row || typeof row !== 'object') continue
         const r = row as Record<string, unknown>
-        const dateVal = String(r.date || r.key || '')
+        const dateVal = normalizeDate(r.date ?? r.key ?? r.day ?? r.timestamp ?? r.time)
         const m = extractMetricsFromObj(row)
         aggPageviews += m.pv
         aggVisitors += m.v
         if (dateVal) {
-          dailyTimeSeries.push({
-            date: dateVal.slice(0, 10),
-            pageviews: m.pv,
-            visitors: m.v,
+          const prev = dailyMap.get(dateVal) || { pageviews: 0, visitors: 0 }
+          dailyMap.set(dateVal, {
+            pageviews: prev.pageviews + m.pv,
+            visitors: prev.visitors + m.v,
           })
         }
       }
     }
+
+    const dailyTimeSeries = Array.from(dailyMap.entries()).map(([date, counts]) => ({
+      date,
+      pageviews: counts.pageviews,
+      visitors: counts.visitors,
+    }))
 
     // Always take the most complete total
     if (totalPageviews === 0 || aggPageviews > totalPageviews) {

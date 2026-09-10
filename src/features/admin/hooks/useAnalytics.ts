@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../../../lib/supabase'
 
-export type DateRangeDays = 7 | 30 | 90
+export type DateRangeDays = 1 | 7 | 30
 
 export interface AnalyticsOverviewData {
   visitors: number
@@ -133,7 +133,13 @@ export function useAnalytics() {
   const [error, setError] = useState<string | null>(null)
 
   const [overview, setOverview] = useState<AnalyticsOverviewData | null>(null)
-  const [timeseries, setTimeseries] = useState<TimeSeriesPoint[]>([])
+  const [timeseriesMap, setTimeseriesMap] = useState<Record<TimeSeriesMetric, TimeSeriesPoint[]>>({
+    visitors: [],
+    interactions: [],
+    project_opens: [],
+    external_clicks: [],
+    resume_downloads: [],
+  })
   const [utmCampaigns, setUtmCampaigns] = useState<UtmCampaignRow[]>([])
   const [projectPerformance, setProjectPerformance] = useState<ProjectPerformanceRow[]>([])
   const [topInteractions, setTopInteractions] = useState<TopInteractionRow[]>([])
@@ -160,16 +166,19 @@ export function useAnalytics() {
     try {
       const [
         overviewRes,
-        timeseriesRes,
         utmRes,
         projectRes,
         topRes,
         funnelRes,
         recentRes,
         vercelData,
+        tsVisitorsRes,
+        tsInteractionsRes,
+        tsOpensRes,
+        tsClicksRes,
+        tsResumeRes,
       ] = await Promise.all([
         supabase.rpc('analytics_overview', { p_from, p_to }),
-        supabase.rpc('analytics_timeseries', { p_from, p_to, p_metric: metric }),
         supabase.rpc('analytics_utm_campaigns', { p_from, p_to }),
         supabase.rpc('analytics_project_performance', { p_from, p_to }),
         supabase.rpc('analytics_top_interactions', { p_from, p_to }),
@@ -178,10 +187,14 @@ export function useAnalytics() {
         fetch(`/api/vercel-traffic?days=${days}`)
           .then(async (r) => (r.ok ? r.json() : null))
           .catch(() => null),
+        Promise.resolve(supabase.rpc('analytics_timeseries', { p_from, p_to, p_metric: 'visitors' })).catch(() => ({ data: [], error: null })),
+        Promise.resolve(supabase.rpc('analytics_timeseries', { p_from, p_to, p_metric: 'interactions' })).catch(() => ({ data: [], error: null })),
+        Promise.resolve(supabase.rpc('analytics_timeseries', { p_from, p_to, p_metric: 'project_opens' })).catch(() => ({ data: [], error: null })),
+        Promise.resolve(supabase.rpc('analytics_timeseries', { p_from, p_to, p_metric: 'external_clicks' })).catch(() => ({ data: [], error: null })),
+        Promise.resolve(supabase.rpc('analytics_timeseries', { p_from, p_to, p_metric: 'resume_downloads' })).catch(() => ({ data: [], error: null })),
       ])
 
       if (overviewRes.error) throw overviewRes.error
-      if (timeseriesRes.error) throw timeseriesRes.error
       if (utmRes.error) throw utmRes.error
       if (projectRes.error) throw projectRes.error
       if (topRes.error) throw topRes.error
@@ -227,6 +240,16 @@ export function useAnalytics() {
         effectiveToday = Math.min(rawInteractionsToday, Math.max(1, effectiveVisitors))
       }
 
+      // Active interactions sum (real intentional actions: demo, github, resume, contact, project opens)
+      const activeInteractionsSum = Array.isArray(topRes.data) && (topRes.data as TopInteractionRow[]).length > 0
+        ? (topRes.data as TopInteractionRow[]).reduce((sum, item) => sum + toSafeNum(item.total, 0), 0)
+        : (rawProjectOpens + rawExternalClicks + rawResumeDownloads)
+
+      // Exclude passive telemetry (page_views, section_views, scroll_depths) if database overview counted all events
+      const calibratedInteractions = (rawInteractions > activeInteractionsSum && activeInteractionsSum > 0)
+        ? activeInteractionsSum
+        : (activeInteractionsSum > 0 ? activeInteractionsSum : rawInteractions)
+
       interface VercelPayload {
         configured?: boolean
         totalVisitors?: number
@@ -244,7 +267,7 @@ export function useAnalytics() {
         visitors_prev: rawVisitorsPrev,
         visitors_today: effectiveToday,
         visitors_yesterday: rawVisitorsYesterday,
-        interactions: rawInteractions,
+        interactions: calibratedInteractions,
         interactions_prev: rawInteractionsPrev,
         interactions_today: rawInteractionsToday,
         interactions_yesterday: rawInteractionsYesterday,
@@ -257,7 +280,6 @@ export function useAnalytics() {
 
       if (vercelTraffic) {
         const vVisitors = toSafeNum(vercelTraffic.totalVisitors, 0)
-        const vPageviews = toSafeNum(vercelTraffic.totalPageviews, 0)
 
         // Total Visitors: take the maximum of Supabase unique visitor count and Vercel total visitors
         const unifiedVisitors = Math.max(effectiveVisitors, vVisitors)
@@ -270,9 +292,6 @@ export function useAnalytics() {
         )
         const unifiedToday = Math.max(effectiveToday, vToday)
 
-        // Total Interactions: combine behavioral events with Vercel pageviews
-        const unifiedInteractions = rawInteractions + vPageviews
-
         // Sessions: at least match visitor count
         const unifiedSessions = Math.max(mergedOverview.sessions, vVisitors)
 
@@ -280,51 +299,138 @@ export function useAnalytics() {
           ...mergedOverview,
           visitors: unifiedVisitors,
           visitors_today: unifiedToday,
-          interactions: unifiedInteractions,
+          interactions: calibratedInteractions,
           sessions: unifiedSessions,
         }
       }
       setOverview(mergedOverview)
 
-      // 2. Unified Activity Time Series: Merge Vercel daily visitor/pageview trends with Supabase
-      let mergedTimeseries: TimeSeriesPoint[] = []
-      if (Array.isArray(timeseriesRes.data)) {
-        mergedTimeseries = (timeseriesRes.data as TimeSeriesPoint[]).map((pt) => ({
-          date: String(pt.date || ''),
-          count: toSafeNum(pt.count, 0),
-        }))
+      // 2. Build Daily Date Axis across the requested days
+      const dateKeys: string[] = []
+      const curDate = new Date(fromDate)
+      const toDateFloor = new Date(toDate)
+      while (curDate <= toDateFloor) {
+        dateKeys.push(curDate.toISOString().slice(0, 10))
+        curDate.setDate(curDate.getDate() + 1)
+      }
+      const todayIso = new Date().toISOString().slice(0, 10)
+      if (!dateKeys.includes(todayIso)) {
+        dateKeys.push(todayIso)
       }
 
+      // Build Vercel daily metrics map
+      const vercelMap = new Map<string, { visitors: number; pageviews: number }>()
       if (vercelTraffic?.dailyTimeSeries && vercelTraffic.dailyTimeSeries.length > 0) {
-        const vMap = new Map<string, { visitors: number; pageviews: number }>()
         for (const item of vercelTraffic.dailyTimeSeries) {
           if (item?.date) {
-            vMap.set(item.date, {
+            vercelMap.set(item.date, {
               visitors: toSafeNum(item.visitors, 0),
               pageviews: toSafeNum(item.pageviews, 0),
             })
           }
         }
-
-        mergedTimeseries = mergedTimeseries.map((pt) => {
-          const v = vMap.get(pt.date)
-          if (!v) return pt
-          if (metric === 'visitors') {
-            return {
-              ...pt,
-              count: Math.max(pt.count, v.visitors),
-            }
-          }
-          if (metric === 'interactions') {
-            return {
-              ...pt,
-              count: pt.count + v.pageviews,
-            }
-          }
-          return pt
-        })
       }
-      setTimeseries(mergedTimeseries)
+
+      // Extract unique visitors per day from recent sessions (failsafe against unmigrated SQL)
+      const sessionsVisitorByDay = new Map<string, Set<string>>()
+      if (Array.isArray(recentRes.data)) {
+        for (const s of recentRes.data) {
+          if (s?.started_at) {
+            const day = String(s.started_at).slice(0, 10)
+            const vId = String(s.visitor_short || s.session_id || '')
+            if (vId) {
+              if (!sessionsVisitorByDay.has(day)) {
+                sessionsVisitorByDay.set(day, new Set())
+              }
+              sessionsVisitorByDay.get(day)!.add(vId)
+            }
+          }
+        }
+      }
+
+      // Determine if Supabase analytics_timeseries for visitors returned raw event count (missing case branch)
+      const rawVisitorsArray = Array.isArray(tsVisitorsRes.data) ? (tsVisitorsRes.data as TimeSeriesPoint[]) : []
+      const rawVisitorsSum = rawVisitorsArray.reduce((acc, pt) => acc + toSafeNum(pt.count, 0), 0)
+      const hasEventsFallbackBug = rawInteractions > 0 && rawVisitorsSum === rawInteractions && rawVisitorsSum > effectiveVisitors
+
+      // 2.1 Process 'visitors' series
+      const processedVisitors: TimeSeriesPoint[] = dateKeys.map((day) => {
+        let count = 0
+        if (hasEventsFallbackBug) {
+          count = sessionsVisitorByDay.get(day)?.size || 0
+        } else {
+          const found = rawVisitorsArray.find((p) => String(p.date || '').slice(0, 10) === day)
+          count = found ? toSafeNum(found.count, 0) : (sessionsVisitorByDay.get(day)?.size || 0)
+        }
+
+        const v = vercelMap.get(day)
+        if (v && v.visitors > 0) {
+          count = Math.max(count, v.visitors)
+        }
+
+        if (day === todayIso && effectiveToday > 0) {
+          count = Math.max(count, effectiveToday)
+        }
+
+        return { date: day, count }
+      })
+
+      const visitorsSum = processedVisitors.reduce((acc, p) => acc + p.count, 0)
+      if (visitorsSum === 0 && effectiveVisitors > 0) {
+        const lastPt = processedVisitors[processedVisitors.length - 1]
+        if (lastPt) {
+          lastPt.count = effectiveVisitors
+        }
+      }
+
+      // 2.2 Process 'interactions' series
+      const rawInteractionsArray = Array.isArray(tsInteractionsRes.data) ? (tsInteractionsRes.data as TimeSeriesPoint[]) : []
+      const rawInteractionsSum = rawInteractionsArray.reduce((acc, pt) => acc + toSafeNum(pt.count, 0), 0)
+      const processedInteractions: TimeSeriesPoint[] = dateKeys.map((day) => {
+        const found = rawInteractionsArray.find((p) => String(p.date || '').slice(0, 10) === day)
+        let count = found ? toSafeNum(found.count, 0) : 0
+        if (rawInteractionsSum > 0 && calibratedInteractions < rawInteractionsSum) {
+          count = Math.round((count / rawInteractionsSum) * calibratedInteractions)
+        }
+        return { date: day, count }
+      })
+
+      const interactionsSum = processedInteractions.reduce((acc, p) => acc + p.count, 0)
+      if (interactionsSum === 0 && calibratedInteractions > 0) {
+        const lastPt = processedInteractions[processedInteractions.length - 1]
+        if (lastPt) {
+          lastPt.count = calibratedInteractions
+        }
+      }
+
+      // 2.3 Process 'project_opens' series
+      const rawOpensArray = Array.isArray(tsOpensRes.data) ? (tsOpensRes.data as TimeSeriesPoint[]) : []
+      const processedOpens: TimeSeriesPoint[] = dateKeys.map((day) => {
+        const found = rawOpensArray.find((p) => String(p.date || '').slice(0, 10) === day)
+        return { date: day, count: found ? toSafeNum(found.count, 0) : 0 }
+      })
+
+      // 2.4 Process 'external_clicks' series
+      const rawClicksArray = Array.isArray(tsClicksRes.data) ? (tsClicksRes.data as TimeSeriesPoint[]) : []
+      const processedClicks: TimeSeriesPoint[] = dateKeys.map((day) => {
+        const found = rawClicksArray.find((p) => String(p.date || '').slice(0, 10) === day)
+        return { date: day, count: found ? toSafeNum(found.count, 0) : 0 }
+      })
+
+      // 2.5 Process 'resume_downloads' series
+      const rawResumeArray = Array.isArray(tsResumeRes.data) ? (tsResumeRes.data as TimeSeriesPoint[]) : []
+      const processedResume: TimeSeriesPoint[] = dateKeys.map((day) => {
+        const found = rawResumeArray.find((p) => String(p.date || '').slice(0, 10) === day)
+        return { date: day, count: found ? toSafeNum(found.count, 0) : 0 }
+      })
+
+      setTimeseriesMap({
+        visitors: processedVisitors,
+        interactions: processedInteractions,
+        project_opens: processedOpens,
+        external_clicks: processedClicks,
+        resume_downloads: processedResume,
+      })
 
       // 3. Unified Referral Sources: Merge Vercel top referrers into UTM Campaign table
       const mergedUtm = (utmRes.data as UtmCampaignRow[]) || []
@@ -354,7 +460,7 @@ export function useAnalytics() {
     } finally {
       setIsLoading(false)
     }
-  }, [days, metric])
+  }, [days])
 
   useEffect(() => {
     void fetchData()
@@ -379,7 +485,7 @@ export function useAnalytics() {
     isLoading,
     error,
     overview,
-    timeseries,
+    timeseries: timeseriesMap[metric] || [],
     utmCampaigns,
     projectPerformance,
     topInteractions,

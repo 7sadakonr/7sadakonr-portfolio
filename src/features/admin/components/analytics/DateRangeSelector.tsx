@@ -10,6 +10,13 @@ const DateRangeSelector = ({ days, onChange }: DateRangeSelectorProps) => {
     <div className="analytics-range-segmented" role="group" aria-label="Select date range">
       <button
         type="button"
+        className={`analytics-range-pill ${days === 1 ? 'active' : ''}`}
+        onClick={() => onChange(1)}
+      >
+        1 Day
+      </button>
+      <button
+        type="button"
         className={`analytics-range-pill ${days === 7 ? 'active' : ''}`}
         onClick={() => onChange(7)}
       >
@@ -21,13 +28,6 @@ const DateRangeSelector = ({ days, onChange }: DateRangeSelectorProps) => {
         onClick={() => onChange(30)}
       >
         30 Days
-      </button>
-      <button
-        type="button"
-        className={`analytics-range-pill ${days === 90 ? 'active' : ''}`}
-        onClick={() => onChange(90)}
-      >
-        90 Days
       </button>
     </div>
   )

@@ -149,13 +149,17 @@ begin
       ) vy
     ),
     'interactions', (select count(*) from public.analytics_events
-                     where created_at between p_from and p_to),
+                     where created_at between p_from and p_to
+                     and event_name not in ('page_view', 'section_view', 'scroll_depth')),
     'interactions_prev', (select count(*) from public.analytics_events
-                          where created_at between v_prev_from and v_prev_to),
+                          where created_at between v_prev_from and v_prev_to
+                          and event_name not in ('page_view', 'section_view', 'scroll_depth')),
     'interactions_today', (select count(*) from public.analytics_events
-                           where created_at >= v_today_start),
+                           where created_at >= v_today_start
+                           and event_name not in ('page_view', 'section_view', 'scroll_depth')),
     'interactions_yesterday', (select count(*) from public.analytics_events
-                               where created_at >= v_yesterday_start and created_at < v_today_start),
+                               where created_at >= v_yesterday_start and created_at < v_today_start
+                               and event_name not in ('page_view', 'section_view', 'scroll_depth')),
     'project_opens', (select count(*) from public.analytics_events
                       where event_name = 'project_open'
                       and created_at between p_from and p_to),
@@ -234,7 +238,8 @@ begin
         else
           (select count(*) from public.analytics_events
            where created_at::date = day::date
-           and created_at between p_from and p_to)
+           and created_at between p_from and p_to
+           and event_name not in ('page_view', 'section_view', 'scroll_depth'))
       end as count
     from generate_series(p_from::date, p_to::date, '1 day'::interval) as day
   ) d;

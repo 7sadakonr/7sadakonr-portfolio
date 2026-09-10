@@ -42,12 +42,6 @@ const ProjectSection = () => {
     } catch {
       // Ignore URL parse errors
     }
-    trackEvent('project_open', {
-      project_slug: slug,
-      target_label: title,
-      target_type: 'sidebar_live_button',
-      destination_host: host,
-    })
     trackEvent('project_demo_click', {
       project_slug: slug,
       target_label: title,
@@ -61,12 +55,6 @@ const ProjectSection = () => {
     const slug = item.id || project?.id
     const title = item.label || project?.title
 
-    trackEvent('project_open', {
-      project_slug: slug,
-      target_label: title,
-      target_type: 'sidebar_github_button',
-      destination_host: 'github.com',
-    })
     trackEvent('project_github_click', {
       project_slug: slug,
       target_label: title,
