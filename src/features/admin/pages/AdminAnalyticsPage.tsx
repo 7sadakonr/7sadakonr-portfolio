@@ -18,6 +18,8 @@ const AdminAnalyticsPage = () => {
     error,
     overview,
     timeseries,
+    trafficInsights,
+    lastUpdated,
     utmCampaigns,
     projectPerformance,
     topInteractions,
@@ -45,6 +47,10 @@ const AdminAnalyticsPage = () => {
         <div>
           <div className="analytics-eyebrow-row">
             <span className="admin-eyebrow">Behavioral &amp; Conversion Analytics</span>
+            <div className="analytics-live-status-pill" title={`Auto-refreshes every 15 seconds. Last updated: ${lastUpdated.toLocaleTimeString()}`}>
+              <span className="analytics-live-pulse-dot" />
+              <span>Live Sync</span>
+            </div>
             {isVercelSynced && (
               <span className="analytics-sync-indicator" title="Vercel Web Analytics is actively merged into all overview cards and the activity graph">
                 <span className="analytics-sync-dot"></span>
@@ -115,6 +121,8 @@ const AdminAnalyticsPage = () => {
           onMetricChange={setMetric}
           isLoading={isLoading}
           metricTotal={metricTotal}
+          days={days}
+          insights={trafficInsights}
         />
       </section>
 

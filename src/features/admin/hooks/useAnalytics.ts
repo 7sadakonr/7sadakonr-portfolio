@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { supabase } from '../../../lib/supabase'
 
 export type DateRangeDays = 1 | 7 | 30
@@ -8,6 +8,7 @@ export interface AnalyticsOverviewData {
   visitors_prev: number
   visitors_today: number
   visitors_yesterday: number
+  active_now: number
   interactions: number
   interactions_prev: number
   interactions_today: number
@@ -19,9 +20,18 @@ export interface AnalyticsOverviewData {
   avg_session_events: number
 }
 
+export interface TrafficInsights {
+  peakTimeLabel: string
+  peakCount: number
+  average: number
+  busiestPeriodLabel: string
+  unitLabel: string
+}
+
 export interface TimeSeriesPoint {
   date: string
   count: number
+  label?: string
 }
 
 export interface UtmCampaignRow {
@@ -131,6 +141,7 @@ export function useAnalytics() {
   const [metric, setMetric] = useState<TimeSeriesMetric>('visitors')
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [lastUpdated, setLastUpdated] = useState<Date>(() => new Date())
 
   const [overview, setOverview] = useState<AnalyticsOverviewData | null>(null)
   const [timeseriesMap, setTimeseriesMap] = useState<Record<TimeSeriesMetric, TimeSeriesPoint[]>>({
@@ -148,14 +159,16 @@ export function useAnalytics() {
 
   const [isVercelSynced, setIsVercelSynced] = useState<boolean>(false)
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (isBackground = false) => {
     if (!supabase) {
       setError('Supabase is not configured.')
       setIsLoading(false)
       return
     }
 
-    setIsLoading(true)
+    if (!isBackground) {
+      setIsLoading(true)
+    }
     setError(null)
 
     const toDate = new Date()
@@ -226,18 +239,104 @@ export function useAnalytics() {
       const rawSessions = toSafeNum(rawData.sessions, 0)
       const rawAvgEvents = toSafeNum(rawData.avg_session_events, 0)
 
+      // Active Now: unique visitors with activity in the last 5 minutes
+      const activeCutoffMs = Date.now() - 5 * 60 * 1000
+      const activeNowSet = new Set<string>()
+
+      // Local midnight for today's visitors (client timezone resilient)
+      const localMidnight = new Date()
+      localMidnight.setHours(0, 0, 0, 0)
+      const localMidnightMs = localMidnight.getTime()
+      const todayVisitorSet = new Set<string>()
+
+      // Identify current admin visitor in this browser to exclude from live counters
+      const adminVisitorId = typeof window !== 'undefined' ? localStorage.getItem('portfolio_visitor_id') : null
+      const adminVisitorShort = adminVisitorId ? adminVisitorId.slice(0, 8).toLowerCase() : null
+      let adminWasActiveInDb = false
+
+      // Filter out admin's own sessions from recentRes.data
+      const rawRecent = Array.isArray(recentRes.data) ? (recentRes.data as RecentSessionItem[]) : []
+      const filteredRecent = rawRecent.filter((s) => {
+        const vShort = (s.visitor_short || '').toLowerCase()
+        const sId = (s.session_id || '').toLowerCase()
+        const isSelf = adminVisitorId && (vShort === adminVisitorShort || sId === adminVisitorId.toLowerCase())
+        if (isSelf) {
+          const lastSeenMs = s.last_seen_at ? new Date(s.last_seen_at).getTime() : 0
+          const startedMs = s.started_at ? new Date(s.started_at).getTime() : 0
+          if (lastSeenMs >= activeCutoffMs || startedMs >= activeCutoffMs) {
+            adminWasActiveInDb = true
+          }
+          return false
+        }
+        return true
+      })
+
+      // Hourly buckets map for 1-day view (24 hours)
+      const hourlyVisitorsMap = new Map<string, Set<string>>()
+      const hourlyInteractionsMap = new Map<string, number>()
+      for (let h = 0; h < 24; h++) {
+        const key = `${String(h).padStart(2, '0')}:00`
+        hourlyVisitorsMap.set(key, new Set())
+        hourlyInteractionsMap.set(key, 0)
+      }
+
       // Fallback derivation if visitors were missing from old Supabase RPC:
       let effectiveVisitors = rawVisitors
       if (effectiveVisitors === 0 && rawSessions > 0) {
         effectiveVisitors = rawSessions
       }
-      if (effectiveVisitors === 0 && Array.isArray(recentRes.data) && recentRes.data.length > 0) {
-        effectiveVisitors = new Set(recentRes.data.map((s: { visitor_short?: string; session_id?: string }) => s.visitor_short || s.session_id)).size
+      if (filteredRecent.length > 0) {
+        const uniqueRecentVisitors = new Set(filteredRecent.map((s) => s.visitor_short || s.session_id))
+        if (effectiveVisitors === 0) {
+          effectiveVisitors = uniqueRecentVisitors.size
+        }
+
+        for (const s of filteredRecent) {
+          const vId = String(s.visitor_short || s.session_id || '')
+          if (!vId) continue
+          const lastSeenMs = s.last_seen_at ? new Date(s.last_seen_at).getTime() : 0
+          const startedMs = s.started_at ? new Date(s.started_at).getTime() : 0
+
+          // Check if active in last 5 minutes
+          if (lastSeenMs >= activeCutoffMs || startedMs >= activeCutoffMs) {
+            activeNowSet.add(vId)
+          }
+
+          // Check if visited since local midnight
+          if (startedMs >= localMidnightMs || lastSeenMs >= localMidnightMs) {
+            todayVisitorSet.add(vId)
+          }
+
+          // Bucket into hour if within last 24h
+          const sDate = new Date(s.started_at || s.last_seen_at || Date.now())
+          if (!isNaN(sDate.getTime()) && Date.now() - sDate.getTime() <= 24 * 60 * 60 * 1000) {
+            const hKey = `${String(sDate.getHours()).padStart(2, '0')}:00`
+            if (hourlyVisitorsMap.has(hKey)) {
+              hourlyVisitorsMap.get(hKey)!.add(vId)
+              const evCount = toSafeNum(s.event_count, 1)
+              hourlyInteractionsMap.set(hKey, (hourlyInteractionsMap.get(hKey) || 0) + evCount)
+            }
+          }
+        }
       }
 
-      let effectiveToday = rawVisitorsToday
+      const rawActiveNow = toSafeNum(rawData.active_now, 0)
+      const adjustedDbActive = adminWasActiveInDb ? Math.max(0, rawActiveNow - 1) : rawActiveNow
+      const calculatedActiveNow = Math.max(
+        adjustedDbActive,
+        activeNowSet.size
+      )
+
+      const adjustedDbToday = adminWasActiveInDb ? Math.max(0, rawVisitorsToday - 1) : rawVisitorsToday
+      let effectiveToday = Math.max(
+        adjustedDbToday,
+        todayVisitorSet.size
+      )
       if (effectiveToday === 0 && rawInteractionsToday > 0) {
         effectiveToday = Math.min(rawInteractionsToday, Math.max(1, effectiveVisitors))
+      }
+      if (effectiveToday === 0 && calculatedActiveNow > 0) {
+        effectiveToday = calculatedActiveNow
       }
 
       // Active interactions sum (real intentional actions: demo, github, resume, contact, project opens)
@@ -267,6 +366,7 @@ export function useAnalytics() {
         visitors_prev: rawVisitorsPrev,
         visitors_today: effectiveToday,
         visitors_yesterday: rawVisitorsYesterday,
+        active_now: calculatedActiveNow,
         interactions: calibratedInteractions,
         interactions_prev: rawInteractionsPrev,
         interactions_today: rawInteractionsToday,
@@ -299,23 +399,32 @@ export function useAnalytics() {
           ...mergedOverview,
           visitors: unifiedVisitors,
           visitors_today: unifiedToday,
+          active_now: calculatedActiveNow,
           interactions: calibratedInteractions,
           sessions: unifiedSessions,
         }
       }
       setOverview(mergedOverview)
 
-      // 2. Build Daily Date Axis across the requested days
+      // 2. Build Date Axis: Hourly for 1-day view (24h), Daily for multi-day views (7d, 30d)
+      const isHourly = days === 1
       const dateKeys: string[] = []
-      const curDate = new Date(fromDate)
-      const toDateFloor = new Date(toDate)
-      while (curDate <= toDateFloor) {
-        dateKeys.push(curDate.toISOString().slice(0, 10))
-        curDate.setDate(curDate.getDate() + 1)
-      }
-      const todayIso = new Date().toISOString().slice(0, 10)
-      if (!dateKeys.includes(todayIso)) {
-        dateKeys.push(todayIso)
+
+      if (isHourly) {
+        for (let h = 0; h < 24; h++) {
+          dateKeys.push(`${String(h).padStart(2, '0')}:00`)
+        }
+      } else {
+        const curDate = new Date(fromDate)
+        const toDateFloor = new Date(toDate)
+        while (curDate <= toDateFloor) {
+          dateKeys.push(curDate.toISOString().slice(0, 10))
+          curDate.setDate(curDate.getDate() + 1)
+        }
+        const todayIso = new Date().toISOString().slice(0, 10)
+        if (!dateKeys.includes(todayIso)) {
+          dateKeys.push(todayIso)
+        }
       }
 
       // Build Vercel daily metrics map
@@ -353,75 +462,139 @@ export function useAnalytics() {
       const rawVisitorsSum = rawVisitorsArray.reduce((acc, pt) => acc + toSafeNum(pt.count, 0), 0)
       const hasEventsFallbackBug = rawInteractions > 0 && rawVisitorsSum === rawInteractions && rawVisitorsSum > effectiveVisitors
 
+      // Helper to match hourly point from RPC
+      const matchHourlyCount = (arr: TimeSeriesPoint[], key: string): number => {
+        const found = arr.find((p) => {
+          const s = String(p.date || '')
+          if (s.includes(':')) {
+            return s.startsWith(key) || s.slice(11, 16) === key
+          }
+          try {
+            const d = new Date(s)
+            return !isNaN(d.getTime()) && `${String(d.getHours()).padStart(2, '0')}:00` === key
+          } catch {
+            return false
+          }
+        })
+        return found ? toSafeNum(found.count, 0) : 0
+      }
+
       // 2.1 Process 'visitors' series
-      const processedVisitors: TimeSeriesPoint[] = dateKeys.map((day) => {
-        let count = 0
-        if (hasEventsFallbackBug) {
-          count = sessionsVisitorByDay.get(day)?.size || 0
-        } else {
-          const found = rawVisitorsArray.find((p) => String(p.date || '').slice(0, 10) === day)
-          count = found ? toSafeNum(found.count, 0) : (sessionsVisitorByDay.get(day)?.size || 0)
+      const processedVisitors: TimeSeriesPoint[] = dateKeys.map((key) => {
+        if (isHourly) {
+          const sessionCount = hourlyVisitorsMap.get(key)?.size || 0
+          const rpcCount = matchHourlyCount(rawVisitorsArray, key)
+          return { date: key, count: Math.max(sessionCount, rpcCount) }
         }
 
-        const v = vercelMap.get(day)
+        let count = 0
+        if (hasEventsFallbackBug) {
+          count = sessionsVisitorByDay.get(key)?.size || 0
+        } else {
+          const found = rawVisitorsArray.find((p) => String(p.date || '').slice(0, 10) === key)
+          count = found ? toSafeNum(found.count, 0) : (sessionsVisitorByDay.get(key)?.size || 0)
+        }
+
+        const v = vercelMap.get(key)
         if (v && v.visitors > 0) {
           count = Math.max(count, v.visitors)
         }
 
-        if (day === todayIso && effectiveToday > 0) {
+        const todayIso = new Date().toISOString().slice(0, 10)
+        if (key === todayIso && effectiveToday > 0) {
           count = Math.max(count, effectiveToday)
         }
 
-        return { date: day, count }
+        return { date: key, count }
       })
 
-      const visitorsSum = processedVisitors.reduce((acc, p) => acc + p.count, 0)
-      if (visitorsSum === 0 && effectiveVisitors > 0) {
-        const lastPt = processedVisitors[processedVisitors.length - 1]
-        if (lastPt) {
-          lastPt.count = effectiveVisitors
+      if (isHourly) {
+        const visitorsSum = processedVisitors.reduce((acc, p) => acc + p.count, 0)
+        if (visitorsSum === 0 && effectiveToday > 0) {
+          const curHKey = `${String(new Date().getHours()).padStart(2, '0')}:00`
+          const curPt = processedVisitors.find((p) => p.date === curHKey)
+          if (curPt) {
+            curPt.count = effectiveToday
+          }
+        }
+      } else {
+        const visitorsSum = processedVisitors.reduce((acc, p) => acc + p.count, 0)
+        if (visitorsSum === 0 && effectiveVisitors > 0) {
+          const lastPt = processedVisitors[processedVisitors.length - 1]
+          if (lastPt) {
+            lastPt.count = effectiveVisitors
+          }
         }
       }
 
       // 2.2 Process 'interactions' series
       const rawInteractionsArray = Array.isArray(tsInteractionsRes.data) ? (tsInteractionsRes.data as TimeSeriesPoint[]) : []
       const rawInteractionsSum = rawInteractionsArray.reduce((acc, pt) => acc + toSafeNum(pt.count, 0), 0)
-      const processedInteractions: TimeSeriesPoint[] = dateKeys.map((day) => {
-        const found = rawInteractionsArray.find((p) => String(p.date || '').slice(0, 10) === day)
+      const processedInteractions: TimeSeriesPoint[] = dateKeys.map((key) => {
+        if (isHourly) {
+          const sessionEvCount = hourlyInteractionsMap.get(key) || 0
+          const rpcCount = matchHourlyCount(rawInteractionsArray, key)
+          return { date: key, count: Math.max(sessionEvCount, rpcCount) }
+        }
+
+        const found = rawInteractionsArray.find((p) => String(p.date || '').slice(0, 10) === key)
         let count = found ? toSafeNum(found.count, 0) : 0
         if (rawInteractionsSum > 0 && calibratedInteractions < rawInteractionsSum) {
           count = Math.round((count / rawInteractionsSum) * calibratedInteractions)
         }
-        return { date: day, count }
+        return { date: key, count }
       })
 
-      const interactionsSum = processedInteractions.reduce((acc, p) => acc + p.count, 0)
-      if (interactionsSum === 0 && calibratedInteractions > 0) {
-        const lastPt = processedInteractions[processedInteractions.length - 1]
-        if (lastPt) {
-          lastPt.count = calibratedInteractions
+      if (isHourly) {
+        const interactionsSum = processedInteractions.reduce((acc, p) => acc + p.count, 0)
+        if (interactionsSum === 0 && calibratedInteractions > 0) {
+          const curHKey = `${String(new Date().getHours()).padStart(2, '0')}:00`
+          const curPt = processedInteractions.find((p) => p.date === curHKey)
+          if (curPt) {
+            curPt.count = calibratedInteractions
+          }
+        }
+      } else {
+        const interactionsSum = processedInteractions.reduce((acc, p) => acc + p.count, 0)
+        if (interactionsSum === 0 && calibratedInteractions > 0) {
+          const lastPt = processedInteractions[processedInteractions.length - 1]
+          if (lastPt) {
+            lastPt.count = calibratedInteractions
+          }
         }
       }
 
       // 2.3 Process 'project_opens' series
       const rawOpensArray = Array.isArray(tsOpensRes.data) ? (tsOpensRes.data as TimeSeriesPoint[]) : []
-      const processedOpens: TimeSeriesPoint[] = dateKeys.map((day) => {
-        const found = rawOpensArray.find((p) => String(p.date || '').slice(0, 10) === day)
-        return { date: day, count: found ? toSafeNum(found.count, 0) : 0 }
+      const processedOpens: TimeSeriesPoint[] = dateKeys.map((key) => {
+        if (isHourly) {
+          const rpcCount = matchHourlyCount(rawOpensArray, key)
+          return { date: key, count: rpcCount }
+        }
+        const found = rawOpensArray.find((p) => String(p.date || '').slice(0, 10) === key)
+        return { date: key, count: found ? toSafeNum(found.count, 0) : 0 }
       })
 
       // 2.4 Process 'external_clicks' series
       const rawClicksArray = Array.isArray(tsClicksRes.data) ? (tsClicksRes.data as TimeSeriesPoint[]) : []
-      const processedClicks: TimeSeriesPoint[] = dateKeys.map((day) => {
-        const found = rawClicksArray.find((p) => String(p.date || '').slice(0, 10) === day)
-        return { date: day, count: found ? toSafeNum(found.count, 0) : 0 }
+      const processedClicks: TimeSeriesPoint[] = dateKeys.map((key) => {
+        if (isHourly) {
+          const rpcCount = matchHourlyCount(rawClicksArray, key)
+          return { date: key, count: rpcCount }
+        }
+        const found = rawClicksArray.find((p) => String(p.date || '').slice(0, 10) === key)
+        return { date: key, count: found ? toSafeNum(found.count, 0) : 0 }
       })
 
       // 2.5 Process 'resume_downloads' series
       const rawResumeArray = Array.isArray(tsResumeRes.data) ? (tsResumeRes.data as TimeSeriesPoint[]) : []
-      const processedResume: TimeSeriesPoint[] = dateKeys.map((day) => {
-        const found = rawResumeArray.find((p) => String(p.date || '').slice(0, 10) === day)
-        return { date: day, count: found ? toSafeNum(found.count, 0) : 0 }
+      const processedResume: TimeSeriesPoint[] = dateKeys.map((key) => {
+        if (isHourly) {
+          const rpcCount = matchHourlyCount(rawResumeArray, key)
+          return { date: key, count: rpcCount }
+        }
+        const found = rawResumeArray.find((p) => String(p.date || '').slice(0, 10) === key)
+        return { date: key, count: found ? toSafeNum(found.count, 0) : 0 }
       })
 
       setTimeseriesMap({
@@ -431,6 +604,7 @@ export function useAnalytics() {
         external_clicks: processedClicks,
         resume_downloads: processedResume,
       })
+      setLastUpdated(new Date())
 
       // 3. Unified Referral Sources: Merge Vercel top referrers into UTM Campaign table
       const mergedUtm = (utmRes.data as UtmCampaignRow[]) || []
@@ -453,7 +627,7 @@ export function useAnalytics() {
       setProjectPerformance((projectRes.data as ProjectPerformanceRow[]) || [])
       setTopInteractions((topRes.data as TopInteractionRow[]) || [])
       setFunnel(funnelRes.data as FunnelData)
-      setRecentSessions((recentRes.data as RecentSessionItem[]) || [])
+      setRecentSessions(filteredRecent)
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to load analytics data'
       setError(message)
@@ -462,9 +636,137 @@ export function useAnalytics() {
     }
   }, [days])
 
+  // Initial fetch and dependency on days
   useEffect(() => {
     void fetchData()
   }, [fetchData])
+
+  // Real-time background sync (15s auto-polling + visibility/focus wakeup)
+  useEffect(() => {
+    let timer: ReturnType<typeof setInterval> | null = null
+
+    const startPolling = () => {
+      if (timer) clearInterval(timer)
+      timer = setInterval(() => {
+        if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+          void fetchData(true)
+        }
+      }, 15000)
+    }
+
+    startPolling()
+
+    const handleVisibilityChange = () => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+        void fetchData(true)
+      }
+    }
+
+    const handleFocus = () => {
+      void fetchData(true)
+    }
+
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', handleVisibilityChange)
+    }
+    if (typeof window !== 'undefined') {
+      window.addEventListener('focus', handleFocus)
+    }
+
+    return () => {
+      if (timer) clearInterval(timer)
+      if (typeof document !== 'undefined') {
+        document.removeEventListener('visibilitychange', handleVisibilityChange)
+      }
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('focus', handleFocus)
+      }
+    }
+  }, [fetchData])
+
+  // Deep traffic insights (peak hour/day, averages, busiest time window)
+  const trafficInsights = useMemo<TrafficInsights>(() => {
+    const currentSeries = timeseriesMap[metric] || []
+    if (!currentSeries || currentSeries.length === 0) {
+      return {
+        peakTimeLabel: '-',
+        peakCount: 0,
+        average: 0,
+        busiestPeriodLabel: '-',
+        unitLabel: days === 1 ? 'per hour' : 'per day',
+      }
+    }
+
+    const firstPt = currentSeries[0]
+    if (!firstPt) {
+      return {
+        peakTimeLabel: '-',
+        peakCount: 0,
+        average: 0,
+        busiestPeriodLabel: '-',
+        unitLabel: days === 1 ? 'per hour' : 'per day',
+      }
+    }
+
+    let peakPt: TimeSeriesPoint = firstPt
+    let sum = 0
+    for (const pt of currentSeries) {
+      sum += pt.count
+      if (pt.count > peakPt.count) {
+        peakPt = pt
+      }
+    }
+
+    const average = currentSeries.length > 0 ? Math.round((sum / currentSeries.length) * 10) / 10 : 0
+
+    let peakTimeLabel = peakPt.date || '-'
+    if (days === 1) {
+      if (peakTimeLabel.includes(':')) {
+        const parts = peakTimeLabel.split(':')
+        const firstHour = parts[0]
+        const hour = firstHour ? parseInt(firstHour, 10) : NaN
+        if (!isNaN(hour)) {
+          const nextHour = (hour + 1) % 24
+          peakTimeLabel = `${String(hour).padStart(2, '0')}:00 - ${String(nextHour).padStart(2, '0')}:00`
+        }
+      }
+    }
+
+    let busiestPeriodLabel = '-'
+    if (days === 1) {
+      const periods = [
+        { name: 'Morning (06:00 - 12:00)', total: 0 },
+        { name: 'Afternoon (12:00 - 18:00)', total: 0 },
+        { name: 'Evening (18:00 - 24:00)', total: 0 },
+        { name: 'Night (00:00 - 06:00)', total: 0 },
+      ]
+      for (const pt of currentSeries) {
+        const dateStr = String(pt.date || '')
+        const parts = dateStr.split(':')
+        const firstPart = parts[0]
+        const h = firstPart ? parseInt(firstPart, 10) : NaN
+        if (!isNaN(h)) {
+          if (h >= 6 && h < 12 && periods[0]) periods[0].total += pt.count
+          else if (h >= 12 && h < 18 && periods[1]) periods[1].total += pt.count
+          else if (h >= 18 && h < 24 && periods[2]) periods[2].total += pt.count
+          else if (periods[3]) periods[3].total += pt.count
+        }
+      }
+      periods.sort((a, b) => b.total - a.total)
+      const topPeriod = periods[0]
+      busiestPeriodLabel = topPeriod && topPeriod.total > 0 ? topPeriod.name : 'Evenly Distributed'
+    } else {
+      busiestPeriodLabel = peakPt.count > 0 ? `Peak on ${peakPt.date}` : '-'
+    }
+
+    return {
+      peakTimeLabel,
+      peakCount: peakPt.count,
+      average,
+      busiestPeriodLabel,
+      unitLabel: days === 1 ? 'per hour' : 'per day',
+    }
+  }, [timeseriesMap, metric, days])
 
   const fetchSessionDetail = useCallback(async (sessionId: string): Promise<SessionDetailData | null> => {
     if (!supabase) return null
@@ -486,6 +788,8 @@ export function useAnalytics() {
     error,
     overview,
     timeseries: timeseriesMap[metric] || [],
+    trafficInsights,
+    lastUpdated,
     utmCampaigns,
     projectPerformance,
     topInteractions,

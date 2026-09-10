@@ -19,10 +19,50 @@ interface QueuedEvent extends EventPayload {
 
 const VISITOR_KEY = 'portfolio_visitor_id'
 const SESSION_KEY = 'portfolio_session_meta'
+const ADMIN_OPT_OUT_KEY = 'portfolio_admin_opt_out'
 const SESSION_TIMEOUT_MS = 30 * 60 * 1000 // 30 minutes
 const FLUSH_BATCH_SIZE = 5
 const FLUSH_INTERVAL_MS = 3000
 const ENDPOINT = '/api/analytics'
+
+export function isAdminOptOut(): boolean {
+  if (typeof window === 'undefined') return false
+  try {
+    if (window.location && typeof window.location.pathname === 'string' && window.location.pathname.startsWith('/admin')) {
+      return true
+    }
+    if (localStorage.getItem(ADMIN_OPT_OUT_KEY) === 'true') {
+      return true
+    }
+  } catch {
+    // Ignore storage/location access errors
+  }
+  return false
+}
+
+export function setAdminOptOut(enabled: boolean): void {
+  if (typeof window === 'undefined') return
+  try {
+    if (enabled) {
+      localStorage.setItem(ADMIN_OPT_OUT_KEY, 'true')
+      localStorage.removeItem(SESSION_KEY)
+      if (flushTimer) {
+        clearTimeout(flushTimer)
+        flushTimer = null
+      }
+      if (heartbeatTimer) {
+        clearInterval(heartbeatTimer)
+        heartbeatTimer = null
+      }
+      eventQueue = []
+      isInitialized = false
+    } else {
+      localStorage.removeItem(ADMIN_OPT_OUT_KEY)
+    }
+  } catch {
+    // Ignore storage access errors
+  }
+}
 
 const IMMEDIATE_EVENTS = new Set([
   'project_open',
@@ -37,6 +77,7 @@ const IMMEDIATE_EVENTS = new Set([
 
 let eventQueue: QueuedEvent[] = []
 let flushTimer: ReturnType<typeof setTimeout> | null = null
+let heartbeatTimer: ReturnType<typeof setInterval> | null = null
 let isInitialized = false
 
 // Cached session state
@@ -163,6 +204,11 @@ function touchSession(): void {
 }
 
 function flush(isExiting = false): void {
+  if (isAdminOptOut()) {
+    eventQueue = []
+    return
+  }
+
   if (flushTimer) {
     clearTimeout(flushTimer)
     flushTimer = null
@@ -224,6 +270,8 @@ function scheduleFlush(): void {
  * Public function to enqueue custom events. Fire-and-forget, never throws.
  */
 export function trackEvent(name: string, payload: Partial<EventPayload> = {}): void {
+  if (isAdminOptOut()) return
+
   if (!isInitialized) {
     // If called before idle init, initialize synchronously without blocking
     initAnalytics()
@@ -260,6 +308,7 @@ export function trackEvent(name: string, payload: Partial<EventPayload> = {}): v
  * Initialize tracker once. Sets up session, exit handlers.
  */
 export function initAnalytics(): void {
+  if (isAdminOptOut()) return
   if (isInitialized || typeof window === 'undefined') return
   isInitialized = true
 
@@ -279,6 +328,15 @@ export function initAnalytics(): void {
     setTimeout(() => {
       flush()
     }, 1000)
+
+    // Start periodic heartbeat (every 30s when page is active) to keep active_now alive
+    if (!heartbeatTimer && typeof window !== 'undefined') {
+      heartbeatTimer = setInterval(() => {
+        if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+          trackEvent('heartbeat')
+        }
+      }, 30000)
+    }
 
     // Exit flush listeners
     const handleVisibilityChange = () => {
@@ -304,6 +362,10 @@ export function _resetAnalyticsForTesting(): void {
   if (flushTimer) {
     clearTimeout(flushTimer)
     flushTimer = null
+  }
+  if (heartbeatTimer) {
+    clearInterval(heartbeatTimer)
+    heartbeatTimer = null
   }
   currentVisitorId = ''
   currentSessionId = ''
