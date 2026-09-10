@@ -4,7 +4,14 @@ import { supabase } from '../../../lib/supabase'
 export type DateRangeDays = 7 | 30 | 90
 
 export interface AnalyticsOverviewData {
+  visitors: number
+  visitors_prev: number
+  visitors_today: number
+  visitors_yesterday: number
   interactions: number
+  interactions_prev: number
+  interactions_today: number
+  interactions_yesterday: number
   project_opens: number
   external_clicks: number
   resume_downloads: number
@@ -95,11 +102,11 @@ export interface SessionDetailData {
   events: SessionEvent[]
 }
 
-export type TimeSeriesMetric = 'interactions' | 'project_opens' | 'external_clicks' | 'resume_downloads'
+export type TimeSeriesMetric = 'visitors' | 'interactions' | 'project_opens' | 'external_clicks' | 'resume_downloads'
 
 export function useAnalytics() {
   const [days, setDays] = useState<DateRangeDays>(30)
-  const [metric, setMetric] = useState<TimeSeriesMetric>('interactions')
+  const [metric, setMetric] = useState<TimeSeriesMetric>('visitors')
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 

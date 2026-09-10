@@ -17,6 +17,11 @@ interface InteractionChartProps {
 }
 
 const METRIC_CONFIG: Record<TimeSeriesMetric, { label: string; color: string; fillGradient: string }> = {
+  visitors: {
+    label: 'Unique Visitors',
+    color: '#10b981',
+    fillGradient: 'colorVisitors',
+  },
   interactions: {
     label: 'All Interactions',
     color: '#1b6b50',
@@ -105,11 +110,8 @@ const InteractionChart = ({
             <span>Calculating daily timeline…</span>
           </div>
         )}
-        {!isLoading && chartData.length === 0 && (
-          <div className="analytics-chart-empty">No activity recorded for this period.</div>
-        )}
-        {!isLoading && chartData.length > 0 && (
-          <ResponsiveContainer width="100%" height={340}>
+        {!isLoading && (
+          <ResponsiveContainer width="100%" height={340} minWidth={0}>
             <AreaChart data={chartData} margin={{ top: 18, right: 16, left: -16, bottom: 4 }}>
               <defs>
                 <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
@@ -132,6 +134,7 @@ const InteractionChart = ({
                 tickLine={false}
                 axisLine={false}
                 allowDecimals={false}
+                domain={[0, (dataMax: number) => Math.max(5, dataMax)]}
               />
               <Tooltip
                 contentStyle={{
@@ -146,7 +149,7 @@ const InteractionChart = ({
                 itemStyle={{ color: '#ffffff', fontWeight: 700 }}
                 labelStyle={{ fontWeight: 600, color: '#a8b9ae', marginBottom: '4px' }}
                 formatter={(value) => [
-                  `${Number(value ?? 0).toLocaleString()} events`,
+                  `${Number(value ?? 0).toLocaleString()} ${metric === 'visitors' ? 'visitors' : 'events'}`,
                   activeConfig.label,
                 ]}
               />
