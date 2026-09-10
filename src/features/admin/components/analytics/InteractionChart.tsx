@@ -61,11 +61,11 @@ const InteractionChart = ({
 }: InteractionChartProps) => {
   const chartData = data.map((d) => ({
     date: formatDate(d.date),
-    count: d.count,
+    count: typeof d.count === 'number' && !isNaN(d.count) && isFinite(d.count) ? d.count : 0,
     rawDate: d.date,
   }))
 
-  const totalCount = data.reduce((sum, pt) => sum + pt.count, 0)
+  const totalCount = chartData.reduce((sum, pt) => sum + pt.count, 0)
   const activeConfig = METRIC_CONFIG[metric]
 
   return (

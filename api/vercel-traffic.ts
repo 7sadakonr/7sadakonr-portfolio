@@ -30,9 +30,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     return
   }
 
-  const vercelToken = process.env.VERCEL_TOKEN || process.env.VERCEL_ACCESS_TOKEN
-  const projectId = process.env.VERCEL_PROJECT_ID || process.env.PROJECT_ID
-  const teamId = process.env.VERCEL_TEAM_ID
+  const vercelToken = (process.env.VERCEL_TOKEN || process.env.VERCEL_ACCESS_TOKEN || '').trim()
+  const projectId = (process.env.VERCEL_PROJECT_ID || process.env.PROJECT_ID || '').trim()
+  let teamId = (process.env.VERCEL_TEAM_ID || '').trim()
 
   if (!vercelToken || !projectId) {
     res.status(200).json({
@@ -40,6 +40,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       message: 'Vercel API Token or Project ID is not yet configured in environment variables.',
     })
     return
+  }
+
+  // Auto-detect teamId if project is owned by a team and teamId was not explicitly set
+  if (!teamId) {
+    try {
+      const projRes = await fetch(`https://api.vercel.com/v9/projects/${encodeURIComponent(projectId)}`, {
+        headers: { Authorization: `Bearer ${vercelToken}` },
+      })
+      if (projRes.ok) {
+        const projData = (await projRes.json()) as { accountId?: string }
+        if (projData?.accountId && projData.accountId.startsWith('team_')) {
+          teamId = projData.accountId
+        }
+      }
+    } catch {
+      // Continue without auto-detected teamId
+    }
   }
 
   // Determine query range (default 30 days, or requested days)
@@ -66,34 +83,51 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
   try {
     // 1. Fetch total count of visits
     const countUrl = `https://api.vercel.com/v1/query/web-analytics/visits/count?${baseParams.toString()}`
-    const countPromise = fetch(countUrl, { headers }).then(async (r) => (r.ok ? r.json() : null)).catch(() => null)
+    const countPromise = fetch(countUrl, { headers })
 
     // Fallback/parallel query to aggregate daily totals in case count returns different schema
     const aggTotalsParams = new URLSearchParams(baseParams)
     aggTotalsParams.set('granularity', 'day')
     const aggTotalsUrl = `https://api.vercel.com/v1/query/web-analytics/visits/aggregate?${aggTotalsParams.toString()}`
-    const aggTotalsPromise = fetch(aggTotalsUrl, { headers }).then(async (r) => (r.ok ? r.json() : null)).catch(() => null)
+    const aggTotalsPromise = fetch(aggTotalsUrl, { headers })
 
     // 2. Fetch top referrers
     const referrersParams = new URLSearchParams(baseParams)
     referrersParams.set('by', 'referrer')
     referrersParams.set('limit', '8')
     const referrersUrl = `https://api.vercel.com/v1/query/web-analytics/visits/aggregate?${referrersParams.toString()}`
-    const referrersPromise = fetch(referrersUrl, { headers }).then(async (r) => (r.ok ? r.json() : null)).catch(() => null)
+    const referrersPromise = fetch(referrersUrl, { headers })
 
     // 3. Fetch top countries
     const countriesParams = new URLSearchParams(baseParams)
     countriesParams.set('by', 'country')
     countriesParams.set('limit', '6')
     const countriesUrl = `https://api.vercel.com/v1/query/web-analytics/visits/aggregate?${countriesParams.toString()}`
-    const countriesPromise = fetch(countriesUrl, { headers }).then(async (r) => (r.ok ? r.json() : null)).catch(() => null)
+    const countriesPromise = fetch(countriesUrl, { headers })
 
-    const [countData, aggTotalsRaw, refDataRaw, countryDataRaw] = await Promise.all([
+    const [countRes, aggTotalsRes, refRes, countryRes] = await Promise.all([
       countPromise,
       aggTotalsPromise,
       referrersPromise,
       countriesPromise,
     ])
+
+    // If both count and aggregate failed due to authentication or permissions
+    if (!countRes.ok && !aggTotalsRes.ok) {
+      const errText = await (countRes.status !== 404 ? countRes.text() : aggTotalsRes.text()).catch(() => '')
+      console.warn(`[Vercel Traffic API] Failed querying Vercel Web Analytics: status ${countRes.status}`, errText)
+      res.status(200).json({
+        configured: false,
+        status: countRes.status,
+        message: `Vercel Web Analytics API returned ${countRes.status}. Make sure VERCEL_TOKEN and VERCEL_PROJECT_ID are valid.`,
+      })
+      return
+    }
+
+    const countData = countRes.ok ? await countRes.json().catch(() => null) : null
+    const aggTotalsRaw = aggTotalsRes.ok ? await aggTotalsRes.json().catch(() => null) : null
+    const refDataRaw = refRes.ok ? await refRes.json().catch(() => null) : null
+    const countryDataRaw = countryRes.ok ? await countryRes.json().catch(() => null) : null
 
     let totalPageviews = 0
     let totalVisitors = 0

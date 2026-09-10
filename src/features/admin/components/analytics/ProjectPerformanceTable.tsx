@@ -51,9 +51,11 @@ const ProjectPerformanceTable = ({ data, isLoading }: ProjectPerformanceTablePro
             )}
             {!isLoading &&
               data.map((row) => {
-                const totalClicks = row.github_clicks + row.demo_clicks
-                const rate = row.opens > 0 ? ((totalClicks / row.opens) * 100).toFixed(1) : '0.0'
-                const rateNum = parseFloat(rate)
+                const totalClicks = (typeof row.github_clicks === 'number' && !isNaN(row.github_clicks) ? row.github_clicks : 0) +
+                  (typeof row.demo_clicks === 'number' && !isNaN(row.demo_clicks) ? row.demo_clicks : 0)
+                const opens = typeof row.opens === 'number' && !isNaN(row.opens) ? row.opens : 0
+                const rate = opens > 0 ? ((totalClicks / opens) * 100).toFixed(1) : '0.0'
+                const rateNum = isNaN(parseFloat(rate)) ? 0 : parseFloat(rate)
 
                 return (
                   <tr

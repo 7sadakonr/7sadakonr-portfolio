@@ -60,8 +60,10 @@ const UtmTable = ({ data, isLoading }: UtmTableProps) => {
             )}
             {!isLoading &&
               data.map((row, index) => {
-                const convRateNum = row.sessions > 0 ? (row.conversions / row.sessions) * 100 : 0
-                const convRate = convRateNum.toFixed(1)
+                const validSessions = typeof row.sessions === 'number' && !isNaN(row.sessions) ? row.sessions : 0
+                const validConversions = typeof row.conversions === 'number' && !isNaN(row.conversions) ? row.conversions : 0
+                const convRateNum = validSessions > 0 ? (validConversions / validSessions) * 100 : 0
+                const convRate = isNaN(convRateNum) || !isFinite(convRateNum) ? '0.0' : convRateNum.toFixed(1)
                 return (
                   <tr key={`${row.source}-${row.campaign}-${index}`}>
                     <td>
