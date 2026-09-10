@@ -40,6 +40,8 @@ const LazySection = ({ id, children, canLoad = true }: LazySectionProps) => {
       if (requestedId === id) setShouldRender(true)
     })
 
+    if (isSectionRequested(id)) setShouldRender(true)
+
     if (!canLoad) return unsubscribe
 
     const element = document.getElementById(id)

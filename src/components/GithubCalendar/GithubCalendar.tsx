@@ -44,9 +44,12 @@ type GitHubPushEvent = {
     payload?: { commits?: unknown[] }
 }
 
+type RepositoryLoadStatus = 'loading' | 'ready' | 'failed'
+
 type GitHubOwnedRepository = {
-    full_name: string
-    name: string
+  full_name: string
+  name: string
+  stargazers_count: number
     owner?: {
         login: string
         avatar_url?: string
@@ -249,6 +252,9 @@ const GithubCalendar = ({ username, className = '', colorSchema = 'green' }: Git
     const [stats, setStats] = useState<GithubStats | null>(() => getCachedData<GithubStats>(statsCacheKey))
     const [loading, setLoading] = useState(() => !getCachedData<GithubContributionData>(contributionCacheKey))
     const [error, setError] = useState(false)
+    const [repositoryLoadStatus, setRepositoryLoadStatus] = useState<RepositoryLoadStatus>(() =>
+        getCachedData<CachedRepository[]>(repositoryCacheKey) ? 'ready' : 'loading',
+    )
     const [isVisible, setIsVisible] = useState(false)
     const containerRef = useRef<HTMLDivElement>(null)
     const [activityRef, cellSize] = useFittedActivityCell(!loading)
@@ -264,7 +270,7 @@ const GithubCalendar = ({ username, className = '', colorSchema = 'green' }: Git
                 setIsVisible(true)
                 observer.disconnect()
             }
-        }, { rootMargin: '200px 0px' })
+        }, { rootMargin: '0px', threshold: 0 })
 
         if (containerRef.current) observer.observe(containerRef.current)
         return () => observer.disconnect()
@@ -314,86 +320,83 @@ const GithubCalendar = ({ username, className = '', colorSchema = 'green' }: Git
     useEffect(() => {
         if (!isVisible) return
 
-        const cached = getCachedData<CachedRepository[]>(repositoryCacheKey)
-        if (cached) {
-            setRepositories(cached)
+        const cachedRepositories = getCachedData<CachedRepository[]>(repositoryCacheKey)
+        const cachedStats = getCachedData<GithubStats>(statsCacheKey)
+        if (cachedRepositories) setRepositories(cachedRepositories)
+        if (cachedStats) setStats(cachedStats)
+        if (cachedRepositories && cachedStats) {
+            setRepositoryLoadStatus('ready')
             return
         }
 
         const controller = new AbortController()
-
-        const fetchRepositories = async () => {
-            try {
-                const headers = { Accept: 'application/vnd.github+json' }
-                const [eventsResponse, ownedRepositoriesResponse] = await Promise.all([
-                    fetch(`https://api.github.com/users/${username}/events/public?per_page=100`, {
-                        headers,
-                        signal: controller.signal,
-                    }),
-                    fetch(`https://api.github.com/users/${username}/repos?per_page=100&type=owner`, {
-                        headers,
-                        signal: controller.signal,
-                    }),
-                ])
-                if (!eventsResponse.ok || !ownedRepositoriesResponse.ok) {
-                    throw new Error('Unable to load GitHub repository activity')
+        const loadRepositoryData = async () => {
+            const headers = { Accept: 'application/vnd.github+json' }
+            const needsRepositories = !cachedRepositories
+            const needsStats = !cachedStats
+            const repositoriesPromise = (needsRepositories || needsStats)
+                ? fetch(`https://api.github.com/users/${username}/repos?per_page=100&type=owner`, { headers, signal: controller.signal })
+                : undefined
+            const eventsPromise = needsRepositories
+                ? fetch(`https://api.github.com/users/${username}/events/public?per_page=100`, { headers, signal: controller.signal })
+                : undefined
+            const profilePromise = needsStats
+                ? fetch(`https://api.github.com/users/${username}`, { headers, signal: controller.signal })
+                : undefined
+            const settle = async (request?: Promise<Response>) => {
+                if (!request) return null
+                try {
+                    const response = await request
+                    return response.ok ? response : null
+                } catch {
+                    return null
                 }
+            }
+            const [repositoriesResponse, eventsResponse, profileResponse] = await Promise.all([
+                settle(repositoriesPromise), settle(eventsPromise), settle(profilePromise),
+            ])
+            if (controller.signal.aborted) return
 
-                const events = await eventsResponse.json() as GitHubPushEvent[]
-                const ownedRepositories = await ownedRepositoriesResponse.json() as GitHubOwnedRepository[]
-                const nextRepositories = toRepositories(events, ownedRepositories, username)
-                setCachedData(repositoryCacheKey, nextRepositories)
-                setRepositories(nextRepositories)
-            } catch (fetchError) {
-                if (!(fetchError instanceof DOMException && fetchError.name === 'AbortError')) {
+            let ownedRepositories: GitHubOwnedRepository[] | null = null
+            if (repositoriesResponse) {
+                try { ownedRepositories = await repositoriesResponse.json() as GitHubOwnedRepository[] } catch { ownedRepositories = null }
+            }
+
+            if (eventsResponse && ownedRepositories) {
+                try {
+                    const events = await eventsResponse.json() as GitHubPushEvent[]
+                    const nextRepositories = toRepositories(events, ownedRepositories, username)
+                    setCachedData(repositoryCacheKey, nextRepositories)
+                    setRepositories(nextRepositories)
+                    setRepositoryLoadStatus('ready')
+                } catch {
                     setRepositories([])
+                    setRepositoryLoadStatus('failed')
                 }
+            } else if (!cachedRepositories) {
+                setRepositories([])
+                setRepositoryLoadStatus('failed')
+            }
+
+            if (profileResponse && ownedRepositories) {
+                try {
+                    const profile = await profileResponse.json() as { followers: number; public_repos: number }
+                    const computedStats = {
+                        followers: profile.followers,
+                        repositories: profile.public_repos,
+                        stars: ownedRepositories.reduce((total, repository) => total + repository.stargazers_count, 0),
+                    }
+                    setCachedData(statsCacheKey, computedStats)
+                    setStats(computedStats)
+                } catch { if (!cachedStats) setStats(null) }
+            } else if (!cachedStats) {
+                setStats(null)
             }
         }
 
-        fetchRepositories()
+        void loadRepositoryData()
         return () => controller.abort()
-    }, [isVisible, repositoryCacheKey, username])
-
-    useEffect(() => {
-        if (!isVisible) return
-
-        const cached = getCachedData<GithubStats>(statsCacheKey)
-        if (cached) {
-            setStats(cached)
-            return
-        }
-
-        const controller = new AbortController()
-
-        const fetchStats = async () => {
-            try {
-                const headers = { Accept: 'application/vnd.github+json' }
-                const [profileResponse, repositoriesResponse] = await Promise.all([
-                    fetch(`https://api.github.com/users/${username}`, { headers, signal: controller.signal }),
-                    fetch(`https://api.github.com/users/${username}/repos?per_page=100&type=owner`, { headers, signal: controller.signal }),
-                ])
-
-                if (!profileResponse.ok || !repositoriesResponse.ok) throw new Error('Unable to load GitHub stats')
-
-                const profile = await profileResponse.json() as { followers: number; public_repos: number }
-                const ownedRepositories = await repositoriesResponse.json() as Array<{ stargazers_count: number }>
-                const computedStats = {
-                    followers: profile.followers,
-                    repositories: profile.public_repos,
-                    stars: ownedRepositories.reduce((total, repository) => total + repository.stargazers_count, 0),
-                }
-
-                setCachedData(statsCacheKey, computedStats)
-                setStats(computedStats)
-            } catch (fetchError) {
-                if (!(fetchError instanceof DOMException && fetchError.name === 'AbortError')) setStats(null)
-            }
-        }
-
-        fetchStats()
-        return () => controller.abort()
-    }, [isVisible, statsCacheKey, username])
+    }, [isVisible, repositoryCacheKey, statsCacheKey, username])
 
     const activityContributions = useMemo(
         () => normalizeContributions(data?.contributions ?? []),
@@ -447,6 +450,7 @@ const GithubCalendar = ({ username, className = '', colorSchema = 'green' }: Git
                         accent={COLOR_SCALES[colorSchema]}
                         cellSize={cellSize}
                         showMonths
+                        fetchWhenEmpty={repositoryLoadStatus === 'failed'}
                         style={{ ...ACTIVITY_THEME, width: '100%' }}
                     />
                 </div>
