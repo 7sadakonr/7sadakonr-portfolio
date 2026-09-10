@@ -123,8 +123,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     totalPageviews = countMetrics.pv
     totalVisitors = countMetrics.v
 
-    // If count returned 0 or null, sum from aggregate breakdown
-    if (totalPageviews === 0 && aggTotalsRaw && typeof aggTotalsRaw === 'object') {
+    // Process daily breakdown from aggregate
+    const dailyTimeSeries: Array<{ date: string; pageviews: number; visitors: number }> = []
+    let aggPageviews = 0
+    let aggVisitors = 0
+
+    if (aggTotalsRaw && typeof aggTotalsRaw === 'object') {
       const rows: unknown[] = Array.isArray(aggTotalsRaw)
         ? (aggTotalsRaw as unknown[])
         : Array.isArray((aggTotalsRaw as Record<string, unknown>).data)
@@ -132,10 +136,28 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
           : []
 
       for (const row of rows) {
+        if (!row || typeof row !== 'object') continue
+        const r = row as Record<string, unknown>
+        const dateVal = String(r.date || r.key || '')
         const m = extractMetricsFromObj(row)
-        totalPageviews += m.pv
-        totalVisitors += m.v
+        aggPageviews += m.pv
+        aggVisitors += m.v
+        if (dateVal) {
+          dailyTimeSeries.push({
+            date: dateVal.slice(0, 10),
+            pageviews: m.pv,
+            visitors: m.v,
+          })
+        }
       }
+    }
+
+    // Always take the most complete total
+    if (totalPageviews === 0 || aggPageviews > totalPageviews) {
+      totalPageviews = aggPageviews
+    }
+    if (totalVisitors === 0 || aggVisitors > totalVisitors) {
+      totalVisitors = aggVisitors
     }
 
     // Process referrers
@@ -174,6 +196,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       totalVisitors,
       topReferrers,
       topCountries,
+      dailyTimeSeries,
       periodDays: days,
     })
   } catch (err) {

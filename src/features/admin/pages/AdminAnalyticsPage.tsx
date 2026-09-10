@@ -7,7 +7,6 @@ import ProjectPerformanceTable from '../components/analytics/ProjectPerformanceT
 import TopInteractions from '../components/analytics/TopInteractions'
 import ConversionFunnel from '../components/analytics/ConversionFunnel'
 import RecentSessions from '../components/analytics/RecentSessions'
-import VercelTrafficBridge from '../components/analytics/VercelTrafficBridge'
 
 const AdminAnalyticsPage = () => {
   const {
@@ -24,22 +23,28 @@ const AdminAnalyticsPage = () => {
     topInteractions,
     funnel,
     recentSessions,
+    isVercelSynced,
     refetch,
     fetchSessionDetail,
   } = useAnalytics()
 
   return (
     <div className="admin-page analytics-page">
-      {/* Vercel Web Analytics Bridge */}
-      <VercelTrafficBridge days={days} />
-
       {/* Page Header */}
       <header className="analytics-header">
         <div>
-          <span className="admin-eyebrow">Behavioral &amp; Conversion Analytics</span>
+          <div className="analytics-eyebrow-row">
+            <span className="admin-eyebrow">Behavioral &amp; Conversion Analytics</span>
+            {isVercelSynced && (
+              <span className="analytics-sync-indicator" title="Vercel Web Analytics is actively merged into all overview cards and the activity graph">
+                <span className="analytics-sync-dot"></span>
+                Unified with Vercel Web Analytics
+              </span>
+            )}
+          </div>
           <h1 className="analytics-page-title">Portfolio Analytics</h1>
           <p className="analytics-page-description">
-            Custom engagement tracking: project clicks, resume downloads, UTM attribution, and visitor journeys.
+            Unified audience &amp; engagement: Vercel past traffic, custom project clicks, resume downloads, and visitor journeys.
           </p>
         </div>
 
