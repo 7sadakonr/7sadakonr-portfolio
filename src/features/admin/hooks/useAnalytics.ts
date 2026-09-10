@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { supabase } from '../../../lib/supabase'
+import { formatAnalyticsHour, hourBucket, rollingHourKeys } from './analyticsTime'
 
 export type DateRangeDays = 1 | 7 | 30
 
 export interface AnalyticsOverviewData {
   visitors: number
-  visitors_prev: number
-  visitors_today: number
-  visitors_yesterday: number
+  visitors_prev: number | null
+  visitors_today: number | null
+  visitors_yesterday: number | null
   active_now: number
   interactions: number
   interactions_prev: number
@@ -172,7 +173,7 @@ export function useAnalytics() {
     setError(null)
 
     const toDate = new Date()
-    const fromDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000)
+    const fromDate = new Date(toDate.getTime() - days * 24 * 60 * 60 * 1000)
     const p_from = fromDate.toISOString()
     const p_to = toDate.toISOString()
 
@@ -248,16 +249,15 @@ export function useAnalytics() {
 
       // Hourly buckets map for 1-day view (24 hours)
       const hourlyInteractionsMap = new Map<string, number>()
-      for (let h = 0; h < 24; h++) {
-        const key = `${String(h).padStart(2, '0')}:00`
+      for (const key of rollingHourKeys(fromDate, toDate)) {
         hourlyInteractionsMap.set(key, 0)
       }
 
       if (filteredRecent.length > 0) {
         for (const s of filteredRecent) {
           const sDate = new Date(s.started_at || s.last_seen_at || Date.now())
-          if (!isNaN(sDate.getTime()) && Date.now() - sDate.getTime() <= 24 * 60 * 60 * 1000) {
-            const hKey = `${String(sDate.getHours()).padStart(2, '0')}:00`
+          if (!isNaN(sDate.getTime()) && sDate >= fromDate && sDate <= toDate) {
+            const hKey = hourBucket(sDate)
             if (hourlyInteractionsMap.has(hKey)) {
               const evCount = toSafeNum(s.event_count, 1)
               hourlyInteractionsMap.set(hKey, (hourlyInteractionsMap.get(hKey) || 0) + evCount)
@@ -281,6 +281,8 @@ export function useAnalytics() {
         totalVisitors?: number
         visitorDataAvailable?: boolean
         visitorTimeSeries?: Array<{ date: string; visitors: number }>
+        dailyTimeSeries?: Array<{ date: string; visitors: number }>
+        visitorDailyDataAvailable?: boolean
         totalPageviews?: number
         topReferrers?: Array<{ referrer: string; count: number }>
       }
@@ -296,16 +298,18 @@ export function useAnalytics() {
           }
         }
       }
-      const todayIso = new Date().toISOString().slice(0, 10)
-      const yesterdayIso = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
+      const todayIso = toDate.toISOString().slice(0, 10)
+      const yesterdayIso = new Date(toDate.getTime() - 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
+      const dailyVisitors = new Map((vercelTraffic?.dailyTimeSeries ?? []).map((point) => [point.date, point.visitors]))
+      const dailyAvailable = vercelVisitorDataAvailable && vercelTraffic?.visitorDailyDataAvailable === true
       setIsVercelSynced(vercelVisitorDataAvailable)
 
       // 1. Overview cards: Vercel is the sole source for visitor metrics.
       const mergedOverview: AnalyticsOverviewData = {
         visitors: vercelVisitors,
-        visitors_prev: 0,
-        visitors_today: vercelVisitorsByDate.get(todayIso) ?? 0,
-        visitors_yesterday: vercelVisitorsByDate.get(yesterdayIso) ?? 0,
+        visitors_prev: null,
+        visitors_today: dailyAvailable ? dailyVisitors.get(todayIso) ?? 0 : null,
+        visitors_yesterday: dailyAvailable ? dailyVisitors.get(yesterdayIso) ?? 0 : null,
         active_now: 0,
         interactions: calibratedInteractions,
         interactions_prev: rawInteractionsPrev,
@@ -324,15 +328,13 @@ export function useAnalytics() {
       const dateKeys: string[] = []
 
       if (isHourly) {
-        for (let h = 0; h < 24; h++) {
-          dateKeys.push(`${String(h).padStart(2, '0')}:00`)
-        }
+        dateKeys.push(...rollingHourKeys(fromDate, toDate))
       } else {
         const curDate = new Date(fromDate)
         const toDateFloor = new Date(toDate)
         while (curDate <= toDateFloor) {
           dateKeys.push(curDate.toISOString().slice(0, 10))
-          curDate.setDate(curDate.getDate() + 1)
+          curDate.setUTCDate(curDate.getUTCDate() + 1)
         }
         if (!dateKeys.includes(todayIso)) {
           dateKeys.push(todayIso)
@@ -341,18 +343,11 @@ export function useAnalytics() {
 
       // Helper to match hourly point from RPC
       const matchHourlyCount = (arr: TimeSeriesPoint[], key: string): number => {
-        const found = arr.find((p) => {
-          const s = String(p.date || '')
-          if (s.includes(':')) {
-            return s.startsWith(key) || s.slice(11, 16) === key
-          }
-          try {
-            const d = new Date(s)
-            return !isNaN(d.getTime()) && `${String(d.getHours()).padStart(2, '0')}:00` === key
-          } catch {
-            return false
-          }
-        })
+        const exact = arr.find((point) => hourBucket(point.date) === key)
+        // Legacy RPC rows contain UTC HH:00 only. Duplicate boundary hours are
+        // ambiguous: do not merge records that could belong to different dates.
+        const legacy = arr.filter((point) => point.date === formatAnalyticsHour(key))
+        const found = exact ?? (legacy.length === 1 ? legacy[0] : undefined)
         return found ? toSafeNum(found.count, 0) : 0
       }
 
@@ -385,7 +380,7 @@ export function useAnalytics() {
       if (isHourly) {
         const interactionsSum = processedInteractions.reduce((acc, p) => acc + p.count, 0)
         if (interactionsSum === 0 && calibratedInteractions > 0) {
-          const curHKey = `${String(new Date().getHours()).padStart(2, '0')}:00`
+          const curHKey = hourBucket(toDate)
           const curPt = processedInteractions.find((p) => p.date === curHKey)
           if (curPt) {
             curPt.count = calibratedInteractions
@@ -558,15 +553,8 @@ export function useAnalytics() {
 
     let peakTimeLabel = peakPt.date || '-'
     if (days === 1) {
-      if (peakTimeLabel.includes(':')) {
-        const parts = peakTimeLabel.split(':')
-        const firstHour = parts[0]
-        const hour = firstHour ? parseInt(firstHour, 10) : NaN
-        if (!isNaN(hour)) {
-          const nextHour = (hour + 1) % 24
-          peakTimeLabel = `${String(hour).padStart(2, '0')}:00 - ${String(nextHour).padStart(2, '0')}:00`
-        }
-      }
+      const next = new Date(new Date(peakTimeLabel).getTime() + 60 * 60 * 1000).toISOString()
+      peakTimeLabel = `${formatAnalyticsHour(peakTimeLabel)} - ${formatAnalyticsHour(next)} UTC`
     }
 
     let busiestPeriodLabel = '-'
@@ -578,10 +566,7 @@ export function useAnalytics() {
         { name: 'Night (00:00 - 06:00)', total: 0 },
       ]
       for (const pt of currentSeries) {
-        const dateStr = String(pt.date || '')
-        const parts = dateStr.split(':')
-        const firstPart = parts[0]
-        const h = firstPart ? parseInt(firstPart, 10) : NaN
+        const h = new Date(pt.date).getUTCHours()
         if (!isNaN(h)) {
           if (h >= 6 && h < 12 && periods[0]) periods[0].total += pt.count
           else if (h >= 12 && h < 18 && periods[1]) periods[1].total += pt.count

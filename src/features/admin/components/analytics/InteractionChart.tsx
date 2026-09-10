@@ -8,6 +8,7 @@ import {
   CartesianGrid,
 } from 'recharts'
 import type { DateRangeDays, TimeSeriesMetric, TimeSeriesPoint, TrafficInsights } from '../../hooks/useAnalytics'
+import { formatAnalyticsDate } from '../../hooks/analyticsTime'
 
 interface InteractionChartProps {
   data: TimeSeriesPoint[]
@@ -48,19 +49,6 @@ const METRIC_CONFIG: Record<TimeSeriesMetric, { label: string; color: string; fi
   },
 }
 
-function formatDate(dateStr: string): string {
-  if (!dateStr) return ''
-  if (dateStr.includes(':')) {
-    return dateStr
-  }
-  try {
-    const d = new Date(dateStr)
-    return isNaN(d.getTime()) ? dateStr : d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
-  } catch {
-    return dateStr
-  }
-}
-
 const InteractionChart = ({
   data,
   metric,
@@ -72,7 +60,7 @@ const InteractionChart = ({
   insights,
 }: InteractionChartProps) => {
   const chartData = data.map((d) => ({
-    date: formatDate(d.date),
+    date: formatAnalyticsDate(d.date, days === 1),
     count: typeof d.count === 'number' && !isNaN(d.count) && isFinite(d.count) ? d.count : 0,
     rawDate: d.date,
   }))
@@ -101,7 +89,7 @@ const InteractionChart = ({
             )}
           </div>
           <p className="analytics-section-subtitle">
-            {subtitle}
+            {subtitle}{days === 1 ? ' · UTC' : ''}
           </p>
         </div>
 
@@ -218,7 +206,7 @@ const InteractionChart = ({
                     const h = first ? parseInt(first, 10) : NaN
                     if (!isNaN(h)) {
                       const nextH = (h + 1) % 24
-                      return `Time: ${String(h).padStart(2, '0')}:00 - ${String(nextH).padStart(2, '0')}:00`
+                      return `Time: ${String(h).padStart(2, '0')}:00 - ${String(nextH).padStart(2, '0')}:00 UTC`
                     }
                   }
                   return `Date: ${str}`
