@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
-import { render, screen } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { fireEvent, render, screen, within } from '@testing-library/react'
+import { describe, expect, it, vi } from 'vitest'
 import InteractionChart from '../src/features/admin/components/analytics/InteractionChart'
 
 expect.extend({
@@ -19,5 +19,14 @@ describe('InteractionChart', () => {
 
     expect(screen.getByText(/Vercel visitor data is unavailable/i)).toBeInTheDocument()
     expect(screen.queryByText('0 Vercel Visitors')).toBeNull()
+  })
+
+  it('offers a compact metric selector for mobile layouts', () => {
+    const onMetricChange = vi.fn()
+    const { container } = render(<InteractionChart metric="visitors" data={[]} isLoading={false} onMetricChange={onMetricChange} />)
+
+    fireEvent.change(within(container).getByRole('combobox', { name: /chart metric/i }), { target: { value: 'external_clicks' } })
+
+    expect(onMetricChange).toHaveBeenCalledWith('external_clicks')
   })
 })

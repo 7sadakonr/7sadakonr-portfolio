@@ -15,6 +15,16 @@ function getSourceBadgeClass(source: string): string {
 }
 
 const UtmTable = ({ data, isLoading }: UtmTableProps) => {
+  const rows = data.map((row, index) => {
+    const sessions = Number.isFinite(row.sessions) ? row.sessions : 0
+    const interactions = Number.isFinite(row.interactions) ? row.interactions : 0
+    const conversions = Number.isFinite(row.conversions) ? row.conversions : 0
+    const convRateNumber = sessions > 0 ? (conversions / sessions) * 100 : 0
+    const convRate = Number.isFinite(convRateNumber) ? convRateNumber.toFixed(1) : '0.0'
+
+    return { ...row, index, sessions, interactions, conversions, convRateNumber, convRate }
+  })
+
   return (
     <div className="analytics-card-panel">
       <div className="analytics-panel-header">
@@ -26,7 +36,7 @@ const UtmTable = ({ data, isLoading }: UtmTableProps) => {
         </div>
       </div>
 
-      <div className="analytics-table-responsive">
+      <div className="analytics-table-responsive analytics-table-desktop">
         <table className="analytics-table">
           <thead>
             <tr>
@@ -59,13 +69,9 @@ const UtmTable = ({ data, isLoading }: UtmTableProps) => {
               </tr>
             )}
             {!isLoading &&
-              data.map((row, index) => {
-                const validSessions = typeof row.sessions === 'number' && !isNaN(row.sessions) ? row.sessions : 0
-                const validConversions = typeof row.conversions === 'number' && !isNaN(row.conversions) ? row.conversions : 0
-                const convRateNum = validSessions > 0 ? (validConversions / validSessions) * 100 : 0
-                const convRate = isNaN(convRateNum) || !isFinite(convRateNum) ? '0.0' : convRateNum.toFixed(1)
+              rows.map((row) => {
                 return (
-                  <tr key={`${row.source}-${row.campaign}-${index}`}>
+                  <tr key={`${row.source}-${row.campaign}-${row.index}`}>
                     <td>
                       <span className={`utm-source-badge ${getSourceBadgeClass(row.source)}`}>
                         {row.source}
@@ -79,11 +85,11 @@ const UtmTable = ({ data, isLoading }: UtmTableProps) => {
                     <td className="text-right font-semibold text-accent">{row.conversions.toLocaleString()}</td>
                     <td className="text-right">
                       <div className="analytics-rate-cell">
-                        <span>{convRate}%</span>
+                        <span>{row.convRate}%</span>
                         <div className="analytics-mini-bar" aria-hidden="true">
                           <div
                             className="analytics-mini-fill"
-                            style={{ width: `${Math.min(100, convRateNum)}%` }}
+                            style={{ width: `${Math.min(100, row.convRateNumber)}%` }}
                           />
                         </div>
                       </div>
@@ -94,6 +100,25 @@ const UtmTable = ({ data, isLoading }: UtmTableProps) => {
           </tbody>
         </table>
       </div>
+
+      <ul className="analytics-mobile-card-list" aria-label="UTM campaign cards">
+        {isLoading && <li className="analytics-mobile-card-state">Loading UTM attribution data…</li>}
+        {!isLoading && rows.length === 0 && <li className="analytics-mobile-card-state">No UTM campaigns detected yet.</li>}
+        {!isLoading && rows.map((row) => (
+          <li className="analytics-mobile-data-card" key={`${row.source}-${row.campaign}-${row.index}`}>
+            <div className="analytics-mobile-card-heading">
+              <span className={`utm-source-badge ${getSourceBadgeClass(row.source)}`}>{row.source}</span>
+              <code className="analytics-campaign-code">{row.campaign}</code>
+            </div>
+            <dl className="analytics-mobile-metrics">
+              <div><dt>Sessions</dt><dd>{row.sessions.toLocaleString()}</dd></div>
+              <div><dt>Interactions</dt><dd>{row.interactions.toLocaleString()}</dd></div>
+              <div><dt>Conversions</dt><dd>{row.conversions.toLocaleString()}</dd></div>
+              <div><dt>Conversion rate</dt><dd>{row.convRate}%</dd></div>
+            </dl>
+          </li>
+        ))}
+      </ul>
     </div>
   )
 }
