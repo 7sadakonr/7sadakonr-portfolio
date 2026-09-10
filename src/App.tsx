@@ -15,6 +15,7 @@ import { getRouteForSection } from './features/navigation/navigation.config'
 import { publishSectionChange } from './features/navigation/navigationEvents'
 import { isNavigationInProgress } from './features/navigation/navigationState'
 import { Seo } from './components/Seo/Seo'
+import { scheduleBelowFoldHydration } from './components/LazySection/sectionLoader'
 
 import './pages/LandingPageShell.css'
 
@@ -38,6 +39,11 @@ function PortfolioApp() {
       .then(({ loadSiteSettings }) => loadSiteSettings())
       .catch(() => { /* defaults remain visible when settings are unavailable */ })
   }, [])
+
+  useEffect(() => {
+    if (!isInteractive) return
+    return scheduleBelowFoldHydration()
+  }, [isInteractive])
 
   // Set up IntersectionObserver to update Navbar based on scroll position
   useEffect(() => {
