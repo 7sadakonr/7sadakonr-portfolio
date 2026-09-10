@@ -5,7 +5,8 @@ import { createProjectSidebarItems } from '../src/features/projects/data/project
 describe('createProjectSidebarItems', () => {
   it('preserves every sidebar field from the project source data', () => {
     expect(createProjectSidebarItems(PROJECTS)).toEqual(
-      PROJECTS.map(({ title, description, tech, liveUrl, githubUrl }) => ({
+      PROJECTS.map(({ id, title, description, tech, liveUrl, githubUrl }) => ({
+        id,
         label: title,
         description,
         tech,

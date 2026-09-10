@@ -120,14 +120,34 @@ begin
   v_yesterday_start := v_today_start - interval '1 day';
 
   select json_build_object(
-    'visitors', (select count(distinct visitor_id) from public.analytics_sessions
-                 where started_at between p_from and p_to),
-    'visitors_prev', (select count(distinct visitor_id) from public.analytics_sessions
-                      where started_at between v_prev_from and v_prev_to),
-    'visitors_today', (select count(distinct visitor_id) from public.analytics_sessions
-                       where started_at >= v_today_start),
-    'visitors_yesterday', (select count(distinct visitor_id) from public.analytics_sessions
-                          where started_at >= v_yesterday_start and started_at < v_today_start),
+    'visitors', (
+      select count(distinct visitor_id) from (
+        select visitor_id from public.analytics_sessions where (started_at between p_from and p_to) or (last_seen_at between p_from and p_to)
+        union
+        select visitor_id from public.analytics_events where created_at between p_from and p_to
+      ) v
+    ),
+    'visitors_prev', (
+      select count(distinct visitor_id) from (
+        select visitor_id from public.analytics_sessions where (started_at between v_prev_from and v_prev_to) or (last_seen_at between v_prev_from and v_prev_to)
+        union
+        select visitor_id from public.analytics_events where created_at between v_prev_from and v_prev_to
+      ) vp
+    ),
+    'visitors_today', (
+      select count(distinct visitor_id) from (
+        select visitor_id from public.analytics_sessions where started_at >= v_today_start or last_seen_at >= v_today_start
+        union
+        select visitor_id from public.analytics_events where created_at >= v_today_start
+      ) vt
+    ),
+    'visitors_yesterday', (
+      select count(distinct visitor_id) from (
+        select visitor_id from public.analytics_sessions where (started_at >= v_yesterday_start and started_at < v_today_start) or (last_seen_at >= v_yesterday_start and last_seen_at < v_today_start)
+        union
+        select visitor_id from public.analytics_events where created_at >= v_yesterday_start and created_at < v_today_start
+      ) vy
+    ),
     'interactions', (select count(*) from public.analytics_events
                      where created_at between p_from and p_to),
     'interactions_prev', (select count(*) from public.analytics_events
@@ -149,7 +169,7 @@ begin
                          where event_name = 'resume_download'
                          and created_at between p_from and p_to),
     'sessions', (select count(distinct session_id) from public.analytics_sessions
-                 where started_at between p_from and p_to),
+                 where (started_at between p_from and p_to) or (last_seen_at between p_from and p_to)),
     'avg_session_events', (
       select coalesce(round(avg(cnt), 1), 0)
       from (
@@ -336,7 +356,7 @@ begin
 end;
 $$;
 
--- 6. Conversion funnel
+-- 6. Recruiter Intent Goals & Section Retention
 create or replace function public.analytics_funnel(
   p_from timestamptz default now() - interval '30 days',
   p_to   timestamptz default now()
@@ -348,26 +368,142 @@ set search_path = ''
 as $$
 declare
   v_result json;
+  v_total_visitors bigint;
+  v_total_sessions bigint;
+  v_resume_sessions bigint;
+  v_resume_events bigint;
+  v_project_sessions bigint;
+  v_project_events bigint;
+  v_demo_sessions bigint;
+  v_demo_events bigint;
+  v_github_sessions bigint;
+  v_github_events bigint;
+  v_contact_sessions bigint;
+  v_contact_events bigint;
+  v_hero_sessions bigint;
+  v_about_sessions bigint;
+  v_projects_sessions bigint;
+  v_contact_section_sessions bigint;
 begin
   if not exists (select 1 from public.portfolio_admins where user_id = (select auth.uid())) then
     raise exception 'Admin access required';
   end if;
 
+  select count(distinct visitor_id)
+  into v_total_visitors
+  from (
+    select visitor_id from public.analytics_sessions where (started_at between p_from and p_to) or (last_seen_at between p_from and p_to)
+    union
+    select visitor_id from public.analytics_events where created_at between p_from and p_to
+  ) v;
+
+  if v_total_visitors is null or v_total_visitors = 0 then
+    v_total_visitors := 0;
+  end if;
+
+  select count(distinct session_id)
+  into v_total_sessions
+  from (
+    select session_id from public.analytics_sessions where (started_at between p_from and p_to) or (last_seen_at between p_from and p_to)
+    union
+    select session_id from public.analytics_events where created_at between p_from and p_to
+  ) s;
+
+  if v_total_sessions is null or v_total_sessions = 0 then
+    v_total_sessions := 0;
+  end if;
+
+  -- Resume Downloads
+  select count(distinct session_id), count(*)
+  into v_resume_sessions, v_resume_events
+  from public.analytics_events
+  where event_name = 'resume_download' and created_at between p_from and p_to;
+
+  -- Project Exploration (Opens)
+  select count(distinct session_id), count(*)
+  into v_project_sessions, v_project_events
+  from public.analytics_events
+  where event_name = 'project_open' and created_at between p_from and p_to;
+
+  -- Demo Clicks
+  select count(distinct session_id), count(*)
+  into v_demo_sessions, v_demo_events
+  from public.analytics_events
+  where event_name = 'project_demo_click' and created_at between p_from and p_to;
+
+  -- GitHub Inspects
+  select count(distinct session_id), count(*)
+  into v_github_sessions, v_github_events
+  from public.analytics_events
+  where event_name in ('project_github_click', 'github_profile_click') and created_at between p_from and p_to;
+
+  -- Contact / Inquiries
+  select count(distinct session_id), count(*)
+  into v_contact_sessions, v_contact_events
+  from public.analytics_events
+  where event_name in ('contact_click', 'email_click', 'linkedin_click') and created_at between p_from and p_to;
+
+  -- Section Retention
+  select count(distinct session_id) into v_hero_sessions
+  from public.analytics_events
+  where event_name in ('page_view', 'section_view') and (section = 'home' or page = '/') and created_at between p_from and p_to;
+
+  select count(distinct session_id) into v_about_sessions
+  from public.analytics_events
+  where event_name = 'section_view' and section = 'about' and created_at between p_from and p_to;
+
+  select count(distinct session_id) into v_projects_sessions
+  from public.analytics_events
+  where event_name = 'section_view' and section = 'projects' and created_at between p_from and p_to;
+
+  select count(distinct session_id) into v_contact_section_sessions
+  from public.analytics_events
+  where event_name = 'section_view' and section = 'contact' and created_at between p_from and p_to;
+
+  if v_hero_sessions = 0 and v_total_sessions > 0 then
+    v_hero_sessions := v_total_sessions;
+  end if;
+
   select json_build_object(
-    'sessions', (select count(distinct session_id) from public.analytics_sessions
-                 where started_at between p_from and p_to),
-    'viewed_projects', (select count(distinct session_id) from public.analytics_events
-                        where event_name = 'section_view' and section = 'projects'
-                        and created_at between p_from and p_to),
-    'opened_project', (select count(distinct session_id) from public.analytics_events
-                       where event_name = 'project_open'
-                       and created_at between p_from and p_to),
-    'clicked_link', (select count(distinct session_id) from public.analytics_events
-                     where event_name in ('project_github_click','project_demo_click')
-                     and created_at between p_from and p_to),
-    'converted', (select count(distinct session_id) from public.analytics_events
-                  where event_name in ('resume_download','contact_click','email_click','linkedin_click','github_profile_click')
-                  and created_at between p_from and p_to)
+    'sessions', v_total_sessions,
+    'visitors', v_total_visitors,
+    'viewed_projects', v_projects_sessions,
+    'opened_project', v_project_sessions,
+    'clicked_link', (select count(distinct session_id) from public.analytics_events where event_name in ('project_github_click','project_demo_click') and created_at between p_from and p_to),
+    'converted', (select count(distinct session_id) from public.analytics_events where event_name in ('resume_download','contact_click','email_click','linkedin_click') and created_at between p_from and p_to),
+    'goals', json_build_object(
+      'resume_downloads', json_build_object(
+        'sessions', v_resume_sessions,
+        'events', v_resume_events,
+        'rate', case when v_total_sessions > 0 then round((v_resume_sessions::numeric / v_total_sessions::numeric) * 100, 1) else 0 end
+      ),
+      'project_engagement', json_build_object(
+        'sessions', v_project_sessions,
+        'events', v_project_events,
+        'rate', case when v_total_sessions > 0 then round((v_project_sessions::numeric / v_total_sessions::numeric) * 100, 1) else 0 end
+      ),
+      'demo_views', json_build_object(
+        'sessions', v_demo_sessions,
+        'events', v_demo_events,
+        'rate', case when v_total_sessions > 0 then round((v_demo_sessions::numeric / v_total_sessions::numeric) * 100, 1) else 0 end
+      ),
+      'github_inspects', json_build_object(
+        'sessions', v_github_sessions,
+        'events', v_github_events,
+        'rate', case when v_total_sessions > 0 then round((v_github_sessions::numeric / v_total_sessions::numeric) * 100, 1) else 0 end
+      ),
+      'contact_intents', json_build_object(
+        'sessions', v_contact_sessions,
+        'events', v_contact_events,
+        'rate', case when v_total_sessions > 0 then round((v_contact_sessions::numeric / v_total_sessions::numeric) * 100, 1) else 0 end
+      )
+    ),
+    'section_retention', json_build_array(
+      json_build_object('section', 'home', 'label', 'Hero / Landed', 'sessions', v_hero_sessions, 'rate', case when v_total_sessions > 0 then round((v_hero_sessions::numeric / v_total_sessions::numeric) * 100, 1) else 100.0 end),
+      json_build_object('section', 'about', 'label', 'About Me & Skills', 'sessions', v_about_sessions, 'rate', case when v_total_sessions > 0 then round((v_about_sessions::numeric / v_total_sessions::numeric) * 100, 1) else 0 end),
+      json_build_object('section', 'projects', 'label', 'Projects Showcase', 'sessions', v_projects_sessions, 'rate', case when v_total_sessions > 0 then round((v_projects_sessions::numeric / v_total_sessions::numeric) * 100, 1) else 0 end),
+      json_build_object('section', 'contact', 'label', 'Contact & Footer', 'sessions', v_contact_section_sessions, 'rate', case when v_total_sessions > 0 then round((v_contact_section_sessions::numeric / v_total_sessions::numeric) * 100, 1) else 0 end)
+    )
   ) into v_result;
 
   return v_result;

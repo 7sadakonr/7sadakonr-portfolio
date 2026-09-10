@@ -101,7 +101,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY
 
   if (!supabaseUrl || !supabaseServiceKey) {
-    // Graceful 204 when server configuration is not yet active
+    console.warn('[Analytics API] SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY is missing.')
+    res.setHeader('X-Analytics-Status', 'missing-credentials')
     res.status(204).end()
     return
   }
@@ -156,7 +157,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     const nowIso = new Date().toISOString()
 
     // 1. Upsert session
-    await supabase.from('analytics_sessions').upsert(
+    const { error: sessionError } = await supabase.from('analytics_sessions').upsert(
       {
         session_id: sessionId,
         visitor_id: visitorId,
@@ -175,6 +176,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       },
       { onConflict: 'session_id' },
     )
+    if (sessionError) {
+      console.error('[Analytics API] Session upsert error:', sessionError.message)
+    }
 
     // 2. Validate & prepare events
     const sanitizedEvents: Array<{
@@ -220,15 +224,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     }
 
     if (sanitizedEvents.length > 0) {
-      await supabase.from('analytics_events').upsert(sanitizedEvents, {
+      const { error: eventsError } = await supabase.from('analytics_events').upsert(sanitizedEvents, {
         onConflict: 'event_id',
         ignoreDuplicates: true,
       })
+      if (eventsError) {
+        console.error('[Analytics API] Events upsert error:', eventsError.message)
+      }
     }
 
+    res.setHeader('X-Analytics-Status', 'ok')
     res.status(204).end()
-  } catch {
-    // Non-critical endpoint: always fail safe without leaking internals
+  } catch (err) {
+    console.error('[Analytics API] Unhandled handler error:', err)
     res.status(204).end()
   }
 }

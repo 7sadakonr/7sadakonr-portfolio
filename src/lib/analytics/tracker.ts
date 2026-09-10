@@ -21,8 +21,19 @@ const VISITOR_KEY = 'portfolio_visitor_id'
 const SESSION_KEY = 'portfolio_session_meta'
 const SESSION_TIMEOUT_MS = 30 * 60 * 1000 // 30 minutes
 const FLUSH_BATCH_SIZE = 5
-const FLUSH_INTERVAL_MS = 8000
+const FLUSH_INTERVAL_MS = 3000
 const ENDPOINT = '/api/analytics'
+
+const IMMEDIATE_EVENTS = new Set([
+  'project_open',
+  'project_demo_click',
+  'project_github_click',
+  'resume_download',
+  'contact_click',
+  'email_click',
+  'linkedin_click',
+  'github_profile_click',
+])
 
 let eventQueue: QueuedEvent[] = []
 let flushTimer: ReturnType<typeof setTimeout> | null = null
@@ -235,7 +246,7 @@ export function trackEvent(name: string, payload: Partial<EventPayload> = {}): v
 
     eventQueue.push(event)
 
-    if (eventQueue.length >= FLUSH_BATCH_SIZE) {
+    if (IMMEDIATE_EVENTS.has(name) || eventQueue.length >= FLUSH_BATCH_SIZE) {
       flush()
     } else {
       scheduleFlush()
@@ -263,6 +274,11 @@ export function initAnalytics(): void {
         title: document.title,
       },
     })
+
+    // Quickly flush initial landing events so session and visitor register immediately
+    setTimeout(() => {
+      flush()
+    }, 1000)
 
     // Exit flush listeners
     const handleVisibilityChange = () => {

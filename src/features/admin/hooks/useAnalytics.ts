@@ -48,12 +48,34 @@ export interface TopInteractionRow {
   total: number
 }
 
+export interface GoalMetric {
+  sessions: number
+  events: number
+  rate: number
+}
+
+export interface SectionRetentionItem {
+  section: string
+  label: string
+  sessions: number
+  rate: number
+}
+
 export interface FunnelData {
   sessions: number
+  visitors?: number
   viewed_projects: number
   opened_project: number
   clicked_link: number
   converted: number
+  goals?: {
+    resume_downloads: GoalMetric
+    project_engagement: GoalMetric
+    demo_views: GoalMetric
+    github_inspects: GoalMetric
+    contact_intents: GoalMetric
+  }
+  section_retention?: SectionRetentionItem[]
 }
 
 export interface RecentSessionItem {

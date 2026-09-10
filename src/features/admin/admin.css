@@ -241,6 +241,66 @@
 .analytics-ranked-bar-bg { height: 5px; background: #e7ede5; border-radius: 999px; overflow: hidden; }
 .analytics-ranked-bar-fill { height: 100%; background: #1b6b50; border-radius: 999px; }
 
+/* Recruiter Intent & Goal Conversions */
+.analytics-intent-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+.analytics-intent-toggle { display: inline-flex; background: #eef2eb; border-radius: 10px; padding: 3px; gap: 2px; }
+.analytics-intent-tab { border: 0; background: transparent; padding: 6px 12px; font: 700 12px/1 "Outfit", sans-serif; color: #526058; border-radius: 8px; cursor: pointer; transition: all 0.15s ease; }
+.analytics-intent-tab.active { background: #fff; color: #17201d; font-weight: 800; box-shadow: 0 2px 6px rgba(23, 32, 29, 0.08); }
+.analytics-intent-loading { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 40px 0; color: #69746e; font-size: 14px; }
+
+.analytics-intent-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+@media (max-width: 640px) { .analytics-intent-grid { grid-template-columns: 1fr; } }
+
+.analytics-intent-card { background: #fafbf9; border: 1px solid #d9ddd5; border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 8px; border-left: 4px solid transparent; transition: transform 0.12s ease; }
+.analytics-intent-card:hover { transform: translateY(-1px); }
+.analytics-intent-card--emerald { border-left-color: #10b981; }
+.analytics-intent-card--purple { border-left-color: #8b5cf6; }
+.analytics-intent-card--blue { border-left-color: #3b82f6; }
+.analytics-intent-card--amber { border-left-color: #f59e0b; }
+
+.analytics-intent-card-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.analytics-intent-icon-wrap { display: flex; align-items: center; gap: 8px; }
+.analytics-intent-icon { width: 28px; height: 28px; border-radius: 7px; background: #eef2ed; display: grid; place-items: center; color: #17201d; }
+.analytics-intent-card--emerald .analytics-intent-icon { background: #ecfdf5; color: #059669; }
+.analytics-intent-card--purple .analytics-intent-icon { background: #f5f3ff; color: #7c3aed; }
+.analytics-intent-card--blue .analytics-intent-icon { background: #eff6ff; color: #2563eb; }
+.analytics-intent-card--amber .analytics-intent-icon { background: #fffbeb; color: #d97706; }
+
+.analytics-intent-card-title { font-size: 13px; font-weight: 800; color: #17201d; }
+.analytics-intent-badge { font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 6px; background: #eef2ed; color: #526058; text-transform: uppercase; letter-spacing: 0.03em; }
+
+.analytics-intent-rate-row { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-top: 4px; }
+.analytics-intent-rate { font-size: 24px; font-weight: 800; color: #17201d; letter-spacing: -0.02em; }
+.analytics-intent-sessions { font-size: 12px; color: #526058; font-weight: 700; display: flex; align-items: baseline; gap: 4px; }
+.analytics-intent-events { font-size: 11px; color: #69746e; font-weight: 500; }
+
+.analytics-intent-meter-track { height: 6px; background: #e5ece6; border-radius: 999px; overflow: hidden; margin: 2px 0; }
+.analytics-intent-meter-fill { height: 100%; border-radius: 999px; transition: width 0.4s ease; }
+.analytics-intent-card--emerald .analytics-intent-meter-fill { background: #10b981; }
+.analytics-intent-card--purple .analytics-intent-meter-fill { background: #8b5cf6; }
+.analytics-intent-card--blue .analytics-intent-meter-fill { background: #3b82f6; }
+.analytics-intent-card--amber .analytics-intent-meter-fill { background: #f59e0b; }
+
+.analytics-intent-subtitle { font-size: 11px; color: #69746e; margin: 0; line-height: 1.35; }
+
+/* Section Retention Pipeline */
+.analytics-retention-pipeline { display: grid; gap: 10px; padding: 4px 0; }
+.analytics-retention-row { background: #fafbf9; border: 1px solid #d9ddd5; border-radius: 12px; padding: 12px 16px; display: grid; grid-template-columns: 180px 1fr 110px; align-items: center; gap: 14px; }
+@media (max-width: 640px) { .analytics-retention-row { grid-template-columns: 1fr; gap: 8px; } }
+
+.analytics-retention-meta { display: flex; align-items: center; gap: 10px; }
+.analytics-retention-index { width: 22px; height: 22px; border-radius: 50%; background: #e5eae4; color: #37473f; font-size: 11px; font-weight: 800; display: grid; place-items: center; }
+.analytics-retention-info { display: flex; flex-direction: column; gap: 1px; }
+.analytics-retention-label { font-size: 13px; font-weight: 800; color: #17201d; }
+.analytics-retention-count { font-size: 11px; color: #69746e; }
+
+.analytics-retention-track { height: 8px; background: #e5ece6; border-radius: 999px; overflow: hidden; width: 100%; }
+.analytics-retention-fill { height: 100%; background: #1b6b50; border-radius: 999px; transition: width 0.4s ease; }
+
+.analytics-retention-stats { text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 1px; }
+.analytics-retention-rate { font-size: 13px; font-weight: 800; color: #17201d; }
+.analytics-retention-drop { font-size: 11px; font-weight: 700; color: #b91c1c; background: #fee2e2; padding: 1px 6px; border-radius: 4px; }
+
 /* Recent Visitor Journeys Cards */
 .analytics-sessions-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 14px; }
 .analytics-journey-card { background: #fff; border: 1px solid #d9ddd5; border-radius: 14px; padding: 16px; display: grid; gap: 12px; cursor: pointer; transition: all 0.15s ease; position: relative; }
