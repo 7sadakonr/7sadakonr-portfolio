@@ -98,7 +98,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
   }
 
   const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
-  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY
+  const supabaseServiceKey =
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.SUPABASE_SECRET_KEY ||
+    process.env.SUPABASE_SERVICE_ROLE ||
+    process.env.VITE_SUPABASE_SERVICEROLE ||
+    process.env.VITE_SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.VITE_SUPABASE_SECRET_KEY
 
   if (!supabaseUrl || !supabaseServiceKey) {
     console.warn('[Analytics API] SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY is missing.')
