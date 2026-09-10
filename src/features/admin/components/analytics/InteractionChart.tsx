@@ -8,12 +8,14 @@ import {
   CartesianGrid,
 } from 'recharts'
 import type { DateRangeDays, TimeSeriesMetric, TimeSeriesPoint, TrafficInsights } from '../../hooks/useAnalytics'
+import { formatAnalyticsDate } from '../../hooks/analyticsTime'
 
 interface InteractionChartProps {
   data: TimeSeriesPoint[]
   metric: TimeSeriesMetric
-  onMetricChange: (metric: TimeSeriesMetric) => void
+  onMetricChange?: (metric: TimeSeriesMetric) => void
   isLoading: boolean
+  isVisitorDataAvailable?: boolean
   metricTotal?: number
   days?: DateRangeDays
   insights?: TrafficInsights
@@ -47,30 +49,18 @@ const METRIC_CONFIG: Record<TimeSeriesMetric, { label: string; color: string; fi
   },
 }
 
-function formatDate(dateStr: string): string {
-  if (!dateStr) return ''
-  if (dateStr.includes(':')) {
-    return dateStr
-  }
-  try {
-    const d = new Date(dateStr)
-    return isNaN(d.getTime()) ? dateStr : d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
-  } catch {
-    return dateStr
-  }
-}
-
 const InteractionChart = ({
   data,
   metric,
-  onMetricChange,
+  onMetricChange = () => {},
   isLoading,
+  isVisitorDataAvailable,
   metricTotal,
   days = 30,
   insights,
 }: InteractionChartProps) => {
   const chartData = data.map((d) => ({
-    date: formatDate(d.date),
+    date: formatAnalyticsDate(d.date, days === 1),
     count: typeof d.count === 'number' && !isNaN(d.count) && isFinite(d.count) ? d.count : 0,
     rawDate: d.date,
   }))
@@ -78,6 +68,13 @@ const InteractionChart = ({
   const totalCount = chartData.reduce((sum, pt) => sum + pt.count, 0)
   const displayedTotal = typeof metricTotal === 'number' ? metricTotal : totalCount
   const activeConfig = METRIC_CONFIG[metric]
+  const isVisitorUnavailable = metric === 'visitors' && isVisitorDataAvailable === false
+  const totalLabel = metric === 'visitors' ? 'Vercel Visitors' : activeConfig.label
+  const subtitle = metric === 'visitors'
+    ? `Vercel visitor data · ${days === 1 ? 'Hourly distribution across the last 24 hours' : `Daily distribution across the last ${days} days`}`
+    : days === 1
+      ? 'Hourly engagement distribution across the last 24 hours'
+      : `Daily engagement distribution across the last ${days} days`
 
   return (
     <div className="analytics-chart-panel">
@@ -85,16 +82,14 @@ const InteractionChart = ({
         <div>
           <div className="analytics-chart-title-row">
             <h2 className="analytics-section-title">Activity Timeline</h2>
-            {!isLoading && (
+            {!isLoading && !isVisitorUnavailable && (
               <span className="analytics-chart-total-pill" style={{ borderColor: activeConfig.color, color: activeConfig.color }}>
-                {displayedTotal.toLocaleString()} {activeConfig.label}
+                {displayedTotal.toLocaleString()} {totalLabel}
               </span>
             )}
           </div>
           <p className="analytics-section-subtitle">
-            {days === 1
-              ? 'Hourly engagement distribution across the last 24 hours'
-              : `Daily engagement distribution across the last ${days} days`}
+            {subtitle}{days === 1 ? ' · UTC' : ''}
           </p>
         </div>
 
@@ -117,7 +112,7 @@ const InteractionChart = ({
       </div>
 
       {/* Vercel-style Deep Traffic Insights Banner */}
-      {!isLoading && insights && (
+      {!isLoading && insights && !isVisitorUnavailable && (
         <div className="analytics-insights-bar">
           <div className="analytics-insight-pill">
             <span className="analytics-insight-label">
@@ -161,7 +156,10 @@ const InteractionChart = ({
             <span>{days === 1 ? 'Calculating hourly timeline…' : 'Calculating daily timeline…'}</span>
           </div>
         )}
-        {!isLoading && (
+        {!isLoading && isVisitorUnavailable && (
+          <p role="status">Vercel visitor data is unavailable</p>
+        )}
+        {!isLoading && !isVisitorUnavailable && (
           <ResponsiveContainer width="100%" height={340} minWidth={0}>
             <AreaChart data={chartData} margin={{ top: 18, right: 16, left: -16, bottom: 4 }}>
               <defs>
@@ -208,7 +206,7 @@ const InteractionChart = ({
                     const h = first ? parseInt(first, 10) : NaN
                     if (!isNaN(h)) {
                       const nextH = (h + 1) % 24
-                      return `Time: ${String(h).padStart(2, '0')}:00 - ${String(nextH).padStart(2, '0')}:00`
+                      return `Time: ${String(h).padStart(2, '0')}:00 - ${String(nextH).padStart(2, '0')}:00 UTC`
                     }
                   }
                   return `Date: ${str}`
