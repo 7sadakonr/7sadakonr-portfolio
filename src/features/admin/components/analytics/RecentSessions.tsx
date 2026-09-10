@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { RecentSessionItem, SessionDetailData } from '../../hooks/useAnalytics'
 import SessionDrawer from './SessionDrawer'
+import CountryFlag from './CountryFlag'
 
 interface RecentSessionsProps {
   sessions: RecentSessionItem[]
@@ -98,7 +99,11 @@ const RecentSessions = ({ sessions, isLoading, fetchDetail }: RecentSessionsProp
                   <div className="analytics-chips">
                     <span className="analytics-chip-id">Visitor #{sess.visitor_short}</span>
                     {sess.device_type && <span className="analytics-chip-device">{sess.device_type}</span>}
-                    {sess.country && <span className="analytics-chip-geo">📍 {sess.country}</span>}
+                    {sess.country && (
+                      <span className="analytics-chip-geo">
+                        <CountryFlag code={sess.country} size="sm" showCode />
+                      </span>
+                    )}
                   </div>
                   <span className="analytics-inspect-link">View Trail →</span>
                 </div>

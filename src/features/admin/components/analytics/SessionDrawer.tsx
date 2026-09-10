@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { SessionDetailData } from '../../hooks/useAnalytics'
+import CountryFlag from './CountryFlag'
 
 interface SessionDrawerProps {
   sessionId: string | null
@@ -102,9 +103,18 @@ const SessionDrawer = ({ sessionId, fetchDetail, onClose }: SessionDrawerProps) 
                 </div>
                 <div className="analytics-tile">
                   <span className="analytics-tile-label">Device / Geo</span>
-                  <span className="analytics-tile-value">
-                    {[s.device_type, s.country].filter(Boolean).join(' • ') || 'Unknown'}
-                  </span>
+                  <div className="analytics-tile-geo">
+                    {s.country && <CountryFlag code={s.country} size="md" />}
+                    <span className="analytics-tile-geo-text">
+                      {[
+                        s.device_type ? s.device_type.charAt(0).toUpperCase() + s.device_type.slice(1) : null,
+                        s.city,
+                        s.country,
+                      ]
+                        .filter(Boolean)
+                        .join(' • ') || 'Unknown'}
+                    </span>
+                  </div>
                 </div>
               </div>
 

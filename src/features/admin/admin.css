@@ -435,4 +435,78 @@
 @keyframes drawerFade { from { opacity: 0; } to { opacity: 1; } }
 @keyframes drawerSlide { from { transform: translateX(100%); } to { transform: translateX(0); } }
 
+/* Flag badges & country images */
+.analytics-chip-geo {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.analytics-flag-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  vertical-align: middle;
+  line-height: 1;
+}
+
+.analytics-flag-img {
+  object-fit: cover;
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.14);
+  flex-shrink: 0;
+  display: inline-block;
+  background: #f0f2ef;
+}
+
+.analytics-flag-img--sm {
+  width: 16px;
+  height: 12px;
+}
+
+.analytics-flag-img--md {
+  width: 20px;
+  height: 15px;
+  border-radius: 3px;
+}
+
+.analytics-flag-code {
+  font-family: monospace;
+  font-weight: 700;
+  font-size: 11px;
+}
+
+.analytics-flag-name {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.analytics-flag-unknown {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.analytics-flag-fallback-icon {
+  font-size: 12px;
+  line-height: 1;
+  display: inline-block;
+}
+
+.analytics-tile-geo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 28px;
+  flex-wrap: wrap;
+}
+
+.analytics-tile-geo-text {
+  font-size: 15px;
+  font-weight: 700;
+  color: #17201d;
+  word-break: break-word;
+}
+
+
 
