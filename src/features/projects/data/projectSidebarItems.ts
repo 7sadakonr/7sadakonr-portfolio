@@ -1,6 +1,7 @@
 import type { PublicProjectItem } from '../types'
 
 export interface ProjectSidebarItem {
+  id: string
   label: string
   description: string
   tech: string[]
@@ -11,7 +12,8 @@ export interface ProjectSidebarItem {
 export const createProjectSidebarItems = (
   projects: readonly PublicProjectItem[],
 ): ProjectSidebarItem[] =>
-  projects.map(({ title, description, tech, liveUrl, githubUrl }) => ({
+  projects.map(({ id, title, description, tech, liveUrl, githubUrl }) => ({
+    id,
     label: title,
     description,
     tech: [...tech],
