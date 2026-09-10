@@ -3,10 +3,12 @@ import { readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createClient } from '@supabase/supabase-js'
+import { loadEnv } from 'vite'
 
 const root = resolve(fileURLToPath(new URL('..', import.meta.url)))
-const url = process.env.VITE_SUPABASE_URL
-const secret = process.env.SUPABASE_SECRET_KEY
+const env = loadEnv('', process.cwd(), '')
+const url = process.env.VITE_SUPABASE_URL ?? env.VITE_SUPABASE_URL
+const secret = process.env.SUPABASE_SECRET_KEY ?? env.SUPABASE_SECRET_KEY
 if (!url || !secret) throw new Error('Set VITE_SUPABASE_URL and SUPABASE_SECRET_KEY before migrating site settings.')
 const client = createClient(url, secret, { auth: { persistSession: false, autoRefreshToken: false } })
 const { data: current, error: readError } = await client.from('site_settings').select('id,resume_en_url,resume_en_storage_path,resume_th_url,resume_th_storage_path').eq('id', 1).single()
