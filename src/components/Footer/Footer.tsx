@@ -2,10 +2,16 @@ import logo from '../../assets/img/logo.svg'
 import { useEffect, useState } from 'react'
 import ResumeDownloadMenu from '../ResumeDownload/ResumeDownloadMenu'
 import { getProjectCatalog, subscribeToProjectCatalog } from '../../features/projects/data/projectCatalogStore'
+import { useSiteSettings } from '../../features/siteSettings/hooks/useSiteSettings'
+import { contactDisplayText, firstVisibleContact, visibleContactLinks } from '../../features/siteSettings/validation/contactLinks'
 import './Footer.css'
 
 const Footer = () => {
   const [projects, setProjects] = useState(getProjectCatalog)
+  const settings = useSiteSettings()
+  const contacts = visibleContactLinks(settings.contactLinks)
+  const email = firstVisibleContact(settings.contactLinks, 'email')
+  const emailHref = (subject: string) => email ? `${email.url}?subject=${encodeURIComponent(subject)}` : ''
   useEffect(() => subscribeToProjectCatalog(setProjects), [])
   return (
   <footer className="site-footer" aria-label="Site footer">
@@ -22,7 +28,7 @@ const Footer = () => {
           </p>
         </div>
 
-        <nav className="site-footer__links" aria-label="Footer navigation">
+        <nav className={`site-footer__links${email ? '' : ' site-footer__links--without-email'}`} aria-label="Footer navigation">
           <section className="site-footer__column">
             <h2>Navigate</h2>
             <ul>
@@ -42,19 +48,18 @@ const Footer = () => {
           <section className="site-footer__column">
             <h2>Connect</h2>
             <ul>
-              <li><a href="https://github.com/7sadakonr" target="_blank" rel="noopener noreferrer">GitHub</a></li>
-              <li><a href="mailto:7sadakonr@gmail.com">7sadakonr@gmail.com</a></li>
+              {contacts.map((contact) => <li key={contact.id}><a href={contact.url} target={contact.url.startsWith('http') ? '_blank' : undefined} rel={contact.url.startsWith('http') ? 'noopener noreferrer' : undefined}>{contactDisplayText(contact)}</a></li>)}
               <li><ResumeDownloadMenu variant="footer" /></li>
             </ul>
           </section>
-          <section className="site-footer__column">
+          {email && <section className="site-footer__column">
             <h2>Available for</h2>
             <ul>
-              <li><a href="mailto:7sadakonr@gmail.com?subject=Project%20inquiry">Web projects</a></li>
-              <li><a href="mailto:7sadakonr@gmail.com?subject=Collaboration">Collaboration</a></li>
-              <li><a href="mailto:7sadakonr@gmail.com?subject=Hello">Say hello</a></li>
+              <li><a href={emailHref('Project inquiry')}>Web projects</a></li>
+              <li><a href={emailHref('Collaboration')}>Collaboration</a></li>
+              <li><a href={emailHref('Hello')}>Say hello</a></li>
             </ul>
-          </section>
+          </section>}
         </nav>
       </div>
       <p className="site-footer__wordmark" aria-hidden="true">7SADAKONR</p>

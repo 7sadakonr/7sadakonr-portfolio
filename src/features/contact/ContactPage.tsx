@@ -2,8 +2,18 @@ import TextReveal from '../../components/Animation/TextReveal'
 import '../../pages/LandingPage.css'
 import ContactForm from './components/ContactForm'
 import ContactInfo from './components/ContactInfo'
+import { useSiteSettings } from '../siteSettings/hooks/useSiteSettings'
 
-const ContactSection = () => (
+const ContactHeading = ({ heading }: { heading: string }) => {
+  const words = heading.trim().split(/\s+/)
+  const accent = words.pop() ?? heading
+  const prefix = words.join(' ')
+  return <>{prefix && <span>{prefix}</span>}<span className="gradient-text"><span className="gradient-text-glow">{accent}</span><span className="gradient-text-content">{accent}</span></span></>
+}
+
+const ContactSection = () => {
+  const settings = useSiteSettings()
+  return (
   <div className="contact-page-wrapper landing-section">
     {/* Main Content */}
     <div className="contact-content">
@@ -15,17 +25,13 @@ const ContactSection = () => (
           delay={0.1}
           stagger={0.07}
         >
-          <span>Let&apos;s</span>
-          <span className="gradient-text">
-            <span className="gradient-text-glow">Connect</span>
-            <span className="gradient-text-content">Connect</span>
-          </span>
+          <ContactHeading heading={settings.contactHeading} />
         </TextReveal>
 
         <TextReveal
           as="p"
           className="contact-hero-subtitle"
-          text="Have a project in mind, a question, or just want to say hi? Feel free to reach out!"
+          text={settings.contactDescription}
           delay={0.25}
           stagger={0.025}
         />
@@ -43,6 +49,7 @@ const ContactSection = () => (
       </section>
     </div>
   </div>
-)
+  )
+}
 
 export default ContactSection

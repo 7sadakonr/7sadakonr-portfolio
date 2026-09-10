@@ -33,6 +33,12 @@ function PortfolioApp() {
   const [isPreloaderVisible, setIsPreloaderVisible] = useState(true)
   const isInteractive = isCriticalReady && !isPreloaderVisible
 
+  useEffect(() => {
+    void import('./features/siteSettings/api/siteSettingsRepository')
+      .then(({ loadSiteSettings }) => loadSiteSettings())
+      .catch(() => { /* defaults remain visible when settings are unavailable */ })
+  }, [])
+
   // Set up IntersectionObserver to update Navbar based on scroll position
   useEffect(() => {
     const observerOptions = {
