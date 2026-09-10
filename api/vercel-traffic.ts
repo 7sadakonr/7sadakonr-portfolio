@@ -126,14 +126,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
 
     // Fallback/parallel query to aggregate daily totals in case count returns different schema
     const aggTotalsParams = new URLSearchParams(baseParams)
-    aggTotalsParams.set('granularity', 'day')
+    aggTotalsParams.set('by', 'day')
     const aggTotalsUrl = `https://api.vercel.com/v1/query/web-analytics/visits/aggregate?${aggTotalsParams.toString()}`
     const aggTotalsPromise = fetch(aggTotalsUrl, { headers })
 
     // Dedicated visitor series; hourly for a one-day range and daily otherwise.
     const seriesParams = new URLSearchParams(baseParams)
     const seriesGranularity = days === 1 ? 'hour' : 'day'
-    seriesParams.set('granularity', seriesGranularity)
+    seriesParams.set('by', seriesGranularity)
     const seriesUrl = `https://api.vercel.com/v1/query/web-analytics/visits/aggregate?${seriesParams.toString()}`
     const seriesPromise = fetch(seriesUrl, { headers })
 

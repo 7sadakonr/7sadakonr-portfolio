@@ -35,11 +35,13 @@ describe('Vercel visitor availability', () => {
     vi.stubEnv('VERCEL_TOKEN', 'test-token')
     vi.stubEnv('VERCEL_PROJECT_ID', 'test-project')
     vi.stubEnv('VERCEL_TEAM_ID', 'team_test')
+    const requests: URL[] = []
     vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
       const url = new URL(String(input))
-      const payload = url.searchParams.get('granularity') === 'hour' ? series
+      requests.push(url)
+      const payload = url.searchParams.get('by') === 'hour' ? series
         : url.pathname.endsWith('/count') ? { visitors: 9, pageViews: 12 }
-          : url.searchParams.get('granularity') === 'day'
+          : url.searchParams.get('by') === 'day'
             ? { data: [{ date: '2026-09-11', visitors: 5, pageViews: 8 }] } : []
       return { ok: true, json: async () => payload } as Response
     })
@@ -54,5 +56,7 @@ describe('Vercel visitor availability', () => {
     expect(body.visitorTimeSeries).toEqual([])
     expect(body.visitorDailyDataAvailable).toBe(true)
     expect(body.dailyTimeSeries).toEqual([{ date: '2026-09-11', visitors: 5, pageviews: 8 }])
+    expect(requests.some((url) => url.searchParams.get('by') === 'hour')).toBe(true)
+    expect(requests.some((url) => url.searchParams.get('by') === 'day')).toBe(true)
   })
 })
