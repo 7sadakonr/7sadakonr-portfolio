@@ -518,6 +518,7 @@ export type GitHubActivityProps = React.ComponentProps<"div"> & {
   defaultOpen?: boolean;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  fetchWhenEmpty?: boolean;
 };
 
 const GitHubActivity = ({
@@ -535,6 +536,7 @@ const GitHubActivity = ({
   defaultOpen = false,
   open: openProp,
   onOpenChange,
+  fetchWhenEmpty = true,
   style,
   ...props
 }: GitHubActivityProps) => {
@@ -548,7 +550,7 @@ const GitHubActivity = ({
     onOpenChange?.(!open);
   };
 
-  const needsFetch = !contributionsProp.length || !reposProp.length;
+  const needsFetch = fetchWhenEmpty && (!contributionsProp.length || !reposProp.length);
   const fetched = useGitHubUser(needsFetch ? username : undefined);
   const placeholder = React.useMemo(
     () => (username ? emptyDays(weeksFor(months)) : []),

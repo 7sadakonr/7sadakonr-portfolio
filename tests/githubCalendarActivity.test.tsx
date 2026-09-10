@@ -73,6 +73,19 @@ describe('GitHub activity card', () => {
         })
     })
 
+    it('shares the repositories response and does not start GitHubActivity fallback requests', async () => {
+        const fetchMock = vi.mocked(fetch)
+        render(<GithubCalendar username="7sadakonr" colorSchema="purple" />)
+
+        await screen.findByRole('img', { name: '3 contributions in 2026' })
+
+        const requests = fetchMock.mock.calls.map(([input]) => String(input))
+        expect(requests.filter((url) => url.includes('github-contributions-api.jogruber.de'))).toHaveLength(1)
+        expect(requests.filter((url) => url.endsWith('/events/public?per_page=100'))).toHaveLength(1)
+        expect(requests.filter((url) => url.endsWith('/repos?per_page=100&type=owner'))).toHaveLength(1)
+        expect(requests.filter((url) => url.endsWith('/users/7sadakonr'))).toHaveLength(1)
+    })
+
     it('keeps the existing recovery link when contribution loading fails', async () => {
         vi.stubGlobal('fetch', vi.fn((input: string | URL | Request) => {
             const url = String(input)
