@@ -1,3 +1,4 @@
+import { Chip } from '@heroui/react'
 import type { TopInteractionRow } from '../../hooks/useAnalytics'
 
 interface TopInteractionsProps {
@@ -55,9 +56,9 @@ const TopInteractions = ({ data, isLoading }: TopInteractionsProps) => {
                     <span className="analytics-ranked-label">
                       {item.target_label || item.project_slug || item.event_name}
                     </span>
-                    <span className={`analytics-action-pill pill-${badge.type}`}>
+                    <Chip size="sm" variant="soft" className={`analytics-action-pill pill-${badge.type}`}>
                       {badge.text}
-                    </span>
+                    </Chip>
                   </div>
                 </div>
 
