@@ -24,4 +24,10 @@ describe('dark admin dashboard styling', () => {
     expect(css).toMatch(/\.analytics-kpi-card--blue \.analytics-kpi-icon\s*\{[^}]*color:\s*#f3a0dc/)
     expect(css).toMatch(/\.analytics-kpi-card--amber \.analytics-kpi-icon\s*\{[^}]*color:\s*#ffc58a/)
   })
+
+  it('uses a single-width frame when a KPI card is active', () => {
+    const css = getDarkTheme()
+
+    expect(css).toMatch(/\.analytics-kpi-card--interactive\.is-active\s*\{[^}]*border-left-width:\s*1px/)
+  })
 })

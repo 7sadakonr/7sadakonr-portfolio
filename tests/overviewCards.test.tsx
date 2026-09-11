@@ -43,11 +43,11 @@ describe('OverviewCards visitor availability', () => {
     expect(card('Visitors Today').querySelector('.analytics-growth-label')).toBeNull()
   })
 
-  it('only marks the total visitor card active for the visitor timeline', () => {
+  it('keeps both visitor summary cards selectable for the visitor timeline', () => {
     render(<OverviewCards data={overview} days={7} isLoading={false} isVisitorDataAvailable activeMetric="visitors" onSelectMetric={() => undefined} />)
 
     expect(card('Total Visitors').classList.contains('is-active')).toBe(true)
-    expect(card('Visitors Today').classList.contains('analytics-kpi-card--interactive')).toBe(false)
-    expect(card('Visitors Today').classList.contains('is-active')).toBe(false)
+    expect(card('Visitors Today').classList.contains('analytics-kpi-card--interactive')).toBe(true)
+    expect(card('Visitors Today').classList.contains('is-active')).toBe(true)
   })
 })
