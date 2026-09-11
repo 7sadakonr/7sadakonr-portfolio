@@ -828,3 +828,37 @@
 .analytics-drawer-close:hover { background: #393942; color: #fff; }
 .analytics-error-banner { background: #3a1e25; border-color: #7b3d4a; color: #ffd0d0; }
 .admin-loading { background: var(--admin-bg); color: var(--admin-text); }
+
+/* Keep every nested analytics frame inside the same quiet dark surface system. */
+.analytics-insights-bar { background: var(--admin-surface-muted); border-color: var(--admin-border); }
+.analytics-insight-pill { background: var(--admin-surface); border-color: var(--admin-border); box-shadow: none; }
+.analytics-insight-label, .analytics-insight-sub, .analytics-timeline-time,
+.analytics-timeline-dest, .analytics-drawer-hint { color: var(--admin-muted); }
+.analytics-insight-val, .analytics-timeline-label { color: var(--admin-text); }
+.analytics-chart-total-pill, .analytics-kpi-badge, .analytics-growth-badge.neutral,
+.analytics-ctr-pill.normal { background: #292932; border-color: var(--admin-border); color: #dedde5; }
+.analytics-growth-badge.positive, .analytics-active-now-tag { background: #173126; border-color: #27563f; color: #9fe3bd; }
+.analytics-growth-badge.negative { background: #3a1e25; color: #ffb0b0; }
+.analytics-vercel-btn { background: #292932; color: var(--admin-text); }
+.analytics-vercel-btn:hover { background: #393942; }
+
+/* KPI accents stay visible before a metric is selected, while card surfaces remain neutral. */
+.analytics-kpi-card--emerald .analytics-kpi-icon { background: rgba(255, 156, 156, 0.14); color: #ff9c9c; }
+.analytics-kpi-card--purple .analytics-kpi-icon { background: rgba(199, 151, 255, 0.14); color: #c797ff; }
+.analytics-kpi-card--blue .analytics-kpi-icon { background: rgba(243, 160, 220, 0.14); color: #f3a0dc; }
+.analytics-kpi-card--amber .analytics-kpi-icon { background: rgba(255, 197, 138, 0.14); color: #ffc58a; }
+.analytics-kpi-card--interactive.is-active { background: var(--admin-surface-muted); box-shadow: none; }
+.analytics-kpi-card--interactive.is-active.analytics-kpi-card--emerald { border-color: #ff9c9c; }
+.analytics-kpi-card--interactive.is-active.analytics-kpi-card--purple { border-color: #c797ff; }
+.analytics-kpi-card--interactive.is-active.analytics-kpi-card--blue { border-color: #f3a0dc; }
+.analytics-kpi-card--interactive.is-active.analytics-kpi-card--amber { border-color: #ffc58a; }
+
+.analytics-intent-icon { background: #292932; color: var(--admin-text); }
+.analytics-intent-card--emerald .analytics-intent-icon { background: rgba(255, 156, 156, 0.14); color: #ff9c9c; }
+.analytics-intent-card--purple .analytics-intent-icon { background: rgba(199, 151, 255, 0.14); color: #c797ff; }
+.analytics-intent-card--blue .analytics-intent-icon { background: rgba(243, 160, 220, 0.14); color: #f3a0dc; }
+.analytics-intent-card--amber .analytics-intent-icon { background: rgba(255, 197, 138, 0.14); color: #ffc58a; }
+.analytics-timeline::before { background: var(--admin-border); }
+.analytics-timeline-dot { background: var(--admin-surface); border-color: #c797ff; box-shadow: 0 0 0 3px rgba(199, 151, 255, 0.14); }
+.analytics-timeline-content { background: var(--admin-surface-muted); border-color: var(--admin-border); }
+.analytics-timeline-badge { background: #173126; color: #9fe3bd; }
