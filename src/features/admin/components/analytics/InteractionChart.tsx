@@ -7,6 +7,7 @@ import {
   Tooltip,
   CartesianGrid,
 } from 'recharts'
+import { Tabs } from '@heroui/react'
 import type { DateRangeDays, TimeSeriesMetric, TimeSeriesPoint, TrafficInsights } from '../../hooks/useAnalytics'
 import { formatAnalyticsDate } from '../../hooks/analyticsTime'
 
@@ -24,30 +25,38 @@ interface InteractionChartProps {
 const METRIC_CONFIG: Record<TimeSeriesMetric, { label: string; color: string; fillGradient: string }> = {
   visitors: {
     label: 'Unique Visitors',
-    color: '#10b981',
+    color: '#34d399',
     fillGradient: 'colorVisitors',
   },
   interactions: {
     label: 'All Interactions',
-    color: '#1b6b50',
+    color: '#a78bfa',
     fillGradient: 'colorInteractions',
   },
   project_opens: {
     label: 'Project Opens',
-    color: '#8b5cf6',
+    color: '#c084fc',
     fillGradient: 'colorProjects',
   },
   external_clicks: {
     label: 'External Clicks',
-    color: '#2563eb',
+    color: '#f472b6',
     fillGradient: 'colorClicks',
   },
   resume_downloads: {
     label: 'Resume Downloads',
-    color: '#d97706',
+    color: '#fbbf24',
     fillGradient: 'colorResume',
   },
 }
+
+const METRIC_KEYS: TimeSeriesMetric[] = [
+  'visitors',
+  'interactions',
+  'project_opens',
+  'external_clicks',
+  'resume_downloads',
+]
 
 const InteractionChart = ({
   data,
@@ -56,7 +65,7 @@ const InteractionChart = ({
   isLoading,
   isVisitorDataAvailable,
   metricTotal,
-  days = 30,
+  days = 1,
   insights,
 }: InteractionChartProps) => {
   const chartData = data.map((d) => ({
@@ -83,7 +92,10 @@ const InteractionChart = ({
           <div className="analytics-chart-title-row">
             <h2 className="analytics-section-title">Activity Timeline</h2>
             {!isLoading && !isVisitorUnavailable && (
-              <span className="analytics-chart-total-pill" style={{ borderColor: activeConfig.color, color: activeConfig.color }}>
+              <span
+                className="analytics-chart-total-pill font-bold"
+                style={{ borderColor: activeConfig.color, color: activeConfig.color }}
+              >
                 {displayedTotal.toLocaleString()} {totalLabel}
               </span>
             )}
@@ -93,137 +105,160 @@ const InteractionChart = ({
           </p>
         </div>
 
-        <div className="analytics-metric-segmented" role="group" aria-label="Chart metric">
-          {(Object.keys(METRIC_CONFIG) as TimeSeriesMetric[]).map((key) => {
-            const cfg = METRIC_CONFIG[key]
-            const isActive = metric === key
-            return (
-              <button
-                key={key}
-                type="button"
-                className={`analytics-segment-btn ${isActive ? 'active' : ''}`}
-                onClick={() => onMetricChange(key)}
-              >
-                {cfg.label}
-              </button>
-            )
-          })}
+        {/* Mobile dropdown selector */}
+        <div className="analytics-metric-select-container md:hidden w-full">
+          <label className="analytics-metric-select-label sr-only" htmlFor="chart-metric-select">
+            Chart metric
+          </label>
+          <select
+            id="chart-metric-select"
+            aria-label="Chart metric"
+            value={metric}
+            onChange={(e) => onMetricChange?.(e.target.value as TimeSeriesMetric)}
+            className="analytics-metric-select w-full bg-[#1c1c24] border border-zinc-800 text-zinc-200 text-xs font-semibold rounded-xl px-3 py-2.5 outline-none focus:border-violet-500"
+          >
+            {METRIC_KEYS.map((k) => (
+              <option key={k} value={k} className="bg-[#16161b] text-white">
+                {METRIC_CONFIG[k].label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* HeroUI Tabs for Metric Switcher on desktop/tablet */}
+        <div className="analytics-desktop-tabs hidden md:block w-full sm:w-auto overflow-x-auto">
+          <Tabs
+            selectedKey={metric}
+            onSelectionChange={(key) => onMetricChange?.(key as TimeSeriesMetric)}
+            aria-label="Activity metrics"
+          >
+            <Tabs.List className="bg-[#1c1c24] border border-zinc-800 rounded-xl p-1 gap-1 flex items-center flex-nowrap shadow-inner">
+              {METRIC_KEYS.map((k) => (
+                <Tabs.Tab
+                  key={k}
+                  id={k}
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap text-zinc-400 data-[selected=true]:bg-zinc-800 data-[selected=true]:text-white transition-all cursor-pointer"
+                >
+                  {METRIC_CONFIG[k].label}
+                </Tabs.Tab>
+              ))}
+            </Tabs.List>
+          </Tabs>
         </div>
       </div>
 
-      {/* Vercel-style Deep Traffic Insights Banner */}
-      {!isLoading && insights && !isVisitorUnavailable && (
-        <div className="analytics-insights-bar">
-          <div className="analytics-insight-pill">
-            <span className="analytics-insight-label">
-              {days === 1 ? '🔥 Peak Hour' : '🔥 Peak Day'}
-            </span>
-            <div className="analytics-insight-content">
-              <span className="analytics-insight-val">{insights.peakTimeLabel}</span>
-              {insights.peakCount > 0 && (
-                <span className="analytics-insight-sub">
-                  ({insights.peakCount.toLocaleString()} {metric === 'visitors' ? 'visitors' : 'events'})
-                </span>
-              )}
-            </div>
+      {insights && !isLoading && (
+        <div className="flex flex-wrap items-center gap-3 mb-5 p-3 rounded-xl bg-[#1c1c24] border border-zinc-800 text-xs">
+          <div className="flex items-center gap-2">
+            <span className="text-zinc-500 font-semibold uppercase text-[10px]">Peak Activity:</span>
+            <span className="text-white font-bold">{insights.peakTimeLabel}</span>
+            <span className="text-emerald-400 font-semibold">({insights.peakCount.toLocaleString()} events)</span>
           </div>
-
-          <div className="analytics-insight-pill">
-            <span className="analytics-insight-label">📊 Average</span>
-            <div className="analytics-insight-content">
-              <span className="analytics-insight-val">
-                {insights.average.toLocaleString()}
-              </span>
-              <span className="analytics-insight-sub">{insights.unitLabel}</span>
-            </div>
+          <div className="hidden sm:block text-zinc-700">|</div>
+          <div className="flex items-center gap-2">
+            <span className="text-zinc-500 font-semibold uppercase text-[10px]">Daily Average:</span>
+            <span className="text-white font-bold">{insights.average.toLocaleString()} {insights.unitLabel}</span>
           </div>
-
-          {days === 1 && (
-            <div className="analytics-insight-pill">
-              <span className="analytics-insight-label">⏰ Busiest Window</span>
-              <div className="analytics-insight-content">
-                <span className="analytics-insight-val">{insights.busiestPeriodLabel}</span>
-              </div>
-            </div>
-          )}
         </div>
       )}
 
       <div className="analytics-chart-container">
         {isLoading && (
           <div className="analytics-chart-loading">
-            <div className="analytics-spinner" aria-hidden="true" />
-            <span>{days === 1 ? 'Calculating hourly timeline…' : 'Calculating daily timeline…'}</span>
+            <div className="w-5 h-5 border-2 border-zinc-600 border-t-violet-400 rounded-full animate-spin" />
+            <span>Loading timeline metrics…</span>
           </div>
         )}
+
         {!isLoading && isVisitorUnavailable && (
-          <p role="status">Vercel visitor data is unavailable</p>
+          <div className="analytics-chart-empty">
+            <p role="status" className="m-0 text-zinc-400">Vercel visitor data is unavailable</p>
+          </div>
         )}
+
+        {!isLoading && !isVisitorUnavailable && totalCount === 0 && (
+          <div className="analytics-chart-empty">
+            <span>No activity recorded for this metric in the selected period.</span>
+          </div>
+        )}
+
         {!isLoading && !isVisitorUnavailable && (
-          <ResponsiveContainer width="100%" height={340} minWidth={0}>
-            <AreaChart data={chartData} margin={{ top: 18, right: 16, left: -16, bottom: 4 }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart
+              data={chartData}
+              margin={{ top: 10, right: 20, left: -2, bottom: 4 }}
+            >
               <defs>
-                <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor={activeConfig.color} stopOpacity={0.35} />
-                  <stop offset="95%" stopColor={activeConfig.color} stopOpacity={0.0} />
+                <linearGradient id="colorVisitors" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#34d399" stopOpacity={0.4} />
+                  <stop offset="95%" stopColor="#34d399" stopOpacity={0.0} />
+                </linearGradient>
+                <linearGradient id="colorInteractions" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#a78bfa" stopOpacity={0.4} />
+                  <stop offset="95%" stopColor="#a78bfa" stopOpacity={0.0} />
+                </linearGradient>
+                <linearGradient id="colorProjects" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#c084fc" stopOpacity={0.4} />
+                  <stop offset="95%" stopColor="#c084fc" stopOpacity={0.0} />
+                </linearGradient>
+                <linearGradient id="colorClicks" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#f472b6" stopOpacity={0.4} />
+                  <stop offset="95%" stopColor="#f472b6" stopOpacity={0.0} />
+                </linearGradient>
+                <linearGradient id="colorResume" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#fbbf24" stopOpacity={0.4} />
+                  <stop offset="95%" stopColor="#fbbf24" stopOpacity={0.0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="4 4" stroke="#e6eae6" vertical={false} />
+
+              <CartesianGrid strokeDasharray="3 3" stroke="#252530" vertical={false} />
+
               <XAxis
                 dataKey="date"
-                stroke="#69746e"
-                fontSize={12}
+                stroke="#6b6975"
+                fontSize={10}
                 tickLine={false}
-                axisLine={{ stroke: '#d9ddd5' }}
-                interval={days === 1 ? 2 : 'preserveStartEnd'}
-                dy={6}
+                axisLine={false}
+                minTickGap={16}
+                interval="preserveStartEnd"
+                dy={4}
               />
               <YAxis
-                stroke="#69746e"
-                fontSize={12}
+                stroke="#6b6975"
+                fontSize={10}
+                width={36}
                 tickLine={false}
                 axisLine={false}
                 allowDecimals={false}
-                domain={[0, (dataMax: number) => Math.max(5, dataMax)]}
+                tickFormatter={(val: number) =>
+                  val >= 1000 ? `${(val / 1000).toFixed(val % 1000 === 0 ? 0 : 1)}k` : String(val)
+                }
               />
+
               <Tooltip
                 contentStyle={{
-                  backgroundColor: '#17201d',
-                  color: '#ffffff',
-                  border: '0',
+                  backgroundColor: '#16161b',
+                  border: '1px solid #2e2e38',
                   borderRadius: '12px',
-                  boxShadow: '0 12px 30px rgba(0, 0, 0, 0.25)',
-                  padding: '10px 14px',
-                  fontSize: '13px',
+                  color: '#f5f4f8',
+                  boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5)',
+                  fontSize: '12px',
+                  fontWeight: 600,
                 }}
-                itemStyle={{ color: '#ffffff', fontWeight: 700 }}
-                labelStyle={{ fontWeight: 600, color: '#a8b9ae', marginBottom: '4px' }}
-                labelFormatter={(label) => {
-                  const str = String(label ?? '')
-                  if (str.includes(':')) {
-                    const parts = str.split(':')
-                    const first = parts[0]
-                    const h = first ? parseInt(first, 10) : NaN
-                    if (!isNaN(h)) {
-                      const nextH = (h + 1) % 24
-                      return `Time: ${String(h).padStart(2, '0')}:00 - ${String(nextH).padStart(2, '0')}:00 UTC`
-                    }
-                  }
-                  return `Date: ${str}`
-                }}
-                formatter={(value) => [
-                  `${Number(value ?? 0).toLocaleString()} ${metric === 'visitors' ? 'visitors' : 'events'}`,
-                  activeConfig.label,
-                ]}
+                labelStyle={{ color: '#94929d', marginBottom: '4px' }}
+                itemStyle={{ color: activeConfig.color }}
+                formatter={(val: unknown) => [Number(val).toLocaleString(), activeConfig.label]}
+                cursor={{ stroke: '#3f3f4e', strokeWidth: 1, strokeDasharray: '4 4' }}
               />
+
               <Area
                 type="monotone"
                 dataKey="count"
                 stroke={activeConfig.color}
                 strokeWidth={2.5}
                 fillOpacity={1}
-                fill="url(#chartGradient)"
-                activeDot={{ r: 6, fill: activeConfig.color, stroke: '#fff', strokeWidth: 2 }}
+                fill={`url(#${activeConfig.fillGradient})`}
+                activeDot={{ r: 4.5, fill: activeConfig.color, stroke: '#16161b', strokeWidth: 2 }}
               />
             </AreaChart>
           </ResponsiveContainer>

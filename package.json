@@ -18,6 +18,8 @@
   },
   "dependencies": {
     "@emailjs/browser": "^4.4.1",
+    "@heroui/react": "^3.2.5",
+    "@heroui/styles": "^3.2.5",
     "@supabase/supabase-js": "^2.112.3",
     "@vercel/analytics": "^1.6.1",
     "clsx": "^2.1.1",

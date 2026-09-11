@@ -42,4 +42,12 @@ describe('OverviewCards visitor availability', () => {
     expect(card('Visitors Today').querySelector('.analytics-growth-badge')).toBeNull()
     expect(card('Visitors Today').querySelector('.analytics-growth-label')).toBeNull()
   })
+
+  it('keeps both visitor summary cards selectable for the visitor timeline', () => {
+    render(<OverviewCards data={overview} days={7} isLoading={false} isVisitorDataAvailable activeMetric="visitors" onSelectMetric={() => undefined} />)
+
+    expect(card('Total Visitors').classList.contains('is-active')).toBe(true)
+    expect(card('Visitors Today').classList.contains('analytics-kpi-card--interactive')).toBe(true)
+    expect(card('Visitors Today').classList.contains('is-active')).toBe(true)
+  })
 })
