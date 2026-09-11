@@ -1030,17 +1030,17 @@
   --field-radius: 12px;
 }
 
-/* Explicit borders and backgrounds for all input types and HeroUI field controls */
-.admin-shell .input,
-.admin-shell .textarea,
+/* Explicit borders and backgrounds for all standalone input types and HeroUI field controls */
+.admin-shell .input:not(.input-group__input),
+.admin-shell .textarea:not(.input-group__textarea),
 .admin-shell .input-group,
-.admin-shell input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
-.admin-shell textarea,
+.admin-shell input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not(.input-group__input):not([data-slot="input-group-input"]),
+.admin-shell textarea:not(.input-group__textarea):not([data-slot="input-group-textarea"]),
 .admin-shell select,
-.admin-login-page .input,
-.admin-login-page .textarea,
+.admin-login-page .input:not(.input-group__input),
+.admin-login-page .textarea:not(.input-group__textarea),
 .admin-login-page .input-group,
-.admin-login-page input:not([type="checkbox"]):not([type="radio"]) {
+.admin-login-page input:not([type="checkbox"]):not([type="radio"]):not(.input-group__input):not([data-slot="input-group-input"]) {
   border: 1px solid #3f3f4e !important;
   background-color: #181820 !important;
   color: #f4f4f6 !important;
@@ -1049,30 +1049,30 @@
   transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
 }
 
-.admin-shell .input:hover,
-.admin-shell .textarea:hover,
+.admin-shell .input:not(.input-group__input):hover,
+.admin-shell .textarea:not(.input-group__textarea):hover,
 .admin-shell .input-group:hover,
-.admin-shell input:not([type="checkbox"]):not([type="radio"]):hover,
-.admin-shell textarea:hover,
+.admin-shell input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not(.input-group__input):not([data-slot="input-group-input"]):hover,
+.admin-shell textarea:not(.input-group__textarea):not([data-slot="input-group-textarea"]):hover,
 .admin-shell select:hover,
-.admin-login-page .input:hover,
-.admin-login-page .textarea:hover,
+.admin-login-page .input:not(.input-group__input):hover,
+.admin-login-page .textarea:not(.input-group__textarea):hover,
 .admin-login-page .input-group:hover,
-.admin-login-page input:not([type="checkbox"]):not([type="radio"]):hover {
+.admin-login-page input:not([type="checkbox"]):not([type="radio"]):not(.input-group__input):not([data-slot="input-group-input"]):hover {
   border-color: #5c5c72 !important;
   background-color: #1b1b24 !important;
 }
 
-.admin-shell .input:focus,
-.admin-shell .textarea:focus,
+.admin-shell .input:not(.input-group__input):focus,
+.admin-shell .textarea:not(.input-group__textarea):focus,
 .admin-shell .input-group:focus-within,
-.admin-shell input:not([type="checkbox"]):not([type="radio"]):focus,
-.admin-shell textarea:focus,
+.admin-shell input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not(.input-group__input):not([data-slot="input-group-input"]):focus,
+.admin-shell textarea:not(.input-group__textarea):not([data-slot="input-group-textarea"]):focus,
 .admin-shell select:focus,
-.admin-login-page .input:focus,
-.admin-login-page .textarea:focus,
+.admin-login-page .input:not(.input-group__input):focus,
+.admin-login-page .textarea:not(.input-group__textarea):focus,
 .admin-login-page .input-group:focus-within,
-.admin-login-page input:not([type="checkbox"]):not([type="radio"]):focus {
+.admin-login-page input:not([type="checkbox"]):not([type="radio"]):not(.input-group__input):not([data-slot="input-group-input"]):focus {
   border-color: #8a38f5 !important;
   box-shadow: 0 0 0 3px rgba(138, 56, 245, 0.25) !important;
   background-color: #1c1c26 !important;
@@ -1100,19 +1100,51 @@
   color: #52525b !important;
 }
 
-/* Inner input of an InputGroup stays transparent and borderless inside its container */
+/* Inner input of an InputGroup stays completely seamless, borderless and transparent */
+.admin-shell .input-group input,
 .admin-shell .input-group .input-group__input,
-.admin-login-page .input-group .input-group__input {
+.admin-shell .input-group [data-slot="input-group-input"],
+.admin-login-page .input-group input,
+.admin-login-page .input-group .input-group__input,
+.admin-login-page .input-group [data-slot="input-group-input"] {
   border: none !important;
+  border-width: 0 !important;
   background: transparent !important;
+  background-color: transparent !important;
   box-shadow: none !important;
+  border-radius: 0 !important;
   color: #f4f4f6 !important;
+  outline: none !important;
+  padding-left: 0.5rem !important;
+}
+
+.admin-shell .input-group input:hover,
+.admin-shell .input-group .input-group__input:hover,
+.admin-login-page .input-group input:hover,
+.admin-login-page .input-group .input-group__input:hover {
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+.admin-shell .input-group input:focus,
+.admin-shell .input-group .input-group__input:focus,
+.admin-login-page .input-group input:focus,
+.admin-login-page .input-group .input-group__input:focus {
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  outline: none !important;
 }
 
 .admin-shell .input-group .input-group__prefix,
 .admin-login-page .input-group .input-group__prefix,
 .admin-shell .input-group .input-group__suffix,
 .admin-login-page .input-group .input-group__suffix {
+  border: none !important;
+  background: transparent !important;
   color: #71717a !important;
   display: flex !important;
   align-items: center !important;
