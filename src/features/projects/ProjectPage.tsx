@@ -52,7 +52,15 @@ const ProjectSection = () => {
     if (!root || typeof ResizeObserver === 'undefined') return
 
     let frameId: number | null = null
-    const observer = new ResizeObserver(() => {
+    let lastHeight = 0
+
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0]
+      if (!entry) return
+      const height = Math.round(entry.contentRect.height)
+      if (height === lastHeight) return
+      lastHeight = height
+
       if (frameId !== null) return
       frameId = requestAnimationFrame(() => {
         frameId = null

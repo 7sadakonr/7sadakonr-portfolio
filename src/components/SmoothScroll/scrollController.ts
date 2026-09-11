@@ -51,7 +51,11 @@ export const cancelScrollAnimation = () => {
 
 export const triggerResize = () => {
   if (activeLenis) {
-    activeLenis.resize()
+    if (activeLenis.isScrolling) {
+      activeLenis.dimensions?.resize()
+    } else {
+      activeLenis.resize()
+    }
   }
 }
 

@@ -688,9 +688,10 @@
 }
 
 .projects-list {
-  display: flex;
-  flex-direction: column;
-  gap: clamp(40px, 6vh, 70px);
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-areas: "stack";
+  position: relative;
 }
 
 @media (max-width: 900px) {
