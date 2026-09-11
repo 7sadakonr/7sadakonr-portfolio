@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Chip, Tabs } from '@heroui/react'
 import type { FunnelData } from '../../hooks/useAnalytics'
 
 interface ConversionFunnelProps {
@@ -45,7 +46,8 @@ const ConversionFunnel = ({ data, isLoading }: ConversionFunnelProps) => {
       sessions: resumeSessions,
       events: resumeEvents,
       badge: 'High Intent',
-      accent: 'emerald',
+      color: '#34d399',
+      borderLeft: 'border-l-emerald-500',
       icon: (
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
@@ -62,7 +64,8 @@ const ConversionFunnel = ({ data, isLoading }: ConversionFunnelProps) => {
       sessions: projectSessions,
       events: projectEvents,
       badge: 'Work Engagement',
-      accent: 'purple',
+      color: '#a78bfa',
+      borderLeft: 'border-l-purple-500',
       icon: (
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
@@ -77,7 +80,8 @@ const ConversionFunnel = ({ data, isLoading }: ConversionFunnelProps) => {
       sessions: codeSessions,
       events: (data?.goals?.demo_views?.events ?? 0) + (data?.goals?.github_inspects?.events ?? 0) || codeSessions,
       badge: 'Proof of Work',
-      accent: 'blue',
+      color: '#60a5fa',
+      borderLeft: 'border-l-blue-500',
       icon: (
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <polygon points="12 2 2 7 12 12 22 7 12 2" />
@@ -89,12 +93,13 @@ const ConversionFunnel = ({ data, isLoading }: ConversionFunnelProps) => {
     {
       id: 'contact',
       title: 'Direct Inquiries',
-      subtitle: 'Email, LinkedIn, or contact form',
+      subtitle: 'Email, LinkedIn, or contact click',
       rate: contactRate,
       sessions: contactSessions,
       events: contactEvents,
       badge: 'Recruiter Outreach',
-      accent: 'amber',
+      color: '#fbbf24',
+      borderLeft: 'border-l-amber-500',
       icon: (
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
@@ -120,116 +125,115 @@ const ConversionFunnel = ({ data, isLoading }: ConversionFunnelProps) => {
 
   return (
     <div className="analytics-card-panel">
-      <div className="analytics-panel-header analytics-intent-header">
+      <div className="analytics-panel-header flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="analytics-section-title">Recruiter Intent &amp; Goals</h2>
+          <h2 className="analytics-section-title">Recruiter Intent &amp; Conversion Goals</h2>
           <p className="analytics-section-subtitle">
-            Hiring milestones: resume downloads, project verification, and page retention
+            Hiring milestones: resume downloads, code proof, and section engagement
           </p>
         </div>
 
-        <div className="analytics-intent-toggle" role="tablist" aria-label="View selection">
-          <button
-            type="button"
-            className={`analytics-intent-tab ${activeView === 'goals' ? 'active' : ''}`}
-            onClick={() => setActiveView('goals')}
-            role="tab"
-            aria-selected={activeView === 'goals'}
-          >
-            Conversion Goals
-          </button>
-          <button
-            type="button"
-            className={`analytics-intent-tab ${activeView === 'retention' ? 'active' : ''}`}
-            onClick={() => setActiveView('retention')}
-            role="tab"
-            aria-selected={activeView === 'retention'}
-          >
-            Section Retention
-          </button>
-        </div>
+        {/* HeroUI Tabs for View Toggle */}
+        <Tabs
+          selectedKey={activeView}
+          onSelectionChange={(key) => setActiveView(key as ActiveView)}
+          aria-label="Conversion view"
+        >
+          <Tabs.List className="bg-[#1c1c24] border border-zinc-800 rounded-xl p-1 gap-1 flex items-center shadow-inner">
+            <Tabs.Tab
+              id="goals"
+              className="px-3 py-1.5 rounded-lg text-xs font-semibold text-zinc-400 data-[selected=true]:bg-zinc-800 data-[selected=true]:text-white transition-all cursor-pointer"
+            >
+              Conversion Goals
+            </Tabs.Tab>
+            <Tabs.Tab
+              id="retention"
+              className="px-3 py-1.5 rounded-lg text-xs font-semibold text-zinc-400 data-[selected=true]:bg-zinc-800 data-[selected=true]:text-white transition-all cursor-pointer"
+            >
+              Section Retention
+            </Tabs.Tab>
+          </Tabs.List>
+        </Tabs>
       </div>
 
       {isLoading && (
-        <div className="analytics-intent-loading">
-          <div className="analytics-spinner" />
+        <div className="flex items-center justify-center gap-3 py-12 text-zinc-400 text-xs">
+          <div className="w-5 h-5 border-2 border-zinc-600 border-t-violet-400 rounded-full animate-spin" />
           <span>Calculating intent metrics…</span>
         </div>
       )}
 
       {!isLoading && activeView === 'goals' && (
-        <div className="analytics-intent-grid">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           {goals.map((goal) => (
-            <div key={goal.id} className={`analytics-intent-card analytics-intent-card--${goal.accent}`}>
-              <div className="analytics-intent-card-top">
-                <div className="analytics-intent-icon-wrap">
-                  <span className="analytics-intent-icon">{goal.icon}</span>
-                  <span className="analytics-intent-card-title">{goal.title}</span>
+            <div
+              key={goal.id}
+              className={`p-4 rounded-xl bg-[#1c1c24] border border-zinc-800 border-l-4 ${goal.borderLeft} flex flex-col gap-2.5 transition-all hover:border-zinc-700/80`}
+            >
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2.5">
+                  <div
+                    className="w-8 h-8 rounded-lg flex items-center justify-center text-xs"
+                    style={{ backgroundColor: `${goal.color}18`, color: goal.color }}
+                  >
+                    {goal.icon}
+                  </div>
+                  <span className="text-xs font-bold text-white">{goal.title}</span>
                 </div>
-                <span className="analytics-intent-badge">{goal.badge}</span>
+                <Chip size="sm" variant="soft" color="default" className="text-[10px] font-semibold text-zinc-400">
+                  {goal.badge}
+                </Chip>
               </div>
 
-              <div className="analytics-intent-rate-row">
-                <span className="analytics-intent-rate">{goal.rate.toFixed(1)}%</span>
-                <span className="analytics-intent-sessions">
-                  {goal.sessions.toLocaleString()} {goal.sessions === 1 ? 'visitor' : 'visitors'}
-                  {goal.events > goal.sessions && (
-                    <small className="analytics-intent-events">({goal.events} total)</small>
-                  )}
+              <div className="flex items-baseline justify-between gap-2 mt-1">
+                <span className="text-2xl font-extrabold text-white tracking-tight">{goal.rate.toFixed(1)}%</span>
+                <span className="text-xs text-zinc-400 font-semibold">
+                  {goal.sessions.toLocaleString()} <span className="font-normal text-zinc-500">sessions</span>
                 </span>
               </div>
 
-              <div className="analytics-intent-meter-track" aria-hidden="true">
+              <div className="h-1.5 bg-zinc-800 rounded-full overflow-hidden">
                 <div
-                  className="analytics-intent-meter-fill"
-                  style={{ width: `${Math.min(100, Math.max(2, goal.rate))}%` }}
+                  className="h-full rounded-full transition-all duration-500"
+                  style={{ width: `${Math.min(100, goal.rate)}%`, backgroundColor: goal.color }}
                 />
               </div>
 
-              <p className="analytics-intent-subtitle">{goal.subtitle}</p>
+              <p className="text-[11px] text-zinc-400 m-0">{goal.subtitle}</p>
             </div>
           ))}
         </div>
       )}
 
       {!isLoading && activeView === 'retention' && (
-        <div className="analytics-retention-pipeline">
-          {retentionSteps.map((step, idx) => {
-            const prevStep = idx > 0 ? retentionSteps[idx - 1] : null
-            const stepDrop = prevStep && prevStep.sessions > 0
-              ? Math.max(0, Math.round(((prevStep.sessions - step.sessions) / prevStep.sessions) * 100))
-              : 0
-
-            return (
-              <div key={step.section} className="analytics-retention-row">
-                <div className="analytics-retention-meta">
-                  <span className="analytics-retention-index">{idx + 1}</span>
-                  <div className="analytics-retention-info">
-                    <strong className="analytics-retention-label">{step.label}</strong>
-                    <span className="analytics-retention-count">
-                      {step.sessions.toLocaleString()} sessions
-                    </span>
-                  </div>
+        <div className="flex flex-col gap-2.5">
+          {retentionSteps.map((step, idx) => (
+            <div
+              key={step.section}
+              className="p-3.5 rounded-xl bg-[#1c1c24] border border-zinc-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
+            >
+              <div className="flex items-center gap-3 min-w-[180px]">
+                <div className="w-6 h-6 rounded-full bg-zinc-800 text-zinc-300 font-bold text-xs flex items-center justify-center shrink-0">
+                  {idx + 1}
                 </div>
-
-                <div className="analytics-retention-progress">
-                  <div className="analytics-retention-track">
-                    <div
-                      className="analytics-retention-fill"
-                      style={{ width: `${Math.min(100, Math.max(3, step.rate))}%` }}
-                    />
-                  </div>
-                </div>
-
-                <div className="analytics-retention-stats">
-                  <span className="analytics-retention-rate">{step.rate.toFixed(1)}% reach</span>
-                  {idx > 0 && stepDrop > 0 && (
-                    <span className="analytics-retention-drop">-{stepDrop}% drop</span>
-                  )}
+                <div>
+                  <div className="text-xs font-bold text-white">{step.label}</div>
+                  <div className="text-[11px] text-zinc-400">{step.sessions.toLocaleString()} visitors reached</div>
                 </div>
               </div>
-            )
-          })}
+
+              <div className="flex-1 w-full sm:mx-4 h-2 bg-zinc-800 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-violet-500 to-emerald-400 rounded-full transition-all duration-500"
+                  style={{ width: `${Math.min(100, step.rate)}%` }}
+                />
+              </div>
+
+              <div className="text-right min-w-[70px] self-end sm:self-auto">
+                <span className="text-xs font-extrabold text-white">{step.rate.toFixed(0)}%</span>
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>

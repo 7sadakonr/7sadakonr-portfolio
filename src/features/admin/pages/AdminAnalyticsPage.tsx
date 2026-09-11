@@ -1,4 +1,5 @@
 import { useAnalytics } from '../hooks/useAnalytics'
+import { Alert, Button } from '@heroui/react'
 import DateRangeSelector from '../components/analytics/DateRangeSelector'
 import OverviewCards from '../components/analytics/OverviewCards'
 import InteractionChart from '../components/analytics/InteractionChart'
@@ -29,6 +30,7 @@ const AdminAnalyticsPage = () => {
     isVisitorDataAvailable,
     refetch,
     fetchSessionDetail,
+    fetchSessionsByDate,
   } = useAnalytics()
 
   const metricTotal = overview
@@ -67,39 +69,50 @@ const AdminAnalyticsPage = () => {
 
         <div className="analytics-header-controls">
           <DateRangeSelector days={days} onChange={setDays} />
-          <button
+          <Button
             type="button"
-            className="analytics-action-refresh"
+            size="sm"
+            variant="outline"
+            className="analytics-action-refresh text-xs cursor-pointer px-3.5 border border-zinc-700 bg-[#1c1c24] hover:bg-zinc-800 hover:text-white text-zinc-200 rounded-xl transition-all"
             onClick={() => void refetch()}
-            disabled={isLoading}
+            isDisabled={isLoading}
             aria-label="Refresh analytics data"
           >
             <svg
               className={`analytics-refresh-icon ${isLoading ? 'spinning' : ''}`}
-              width="15"
-              height="15"
+              width="14"
+              height="14"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
               strokeWidth="2.5"
               strokeLinecap="round"
               strokeLinejoin="round"
+              aria-hidden="true"
             >
               <polyline points="23 4 23 10 17 10" />
               <polyline points="1 20 1 14 7 14" />
               <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
             </svg>
             <span>{isLoading ? 'Updating…' : 'Refresh'}</span>
-          </button>
+          </Button>
         </div>
       </header>
 
       {error && (
-        <div className="admin-form-error analytics-error-banner" role="alert">
-          <p>⚠️ Unable to load analytics: {error}</p>
-          <button type="button" className="admin-button" onClick={() => void refetch()}>
-            Retry
-          </button>
+        <div className="mb-6">
+          <Alert status="danger">
+            <Alert.Indicator />
+            <Alert.Content className="flex-1 flex items-center justify-between gap-3">
+              <div>
+                <Alert.Title className="text-xs font-bold">Analytics Data Unavailable</Alert.Title>
+                <Alert.Description className="text-xs">{error}</Alert.Description>
+              </div>
+              <Button size="sm" variant="outline" className="text-xs shrink-0" onClick={() => void refetch()}>
+                Retry
+              </Button>
+            </Alert.Content>
+          </Alert>
         </div>
       )}
 
@@ -157,6 +170,7 @@ const AdminAnalyticsPage = () => {
           sessions={recentSessions}
           isLoading={isLoading}
           fetchDetail={fetchSessionDetail}
+          fetchByDate={fetchSessionsByDate}
         />
       </section>
     </div>

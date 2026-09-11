@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Chip } from '@heroui/react'
 import type { ProjectPerformanceRow } from '../../hooks/useAnalytics'
 import ProjectDrawer from './ProjectDrawer'
 
@@ -13,7 +14,7 @@ const ProjectPerformanceTable = ({ data, isLoading }: ProjectPerformanceTablePro
     const githubClicks = Number.isFinite(row.github_clicks) ? row.github_clicks : 0
     const demoClicks = Number.isFinite(row.demo_clicks) ? row.demo_clicks : 0
     const opens = Number.isFinite(row.opens) ? row.opens : 0
-    const rateNumber = opens > 0 ? (githubClicks + demoClicks) / opens * 100 : 0
+    const rateNumber = opens > 0 ? ((githubClicks + demoClicks) / opens) * 100 : 0
     const rate = Number.isFinite(rateNumber) ? rateNumber.toFixed(1) : '0.0'
     return { ...row, githubClicks, demoClicks, opens, rate, rateNumber }
   })
@@ -24,7 +25,7 @@ const ProjectPerformanceTable = ({ data, isLoading }: ProjectPerformanceTablePro
         <div>
           <h2 className="analytics-section-title">Individual Project Engagement</h2>
           <p className="analytics-section-subtitle">
-            Opens, unique visitors &amp; external link conversions per project (Click row to view details)
+            Opens, unique visitors &amp; external link conversions per project (Click row to inspect)
           </p>
         </div>
       </div>
@@ -45,14 +46,17 @@ const ProjectPerformanceTable = ({ data, isLoading }: ProjectPerformanceTablePro
           <tbody>
             {isLoading && (
               <tr>
-                <td colSpan={7} className="text-center py-8 text-muted">
-                  Loading project engagement metrics…
+                <td colSpan={7} className="text-center py-8 text-zinc-400">
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-4 h-4 border-2 border-zinc-600 border-t-violet-400 rounded-full animate-spin" />
+                    <span>Loading project engagement metrics…</span>
+                  </div>
                 </td>
               </tr>
             )}
             {!isLoading && data.length === 0 && (
               <tr>
-                <td colSpan={7} className="text-center py-8 text-muted">
+                <td colSpan={7} className="text-center py-8 text-zinc-400">
                   No project engagement recorded yet.
                 </td>
               </tr>
@@ -65,6 +69,7 @@ const ProjectPerformanceTable = ({ data, isLoading }: ProjectPerformanceTablePro
                     onClick={() => setSelectedProject(row)}
                     tabIndex={0}
                     role="button"
+                    className="hover:bg-zinc-800/50 transition-colors cursor-pointer"
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' || e.key === ' ') {
                         e.preventDefault()
@@ -74,21 +79,26 @@ const ProjectPerformanceTable = ({ data, isLoading }: ProjectPerformanceTablePro
                   >
                     <td>
                       <div className="analytics-project-meta-cell">
-                        <span className="analytics-project-name">{row.title || row.slug}</span>
-                        <code className="analytics-project-slug">{row.slug}</code>
+                        <span className="font-bold text-white text-sm">{row.title || row.slug}</span>
+                        <code className="text-xs text-zinc-500 font-mono">{row.slug}</code>
                       </div>
                     </td>
-                    <td className="text-right font-medium">{row.opens.toLocaleString()}</td>
-                    <td className="text-right">{row.visitors.toLocaleString()}</td>
-                    <td className="text-right">{row.githubClicks.toLocaleString()}</td>
-                    <td className="text-right">{row.demoClicks.toLocaleString()}</td>
+                    <td className="text-right font-medium text-white">{row.opens.toLocaleString()}</td>
+                    <td className="text-right text-zinc-300">{row.visitors.toLocaleString()}</td>
+                    <td className="text-right text-zinc-300">{row.githubClicks.toLocaleString()}</td>
+                    <td className="text-right text-zinc-300">{row.demoClicks.toLocaleString()}</td>
                     <td className="text-right">
-                      <span className={`analytics-ctr-pill ${row.rateNumber >= 15 ? 'high' : row.rateNumber >= 5 ? 'medium' : 'normal'}`}>
+                      <Chip
+                        size="sm"
+                        variant="soft"
+                        color={row.rateNumber >= 15 ? 'success' : row.rateNumber >= 5 ? 'accent' : 'default'}
+                        className="text-xs font-bold"
+                      >
                         {row.rate}%
-                      </span>
+                      </Chip>
                     </td>
                     <td className="text-center">
-                      <span className="analytics-view-action" aria-label="View project details">
+                      <span className="text-xs font-bold text-violet-400 hover:text-violet-300" aria-label="View project details">
                         Inspect →
                       </span>
                     </td>
@@ -105,8 +115,8 @@ const ProjectPerformanceTable = ({ data, isLoading }: ProjectPerformanceTablePro
         {!isLoading && rows.map((row) => (
           <li className="analytics-mobile-data-card analytics-mobile-project-card" key={row.slug}>
             <div className="analytics-project-meta-cell">
-              <span className="analytics-project-name">{row.title || row.slug}</span>
-              <code className="analytics-project-slug">{row.slug}</code>
+              <span className="font-bold text-white text-sm">{row.title || row.slug}</span>
+              <code className="text-xs text-zinc-500 font-mono">{row.slug}</code>
             </div>
             <dl className="analytics-mobile-metrics">
               <div><dt>Opens</dt><dd>{row.opens.toLocaleString()}</dd></div>
@@ -115,7 +125,12 @@ const ProjectPerformanceTable = ({ data, isLoading }: ProjectPerformanceTablePro
               <div><dt>Demo</dt><dd>{row.demoClicks.toLocaleString()}</dd></div>
               <div><dt>Click Rate</dt><dd>{row.rate}%</dd></div>
             </dl>
-            <button type="button" className="analytics-mobile-inspect" onClick={() => setSelectedProject(row)} aria-label={`Inspect ${row.title || row.slug}`}>
+            <button
+              type="button"
+              className="analytics-mobile-inspect"
+              onClick={() => setSelectedProject(row)}
+              aria-label={`Inspect ${row.title || row.slug}`}
+            >
               Inspect details
             </button>
           </li>

@@ -19,6 +19,7 @@ const AdminRoutes = () => (
       <Route path="login" element={<AdminLoginPage />} />
       <Route element={<ProtectedAdminRoute />}>
         <Route element={<AdminLayout />}>
+          <Route index element={<Navigate to="/admin/analytics" replace />} />
           <Route
             path="analytics"
             element={
