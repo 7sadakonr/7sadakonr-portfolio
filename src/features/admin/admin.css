@@ -1086,8 +1086,18 @@
 .admin-login-page input::placeholder,
 .admin-login-page textarea::placeholder,
 .admin-login-page .input-group__input::placeholder {
-  color: #a1a1aa !important;
+  color: #71717a !important;
   opacity: 1 !important;
+  transition: color 0.15s ease;
+}
+
+.admin-shell input:focus::placeholder,
+.admin-shell textarea:focus::placeholder,
+.admin-shell .input-group:focus-within .input-group__input::placeholder,
+.admin-login-page input:focus::placeholder,
+.admin-login-page textarea:focus::placeholder,
+.admin-login-page .input-group:focus-within .input-group__input::placeholder {
+  color: #52525b !important;
 }
 
 /* Inner input of an InputGroup stays transparent and borderless inside its container */
@@ -1100,8 +1110,17 @@
 }
 
 .admin-shell .input-group .input-group__prefix,
-.admin-login-page .input-group .input-group__prefix {
-  color: #a1a1aa !important;
+.admin-login-page .input-group .input-group__prefix,
+.admin-shell .input-group .input-group__suffix,
+.admin-login-page .input-group .input-group__suffix {
+  color: #71717a !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+input[type="search"]::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 /* Modern styling for row action buttons and refresh */
