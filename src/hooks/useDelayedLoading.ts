@@ -1,46 +1,38 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 export const useDelayedLoading = (isLoading: boolean, delayMs = 180, minDisplayMs = 200) => {
   const [showSkeleton, setShowSkeleton] = useState(false)
-  // We need a ref to keep track of when the skeleton was actually shown
-  // to avoid closure staleness issues in the useEffect.
+  const isSkeletonVisibleRef = useRef(false)
+  const skeletonShownAtRef = useRef<number | null>(null)
 
   useEffect(() => {
-    let timeoutId: ReturnType<typeof setTimeout>
-    let minDisplayTimeoutId: ReturnType<typeof setTimeout>
-    let isMounted = true
-    let skeletonShownTime = 0
+    let timeoutId: ReturnType<typeof setTimeout> | undefined
 
     if (isLoading) {
-      setShowSkeleton(false) // Reset on new load if it was false
+      if (isSkeletonVisibleRef.current) return
+
       timeoutId = setTimeout(() => {
-        if (isMounted) {
-          setShowSkeleton(true)
-          skeletonShownTime = Date.now()
-        }
+        isSkeletonVisibleRef.current = true
+        skeletonShownAtRef.current = Date.now()
+        setShowSkeleton(true)
       }, delayMs)
     } else {
-      setShowSkeleton((currentlyShowing) => {
-        if (currentlyShowing) {
-          const elapsedTime = Date.now() - skeletonShownTime
-          const remainingTime = Math.max(0, minDisplayMs - elapsedTime)
-          
-          if (remainingTime > 0) {
-             minDisplayTimeoutId = setTimeout(() => {
-               if (isMounted) setShowSkeleton(false)
-             }, remainingTime)
-             return true
-          }
-          return false
-        }
-        return false
-      })
+      if (!isSkeletonVisibleRef.current || skeletonShownAtRef.current === null) {
+        setShowSkeleton(false)
+        return
+      }
+
+      const elapsedTime = Date.now() - skeletonShownAtRef.current
+      const remainingTime = Math.max(0, minDisplayMs - elapsedTime)
+      timeoutId = setTimeout(() => {
+        isSkeletonVisibleRef.current = false
+        skeletonShownAtRef.current = null
+        setShowSkeleton(false)
+      }, remainingTime)
     }
 
     return () => {
-      isMounted = false
-      clearTimeout(timeoutId)
-      clearTimeout(minDisplayTimeoutId)
+      if (timeoutId !== undefined) clearTimeout(timeoutId)
     }
   }, [isLoading, delayMs, minDisplayMs])
 

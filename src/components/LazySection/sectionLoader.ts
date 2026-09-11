@@ -1,4 +1,5 @@
 import { loadAboutPage, loadProjectPage, loadContactPage } from '../../utils/runtimeWarmup'
+import { scheduleIdleWork } from '../../utils/runtimeScheduler'
 
 export type LazySectionId = 'about' | 'projects' | 'contact'
 
@@ -10,45 +11,6 @@ const readyWaiters = new Map<LazySectionId, Set<() => void>>()
 
 const events = new EventTarget()
 const requestEventName = 'landing-section-load-request'
-
-type IdleWindow = Window & {
-  requestIdleCallback?: (callback: IdleRequestCallback) => number
-  cancelIdleCallback?: (handle: number) => void
-}
-
-const runWhenIdle = (callback: () => void) => {
-  const idleWindow = window as IdleWindow
-  let timeoutHandle: number | undefined
-  let idleHandle: number | undefined
-  let lastInputAt = performance.now()
-  const markInput = () => { lastInputAt = performance.now() }
-  const inputEvents = ['wheel', 'touchstart', 'pointerdown'] as const
-  inputEvents.forEach((eventName) => window.addEventListener(eventName, markInput, { passive: true }))
-
-  const cleanup = () => {
-    if (timeoutHandle !== undefined) window.clearTimeout(timeoutHandle)
-    if (idleHandle !== undefined) idleWindow.cancelIdleCallback?.(idleHandle)
-    inputEvents.forEach((eventName) => window.removeEventListener(eventName, markInput))
-  }
-
-  const runAfterInputSettles = () => {
-    const remainingQuietTime = 220 - (performance.now() - lastInputAt)
-    if (remainingQuietTime > 0) {
-      timeoutHandle = window.setTimeout(runAfterInputSettles, remainingQuietTime)
-      return
-    }
-    cleanup()
-    callback()
-  }
-
-  if (idleWindow.requestIdleCallback) {
-    idleHandle = idleWindow.requestIdleCallback(runAfterInputSettles)
-    return cleanup
-  }
-
-  timeoutHandle = window.setTimeout(runAfterInputSettles, 180)
-  return cleanup
-}
 
 export const getOwningSection = (targetId: string): LazySectionId | null => {
   if (targetId === 'about' || targetId === 'about-me' || targetId === 'skills') return 'about'
@@ -99,7 +61,7 @@ export const scheduleBelowFoldHydration = () => {
   const hydrateNext = (index: number) => {
     if (cancelled || index >= sectionOrder.length) return
 
-    cancelIdleWork = runWhenIdle(() => {
+    cancelIdleWork = scheduleIdleWork(() => {
       if (cancelled) return
       const sectionId = sectionOrder[index]
       if (!sectionId) return

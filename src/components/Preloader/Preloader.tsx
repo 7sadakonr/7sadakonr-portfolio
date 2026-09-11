@@ -2,6 +2,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import './Preloader.css';
 
 interface PreloaderProps {
+  isCriticalReady?: boolean;
+  mode?: 'full' | 'short';
   onReveal?: () => void;
   onComplete?: () => void;
 }
@@ -16,7 +18,6 @@ const GREETINGS = [
 ];
 
 const MIN_VISIBLE_MS = 600;
-const COMPLETE_HOLD_MS = 100;
 // The accent layer exits 100ms after the 750ms main curtain transition.
 const EXIT_DURATION_MS = 850;
 
@@ -24,7 +25,12 @@ const delay = (ms: number) => new Promise<void>((resolve) => {
   window.setTimeout(resolve, ms);
 });
 
-export const Preloader: React.FC<PreloaderProps> = ({ onReveal, onComplete }) => {
+export const Preloader: React.FC<PreloaderProps> = ({
+  isCriticalReady = false,
+  mode = 'full',
+  onReveal,
+  onComplete,
+}) => {
   const [currentGreetingIndex, setCurrentGreetingIndex] = useState(0);
   const [showName, setShowName] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
@@ -32,6 +38,8 @@ export const Preloader: React.FC<PreloaderProps> = ({ onReveal, onComplete }) =>
 
   const onRevealRef = useRef(onReveal);
   const onCompleteRef = useRef(onComplete);
+  const criticalReadyRef = useRef(isCriticalReady);
+  const criticalReadyWaitersRef = useRef(new Set<() => void>());
   const progressRef = useRef(0);
   const progressTargetRef = useRef(0);
   const counterDomRef = useRef<HTMLDivElement>(null);
@@ -41,6 +49,14 @@ export const Preloader: React.FC<PreloaderProps> = ({ onReveal, onComplete }) =>
     onRevealRef.current = onReveal;
     onCompleteRef.current = onComplete;
   }, [onReveal, onComplete]);
+
+  useEffect(() => {
+    criticalReadyRef.current = isCriticalReady;
+    if (isCriticalReady) {
+      criticalReadyWaitersRef.current.forEach((resolve) => resolve());
+      criticalReadyWaitersRef.current.clear();
+    }
+  }, [isCriticalReady]);
 
   // The counter eases toward real task completion instead of jumping from a
   // fast cached resource directly to 100. It never advances beyond the work
@@ -94,8 +110,9 @@ export const Preloader: React.FC<PreloaderProps> = ({ onReveal, onComplete }) =>
     };
   }, []);
 
-  // Block scrolling only while the visual curtain is present.
+  // The curtain remains visual-only once critical content can receive input.
   useEffect(() => {
+    if (isCriticalReady) return;
     const originalBodyOverflow = document.body.style.overflow;
     const originalHtmlOverflow = document.documentElement.style.overflow;
     
@@ -115,7 +132,7 @@ export const Preloader: React.FC<PreloaderProps> = ({ onReveal, onComplete }) =>
       document.removeEventListener('wheel', preventScroll);
       document.removeEventListener('touchmove', preventScroll);
     };
-  }, []);
+  }, [isCriticalReady]);
 
   useEffect(() => {
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -131,6 +148,13 @@ export const Preloader: React.FC<PreloaderProps> = ({ onReveal, onComplete }) =>
 
     let cancelled = false;
     const startedAt = performance.now();
+    const waitForCriticalReady = () => new Promise<void>((resolve) => {
+      if (criticalReadyRef.current) {
+        resolve();
+        return;
+      }
+      criticalReadyWaitersRef.current.add(resolve);
+    });
     const waitForVisualProgress = (target: number) => new Promise<void>((resolve) => {
       const check = () => {
         if (progressRef.current >= target || cancelled) {
@@ -142,26 +166,28 @@ export const Preloader: React.FC<PreloaderProps> = ({ onReveal, onComplete }) =>
       check();
     });
 
-    const greetingTimer = window.setInterval(() => {
-      setCurrentGreetingIndex((current) => Math.min(current + 1, GREETINGS.length - 1));
-    }, 320);
+    const greetingTimer = mode === 'full'
+      ? window.setInterval(() => {
+        setCurrentGreetingIndex((current) => Math.min(current + 1, GREETINGS.length - 1));
+      }, 320)
+      : undefined;
 
     const run = async () => {
-      progressTargetRef.current = 95;
-      await waitForVisualProgress(95);
+      progressTargetRef.current = mode === 'short' ? 100 : 95;
+      if (mode === 'full') await waitForVisualProgress(95);
+      await waitForCriticalReady();
       const elapsed = performance.now() - startedAt;
-      if (elapsed < MIN_VISIBLE_MS) await delay(MIN_VISIBLE_MS - elapsed);
+      if (mode === 'full' && elapsed < MIN_VISIBLE_MS) await delay(MIN_VISIBLE_MS - elapsed);
 
       if (cancelled) return;
 
-      window.clearInterval(greetingTimer);
+      if (greetingTimer !== undefined) window.clearInterval(greetingTimer);
       progressTargetRef.current = 100;
       await waitForVisualProgress(100);
       if (cancelled) return;
 
       setShowName(true);
-
-      await delay(COMPLETE_HOLD_MS);
+      await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
       if (cancelled) return;
 
       // Reveal the already-loaded Hero behind the curtain while it slides away.
@@ -179,9 +205,9 @@ export const Preloader: React.FC<PreloaderProps> = ({ onReveal, onComplete }) =>
 
     return () => {
       cancelled = true;
-      window.clearInterval(greetingTimer);
+      if (greetingTimer !== undefined) window.clearInterval(greetingTimer);
     };
-  }, []);
+  }, [mode]);
 
   if (isComplete) return null;
 
@@ -189,7 +215,7 @@ export const Preloader: React.FC<PreloaderProps> = ({ onReveal, onComplete }) =>
   const nameChars = finalName.split('');
 
   return (
-    <div className="preloader-container" aria-hidden="true">
+    <div className={`preloader-container${isCriticalReady ? ' preloader-container--pass-through' : ''}`} aria-hidden="true">
       {/* Accent layer (curtain back) */}
       <div className={`preloader-layer preloader-accent-layer ${isExiting ? 'exit-slide-accent' : ''}`} />
 

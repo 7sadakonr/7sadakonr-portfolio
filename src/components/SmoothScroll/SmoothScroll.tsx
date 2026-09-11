@@ -1,16 +1,20 @@
 import { useCallback, useEffect, useRef } from 'react'
 import { loadLenis, type LenisInstance } from '../../utils/runtimeWarmup'
+import { scheduleIdleWork } from '../../utils/runtimeScheduler'
 import { REDUCED_MOTION_QUERY, setActiveLenis } from './scrollController'
 
 interface SmoothScrollProps {
   children: React.ReactNode
   isPrepared: boolean
   isEnabled: boolean
+  allowIdleLoad?: boolean
 }
 
-export default function SmoothScroll({ children, isPrepared, isEnabled }: SmoothScrollProps) {
+export default function SmoothScroll({ children, isPrepared, isEnabled, allowIdleLoad = false }: SmoothScrollProps) {
   const requestRef = useRef<number | null>(null)
   const lenisRef = useRef<LenisInstance | null>(null)
+  const isLoadingRef = useRef(false)
+  const loadGenerationRef = useRef(0)
   const enabledRef = useRef(isEnabled)
   const motionPreferenceRef = useRef<MediaQueryList | null>(null)
 
@@ -54,31 +58,60 @@ export default function SmoothScroll({ children, isPrepared, isEnabled }: Smooth
 
   useEffect(() => {
     const hasFinePointer = window.matchMedia('(pointer: fine)').matches
-    if (!isPrepared || !hasFinePointer || lenisRef.current || motionPreferenceRef.current?.matches) return
+    if (!isPrepared || !hasFinePointer) return
 
-    let disposed = false
-    void loadLenis().then(({ default: Lenis }) => {
-      if (disposed || motionPreferenceRef.current?.matches || lenisRef.current) return
+    let cancelled = false
+    let cancelIdleWork: (() => void) | undefined
+    const requestLenis = () => {
+      if (cancelled || isLoadingRef.current || lenisRef.current || window.matchMedia(REDUCED_MOTION_QUERY).matches) return
 
-      const lenis = new Lenis({
-        duration: 1.5,
-        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-        orientation: 'vertical',
-        gestureOrientation: 'vertical',
-        smoothWheel: true,
-        wheelMultiplier: 0.5,
-        touchMultiplier: 1.5,
-        syncTouch: false,
+      isLoadingRef.current = true
+      const generation = ++loadGenerationRef.current
+      void loadLenis().then(({ default: Lenis }) => {
+        if (cancelled || generation !== loadGenerationRef.current || window.matchMedia(REDUCED_MOTION_QUERY).matches || lenisRef.current) {
+          if (!lenisRef.current) isLoadingRef.current = false
+          return
+        }
+
+        const scrollPosition = window.scrollY
+        const lenis = new Lenis({
+          duration: 1.5,
+          easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+          orientation: 'vertical',
+          gestureOrientation: 'vertical',
+          smoothWheel: true,
+          wheelMultiplier: 0.5,
+          touchMultiplier: 1.5,
+          syncTouch: false,
+        })
+        lenis.resize()
+        lenis.scrollTo(scrollPosition, { immediate: true, force: true })
+        lenisRef.current = lenis
+        isLoadingRef.current = false
+        setActiveLenis(lenis)
+        syncActivity()
+      }).catch(() => {
+        if (generation === loadGenerationRef.current) isLoadingRef.current = false
       })
-      lenisRef.current = lenis
-      setActiveLenis(lenis)
-      syncActivity()
-    })
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (['ArrowDown', 'ArrowUp', 'PageDown', 'PageUp', 'Home', 'End', ' '].includes(event.key)) requestLenis()
+    }
+
+    window.addEventListener('wheel', requestLenis, { passive: true, once: true })
+    window.addEventListener('keydown', handleKeyDown, { passive: true })
+    if (allowIdleLoad) cancelIdleWork = scheduleIdleWork(requestLenis)
 
     return () => {
-      disposed = true
+      cancelled = true
+      loadGenerationRef.current += 1
+      if (!lenisRef.current) isLoadingRef.current = false
+      cancelIdleWork?.()
+      window.removeEventListener('wheel', requestLenis)
+      window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [isPrepared, syncActivity])
+  }, [allowIdleLoad, isPrepared, syncActivity])
 
   useEffect(() => {
     const motionPreference = window.matchMedia(REDUCED_MOTION_QUERY)

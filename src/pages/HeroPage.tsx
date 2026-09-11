@@ -2,15 +2,17 @@ import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import './HeroPage.css'
 import { scrollToTarget } from '../components/SmoothScroll/scrollController';
 import TextReveal from '../components/Animation/TextReveal';
+import { scheduleIdleWork } from '../utils/runtimeScheduler';
 
 interface HeroPageProps {
   effectsEnabled?: boolean;
+  allowIdleEffects?: boolean;
   onCriticalReady?: () => void;
 }
 
 const BackgroundBeams = lazy(() => import('../components/BackgroundBeams/BackgroundBeams'))
 
-const HeroPage = ({ effectsEnabled = true, onCriticalReady }: HeroPageProps) => {
+const HeroPage = ({ effectsEnabled = true, allowIdleEffects = false, onCriticalReady }: HeroPageProps) => {
   const heroRef = useRef<HTMLElement>(null);
   const criticalReadyRef = useRef(false);
   const [isImageReady, setIsImageReady] = useState(false);
@@ -19,6 +21,7 @@ const HeroPage = ({ effectsEnabled = true, onCriticalReady }: HeroPageProps) => 
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(() =>
     window.matchMedia('(prefers-reduced-motion: reduce)').matches,
   );
+  const [shouldMountEffects, setShouldMountEffects] = useState(false);
 
   useEffect(() => {
     const hero = heroRef.current;
@@ -43,8 +46,27 @@ const HeroPage = ({ effectsEnabled = true, onCriticalReady }: HeroPageProps) => 
     };
   }, []);
 
+  useEffect(() => {
+    if (!effectsEnabled || prefersReducedMotion) {
+      setShouldMountEffects(false);
+      return;
+    }
+
+    let cancelIdleWork: (() => void) | undefined;
+    const enableEffects = () => setShouldMountEffects(true);
+    const hasFinePointer = window.matchMedia('(pointer: fine)').matches;
+    if (hasFinePointer) window.addEventListener('pointermove', enableEffects, { passive: true, once: true });
+    if (allowIdleEffects) cancelIdleWork = scheduleIdleWork(enableEffects);
+
+    return () => {
+      cancelIdleWork?.();
+      if (hasFinePointer) window.removeEventListener('pointermove', enableEffects);
+    };
+  }, [allowIdleEffects, effectsEnabled, prefersReducedMotion]);
+
   const isEffectActive =
     effectsEnabled &&
+    shouldMountEffects &&
     isImageReady &&
     isInView &&
     isDocumentVisible &&

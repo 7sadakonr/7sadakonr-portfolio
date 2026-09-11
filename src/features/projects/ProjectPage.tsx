@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import '../../pages/LandingPage.css'
 import AnimatedContent from '../../components/Animation/AnimatedContent'
 import TextReveal from '../../components/Animation/TextReveal'
@@ -11,13 +11,48 @@ import { useActiveProject } from './hooks/useActiveProject'
 import { useProjects } from './hooks/useProjects'
 import { useDelayedLoading } from '../../hooks/useDelayedLoading'
 import { trackEvent } from '../../lib/analytics/trackEvent'
+import { triggerResize } from '../../components/SmoothScroll/scrollController'
+import { getProjectLoadingPhase } from './projectLoadingState'
 
 const ProjectSection = () => {
   const { projects, isLoading, error, retry } = useProjects()
   const showSkeleton = useDelayedLoading(isLoading, 180, 200)
+  const loadingPhase = getProjectLoadingPhase(isLoading, showSkeleton)
+  const [isSkeletonMounted, setIsSkeletonMounted] = useState(true)
+  const projectRootRef = useRef<HTMLDivElement>(null)
   
   const { activeProjectIndex, setActiveProjectIndex, setProjectRef, scrollToProject } = useActiveProject(projects.length)
   const sidebarItems = useMemo(() => createProjectSidebarItems(projects), [projects])
+
+  useEffect(() => {
+    if (loadingPhase !== 'exiting') {
+      setIsSkeletonMounted(true)
+      return
+    }
+
+    const timeoutId = window.setTimeout(() => setIsSkeletonMounted(false), 250)
+    return () => window.clearTimeout(timeoutId)
+  }, [loadingPhase])
+
+  useEffect(() => {
+    const root = projectRootRef.current
+    if (!root || typeof ResizeObserver === 'undefined') return
+
+    let frameId: number | null = null
+    const observer = new ResizeObserver(() => {
+      if (frameId !== null) return
+      frameId = requestAnimationFrame(() => {
+        frameId = null
+        triggerResize()
+      })
+    })
+
+    observer.observe(root)
+    return () => {
+      observer.disconnect()
+      if (frameId !== null) cancelAnimationFrame(frameId)
+    }
+  }, [])
 
   const handleSidebarItemClick = (index: number) => {
     scrollToProject(index)
@@ -64,7 +99,7 @@ const ProjectSection = () => {
   }
 
   return (
-    <div className="project-page-wrapper landing-section">
+    <div ref={projectRootRef} className="project-page-wrapper landing-section">
       <div className="project-content">
         <section className="project-hero">
           <TextReveal as="h1" className="project-hero-title" delay={0.1} stagger={0.07}>
@@ -96,8 +131,8 @@ const ProjectSection = () => {
               <div className="projects-state">No projects available.</div>
             )}
 
-            <div className={`projects-list-skeleton-wrapper ${!showSkeleton ? 'fade-out' : ''}`}>
-              {showSkeleton && !error && (
+            <div className={`projects-list-skeleton-wrapper projects-list-skeleton-wrapper--${loadingPhase}${loadingPhase === 'exiting' ? ' fade-out' : ''}`}>
+              {isSkeletonMounted && !error && (
                 <>
                   <ProjectCardSkeleton />
                   <ProjectCardSkeleton />
@@ -106,8 +141,8 @@ const ProjectSection = () => {
               )}
             </div>
 
-            <div className={`projects-list-content-wrapper ${!showSkeleton && !isLoading && !error && projects.length > 0 ? 'fade-in' : 'pre-fade-in'}`}>
-              {!showSkeleton && !error && projects.map((project, index) => (
+            <div className={`projects-list-content-wrapper ${loadingPhase === 'exiting' && !error && projects.length > 0 ? 'fade-in' : 'pre-fade-in'}`}>
+              {loadingPhase === 'exiting' && !error && projects.map((project, index) => (
                 <AnimatedContent key={project.id} direction="up" distance={60} delay={index * 0.1} triggerOnce>
                   <ProjectCard
                     project={project}
@@ -121,12 +156,12 @@ const ProjectSection = () => {
           </section>
 
           <aside className="projects-sidebar">
-            <div className={`sidebar-fade-wrapper ${!showSkeleton ? 'fade-out' : ''}`}>
-              {showSkeleton && !error && <ProjectSidebarSkeleton />}
+            <div className={`sidebar-fade-wrapper sidebar-fade-wrapper--${loadingPhase}${loadingPhase === 'exiting' ? ' fade-out' : ''}`}>
+              {isSkeletonMounted && !error && <ProjectSidebarSkeleton />}
             </div>
             
-            <div className={`sidebar-fade-wrapper ${!showSkeleton && !isLoading && !error && projects.length > 0 ? 'fade-in' : 'pre-fade-in'}`}>
-              {!showSkeleton && !error && projects.length > 0 && (
+            <div className={`sidebar-fade-wrapper ${loadingPhase === 'exiting' && !error && projects.length > 0 ? 'fade-in' : 'pre-fade-in'}`}>
+              {loadingPhase === 'exiting' && !error && projects.length > 0 && (
                 <ProjectSidebar
                   items={sidebarItems}
                   activeIndex={activeProjectIndex}

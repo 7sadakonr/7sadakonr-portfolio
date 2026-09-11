@@ -23,6 +23,19 @@
   pointer-events: none;
 }
 
+.projects-list-skeleton-wrapper--reserved,
+.sidebar-fade-wrapper--reserved {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.projects-list-skeleton-wrapper--reserved .skeleton-item,
+.projects-list-skeleton-wrapper.fade-out .skeleton-item,
+.sidebar-fade-wrapper--reserved .skeleton-item,
+.sidebar-fade-wrapper.fade-out .skeleton-item {
+  animation-play-state: paused;
+}
+
 .projects-list-content-wrapper.fade-in,
 .sidebar-fade-wrapper.fade-in {
   opacity: 1;

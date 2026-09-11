@@ -9,7 +9,7 @@ describe('LazySection loading', () => {
     const source = await read('../src/components/LazySection/LazySection.tsx')
 
     expect(loader).toContain('scheduleBelowFoldHydration')
-    expect(loader).toContain('runWhenIdle')
+    expect(loader).toContain('scheduleIdleWork')
     expect(loader).toContain('requestSection(sectionId)')
     expect(source).toContain("{ rootMargin: '0px 0px -64px 0px', threshold: 0 }")
     expect(source).toContain("{ rootMargin: '0px 0px -180px 0px', threshold: 0 }")

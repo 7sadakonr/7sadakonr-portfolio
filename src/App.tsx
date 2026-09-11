@@ -16,9 +16,7 @@ import { publishSectionChange } from './features/navigation/navigationEvents'
 import { isNavigationInProgress } from './features/navigation/navigationState'
 import { Seo } from './components/Seo/Seo'
 import { scheduleBelowFoldHydration } from './components/LazySection/sectionLoader'
-import { initAnalytics } from './lib/analytics/tracker'
-import { initSectionTracking } from './lib/analytics/sections'
-import { initScrollTracking } from './lib/analytics/scroll'
+import { scheduleAfterPaint, scheduleIdleWork } from './utils/runtimeScheduler'
 
 import './pages/LandingPageShell.css'
 
@@ -32,47 +30,99 @@ const Navbar = lazy(loadNavbar)
 const Analytics = lazy(() => import('@vercel/analytics/react').then(({ Analytics: Component }) => ({ default: Component })))
 const AdminRoutes = lazy(() => import('./features/admin/AdminRoutes'))
 
+const PRELOADER_SEEN_KEY = 'portfolio_preloader_seen_v1'
+
+const getPreloaderMode = (): 'full' | 'short' => {
+  try {
+    return window.sessionStorage.getItem(PRELOADER_SEEN_KEY) === 'true' ? 'short' : 'full'
+  } catch {
+    return 'full'
+  }
+}
+
 function PortfolioApp() {
   const [isCriticalReady, setIsCriticalReady] = useState(false)
   const [isPreloaderVisible, setIsPreloaderVisible] = useState(true)
-  const isInteractive = isCriticalReady && !isPreloaderVisible
+  const [isNavbarReady, setIsNavbarReady] = useState(false)
+  const [isVercelAnalyticsReady, setIsVercelAnalyticsReady] = useState(false)
+  const [allowIdleLenis, setAllowIdleLenis] = useState(false)
+  const [allowIdleBeams, setAllowIdleBeams] = useState(false)
+  const [preloaderMode] = useState(getPreloaderMode)
 
   useEffect(() => {
-    void import('./features/siteSettings/api/siteSettingsRepository')
-      .then(({ loadSiteSettings }) => loadSiteSettings())
-      .catch(() => { /* defaults remain visible when settings are unavailable */ })
-  }, [])
-
-  useEffect(() => {
-    if (!isInteractive) return
-    return scheduleBelowFoldHydration()
-  }, [isInteractive])
-
-  // Initialize hybrid analytics when page is interactive
-  useEffect(() => {
-    if (!isInteractive) return
-
+    if (!isCriticalReady) return
+    let cancelled = false
+    const cancelSettings = scheduleIdleWork(() => {
+      void import('./features/siteSettings/api/siteSettingsRepository').then(
+        ({ loadSiteSettings }) => { void loadSiteSettings().catch(() => undefined) },
+        () => undefined,
+      ).finally(() => {
+        if (!cancelled) scheduleAnalytics()
+      })
+    })
+    let cancelAnalytics: (() => void) | undefined
+    let cancelLenis: (() => void) | undefined
+    let cancelBeams: (() => void) | undefined
+    let cancelSections: (() => void) | undefined
     let cleanupSections: (() => void) | undefined
     let cleanupScroll: (() => void) | undefined
 
-    const idle = typeof window !== 'undefined' && typeof window.requestIdleCallback === 'function'
-      ? window.requestIdleCallback
-      : (cb: () => void) => setTimeout(cb, 100)
+    const scheduleSections = () => {
+      cancelSections = scheduleIdleWork(() => {
+        if (!cancelled) cancelSections = scheduleBelowFoldHydration()
+      })
+    }
 
-    const idleHandle = idle(() => {
-      initAnalytics()
-      cleanupSections = initSectionTracking()
-      cleanupScroll = initScrollTracking()
-    })
+    const scheduleBeams = () => {
+      cancelBeams = scheduleIdleWork(() => {
+        if (cancelled) return
+        setAllowIdleBeams(true)
+        scheduleSections()
+      })
+    }
+
+    const scheduleLenis = () => {
+      cancelLenis = scheduleIdleWork(() => {
+        if (cancelled) return
+        setAllowIdleLenis(true)
+        scheduleBeams()
+      })
+    }
+
+    const scheduleAnalytics = () => {
+      cancelAnalytics = scheduleIdleWork(() => {
+        void Promise.all([
+          import('./lib/analytics/tracker'),
+          import('./lib/analytics/sections'),
+          import('./lib/analytics/scroll'),
+        ]).then(([tracker, sections, scroll]) => {
+          if (cancelled) return
+          tracker.initAnalytics()
+          cleanupSections = sections.initSectionTracking()
+          cleanupScroll = scroll.initScrollTracking()
+          setIsVercelAnalyticsReady(true)
+        }).catch(() => undefined).finally(() => {
+          if (!cancelled) scheduleLenis()
+        })
+      })
+    }
 
     return () => {
-      if (typeof window !== 'undefined' && typeof window.cancelIdleCallback === 'function' && typeof idleHandle === 'number') {
-        window.cancelIdleCallback(idleHandle)
-      }
+      cancelled = true
+      cancelSettings?.()
+      cancelAnalytics?.()
+      cancelLenis?.()
+      cancelBeams?.()
+      cancelSections?.()
       cleanupSections?.()
       cleanupScroll?.()
     }
-  }, [isInteractive])
+  }, [isCriticalReady])
+
+  useEffect(() => {
+    if (!isCriticalReady) return
+    return scheduleAfterPaint(() => setIsNavbarReady(true))
+  }, [isCriticalReady])
 
   // Set up IntersectionObserver to update Navbar based on scroll position
   useEffect(() => {
@@ -104,34 +154,47 @@ function PortfolioApp() {
   }, [])
 
   return (
-    <SmoothScroll isPrepared={isInteractive} isEnabled={isInteractive}>
+    <SmoothScroll isPrepared={isCriticalReady} isEnabled={isCriticalReady} allowIdleLoad={allowIdleLenis}>
       <Seo />
-      {isPreloaderVisible && <Preloader onComplete={() => setIsPreloaderVisible(false)} />}
-      {isInteractive && (
+      {isPreloaderVisible && (
+        <Preloader
+          isCriticalReady={isCriticalReady}
+          mode={preloaderMode}
+          onComplete={() => {
+            try { window.sessionStorage.setItem(PRELOADER_SEEN_KEY, 'true') } catch { /* storage is optional */ }
+            setIsPreloaderVisible(false)
+          }}
+        />
+      )}
+      {isVercelAnalyticsReady && (
         <Suspense fallback={null}>
           <Analytics />
         </Suspense>
       )}
-      {isCriticalReady && (
+      {isNavbarReady && (
         <Suspense fallback={null}>
-          <Navbar isInteractive={isInteractive} />
+          <Navbar isInteractive={isCriticalReady} />
         </Suspense>
       )}
 
       <div className="landing-page-container">
         <div className="landing-content-flow">
-          <SpaceBackground motion="none" showPlanet={true} isActive={isInteractive}>
+          <SpaceBackground motion="none" showPlanet={true} isActive={allowIdleBeams}>
             <section id="home">
-              <HeroPage effectsEnabled={isInteractive} onCriticalReady={() => setIsCriticalReady(true)} />
+              <HeroPage
+                effectsEnabled={isCriticalReady}
+                allowIdleEffects={allowIdleBeams}
+                onCriticalReady={() => setIsCriticalReady(true)}
+              />
             </section>
           </SpaceBackground>
-          <LazySection id="about" canLoad={isInteractive}>
+          <LazySection id="about" canLoad={isCriticalReady}>
             <AboutPage />
           </LazySection>
-          <LazySection id="projects" canLoad={isInteractive}>
+          <LazySection id="projects" canLoad={isCriticalReady}>
             <ProjectPage />
           </LazySection>
-          <LazySection id="contact" canLoad={isInteractive}>
+          <LazySection id="contact" canLoad={isCriticalReady}>
             <ContactPage />
             <PageEnd />
           </LazySection>
