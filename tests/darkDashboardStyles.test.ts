@@ -23,6 +23,7 @@ describe('dark admin dashboard styling', () => {
     expect(css).toMatch(/\.analytics-kpi-card--purple \.analytics-kpi-icon\s*\{[^}]*color:\s*#c797ff/)
     expect(css).toMatch(/\.analytics-kpi-card--blue \.analytics-kpi-icon\s*\{[^}]*color:\s*#f3a0dc/)
     expect(css).toMatch(/\.analytics-kpi-card--amber \.analytics-kpi-icon\s*\{[^}]*color:\s*#ffc58a/)
+    expect(css).toMatch(/\.analytics-kpi-card--emerald\s*\{[^}]*border-left-color:\s*#ff9c9c/)
   })
 
   it('uses a single-width frame when a KPI card is active', () => {

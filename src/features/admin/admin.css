@@ -843,6 +843,7 @@
 .analytics-vercel-btn:hover { background: #393942; }
 
 /* KPI accents stay visible before a metric is selected, while card surfaces remain neutral. */
+.analytics-kpi-card--emerald { border-left-color: #ff9c9c; }
 .analytics-kpi-card--emerald .analytics-kpi-icon { background: rgba(255, 156, 156, 0.14); color: #ff9c9c; }
 .analytics-kpi-card--purple .analytics-kpi-icon { background: rgba(199, 151, 255, 0.14); color: #c797ff; }
 .analytics-kpi-card--blue .analytics-kpi-icon { background: rgba(243, 160, 220, 0.14); color: #f3a0dc; }
