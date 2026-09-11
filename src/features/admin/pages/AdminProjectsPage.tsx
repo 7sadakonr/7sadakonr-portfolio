@@ -140,11 +140,32 @@ const AdminProjectsPage = () => {
               </svg>
             </InputGroup.Prefix>
             <InputGroup.Input
+              id="admin-projects-search"
+              type="search"
+              aria-label="Search projects"
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
-              placeholder="Search projects by title, description or technology…"
-              className="text-xs bg-transparent text-white placeholder:text-zinc-400 focus:outline-none"
+              placeholder="Search projects, tech, or tags…"
+              className="text-xs bg-transparent text-white placeholder:text-zinc-500 focus:outline-none"
             />
+            {searchQuery && (
+              <InputGroup.Suffix className="pr-2.5 flex items-center gap-1.5">
+                <span className="text-[10px] text-zinc-500 font-semibold uppercase tracking-wider">
+                  {filteredProjects.length} found
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="w-5 h-5 rounded-md flex items-center justify-center text-zinc-400 hover:text-white hover:bg-zinc-700/60 transition-all cursor-pointer focus:outline-none"
+                  aria-label="Clear project search"
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
+              </InputGroup.Suffix>
+            )}
           </InputGroup>
         </div>
       )}
