@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Button, Chip } from '@heroui/react'
 import type { DateRangeDays } from '../../hooks/useAnalytics'
 
 interface VercelTrafficData {
@@ -56,7 +57,9 @@ const VercelTrafficBridge = ({ days }: VercelTrafficBridgeProps) => {
             <div>
               <div className="analytics-vercel-header-row">
                 <strong>Vercel Web Analytics (Live Synced)</strong>
-                <span className="analytics-badge-synced">● API Connected</span>
+                <Chip size="sm" variant="soft" color="success" className="analytics-badge-synced font-semibold">
+                  ● API Connected
+                </Chip>
               </div>
               <span className="analytics-vercel-sub">
                 Historical traffic, global page views, and inbound referrers pulled directly from Vercel API.
@@ -121,7 +124,9 @@ const VercelTrafficBridge = ({ days }: VercelTrafficBridgeProps) => {
         <div className="analytics-vercel-copy">
           <div className="analytics-vercel-banner-title">
             <strong>Vercel Web Analytics Bridge</strong>
-            <span className="analytics-badge-optional">Optional Historical Sync</span>
+            <Chip size="sm" variant="soft" className="analytics-badge-optional font-medium">
+              Optional Historical Sync
+            </Chip>
           </div>
           <span>
             {showSetup
@@ -132,13 +137,14 @@ const VercelTrafficBridge = ({ days }: VercelTrafficBridgeProps) => {
       </div>
 
       <div className="analytics-vercel-actions">
-        <button
-          type="button"
+        <Button
+          size="sm"
+          variant="ghost"
           className="analytics-vercel-toggle-btn"
-          onClick={() => setShowSetup(!showSetup)}
+          onPress={() => setShowSetup(!showSetup)}
         >
           {showSetup ? 'Hide Setup Guide ✕' : 'Connect Past Vercel Data ⚡'}
-        </button>
+        </Button>
         <a
           href="https://vercel.com"
           target="_blank"

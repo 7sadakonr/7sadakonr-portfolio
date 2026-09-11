@@ -26,7 +26,23 @@ describe('InteractionChart', () => {
     const { container } = render(<InteractionChart metric="visitors" data={[]} isLoading={false} onMetricChange={onMetricChange} />)
 
     fireEvent.change(within(container).getByRole('combobox', { name: /chart metric/i }), { target: { value: 'external_clicks' } })
-
     expect(onMetricChange).toHaveBeenCalledWith('external_clicks')
+  })
+
+  it('renders timeline total pill with formatted count when data is provided', () => {
+    const mockData = [
+      { date: '2026-09-01T00:00:00.000Z', count: 12 },
+      { date: '2026-09-02T00:00:00.000Z', count: 34 },
+    ]
+    render(
+      <InteractionChart
+        metric="interactions"
+        data={mockData}
+        isLoading={false}
+        days={30}
+      />
+    )
+
+    expect(screen.getByText(/46 All Interactions/i)).toBeInTheDocument()
   })
 })

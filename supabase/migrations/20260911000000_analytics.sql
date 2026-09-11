@@ -666,6 +666,7 @@ begin
       s.started_at,
       s.last_seen_at,
       s.landing_path,
+      s.referrer_host,
       s.utm_source,
       s.utm_campaign,
       s.country,

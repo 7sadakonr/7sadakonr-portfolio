@@ -1,3 +1,4 @@
+import { Card } from '@heroui/react'
 import type { AnalyticsOverviewData, DateRangeDays, TimeSeriesMetric } from '../../hooks/useAnalytics'
 
 interface OverviewCardsProps {
@@ -193,16 +194,16 @@ const OverviewCards = ({
   ]
 
   return (
-    <div className="analytics-kpi-container">
+    <div className="analytics-kpi-container flex flex-col gap-5">
       {/* 4 Primary Cards */}
-      <div className="analytics-overview-grid">
+      <div className="analytics-overview-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {primaryCards.map((card) => {
           const isInteractive = Boolean(card.metric && onSelectMetric)
           const isActive = Boolean(card.metric && activeMetric === card.metric)
           return (
-            <div
+            <Card
               key={card.title}
-              className={`analytics-kpi-card analytics-kpi-card--${card.accent} ${isInteractive ? 'analytics-kpi-card--interactive' : ''} ${isActive ? 'is-active' : ''}`}
+              className={`analytics-kpi-card analytics-kpi-card--${card.accent} ${isInteractive ? 'analytics-kpi-card--interactive' : ''} ${isActive ? 'is-active' : ''} border border-zinc-800 bg-[#16161b] hover:border-zinc-700/80 transition-all rounded-xl p-5 shadow-sm`}
               onClick={isInteractive ? () => onSelectMetric!(card.metric!) : undefined}
               role={isInteractive ? 'button' : undefined}
               tabIndex={isInteractive ? 0 : undefined}
@@ -218,17 +219,18 @@ const OverviewCards = ({
               }
               title={isInteractive ? `Click to switch timeline graph to ${card.title}` : undefined}
             >
-              <div className="analytics-kpi-top">
-                <span className="analytics-kpi-icon">{card.icon}</span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  {isActive && <span className="analytics-kpi-active-tag">Active</span>}
-                  <span className="analytics-kpi-badge">{card.badge}</span>
-                </div>
+              <div className="analytics-kpi-top flex items-center justify-between gap-2 mb-3">
+                <span className="analytics-kpi-icon w-9 h-9 rounded-lg flex items-center justify-center bg-zinc-800/80 text-zinc-300">
+                  {card.icon}
+                </span>
+                <span className="analytics-kpi-badge text-[11px] px-2.5 py-0.5 rounded-full bg-zinc-800 text-zinc-300 font-medium">
+                  {card.badge}
+                </span>
               </div>
-              <div className="analytics-kpi-body">
-                <span className="analytics-kpi-title">{card.title}</span>
-                <div className="analytics-kpi-number-row">
-                  <span className="analytics-kpi-number">
+              <div className="analytics-kpi-body flex flex-col gap-1">
+                <span className="analytics-kpi-title text-xs font-semibold text-zinc-400">{card.title}</span>
+                <div className="analytics-kpi-number-row flex items-baseline gap-2.5 flex-wrap">
+                  <span className="analytics-kpi-number text-2xl font-bold tracking-tight text-zinc-100">
                     {isLoading ? (
                       <span className="analytics-kpi-skeleton">--</span>
                     ) : typeof card.value === 'number' ? (
@@ -237,39 +239,33 @@ const OverviewCards = ({
                       card.value || '0'
                     )}
                   </span>
-                  {card.title === 'Visitors Today' && todayAvailable && !isLoading && (data?.active_now ?? 0) > 0 && (
-                    <span className="analytics-active-now-tag" title="Visitors currently browsing in the last 5 minutes">
-                      <span className="analytics-live-pulse-dot" />
-                      {data?.active_now} online
-                    </span>
-                  )}
                   {!isLoading && card.growth && (
-                    <span className={`analytics-growth-badge ${card.growth.direction}`}>
+                    <span className={`analytics-growth-badge ${card.growth.direction} text-xs font-bold px-1.5 py-0.5 rounded`}>
                       {card.growth.symbol} {card.growth.rateText}
                     </span>
                   )}
                 </div>
-                <div className="analytics-kpi-footer-row">
-                  <p className="analytics-kpi-desc">{card.description}</p>
+                <div className="analytics-kpi-footer-row flex items-center justify-between gap-2 mt-1">
+                  <p className="analytics-kpi-desc text-xs text-zinc-500 m-0 leading-relaxed">{card.description}</p>
                   {!isLoading && card.growthLabel && (
-                    <small className="analytics-growth-label">{card.growthLabel}</small>
+                    <small className="analytics-growth-label text-[11px] text-zinc-500 shrink-0">{card.growthLabel}</small>
                   )}
                 </div>
               </div>
-            </div>
+            </Card>
           )
         })}
       </div>
 
       {/* 4 Supporting Metric Tiles */}
-      <div className="analytics-kpi-secondary-grid">
+      <div className="analytics-kpi-secondary-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
         {secondaryCards.map((sec) => {
           const isInteractive = Boolean(sec.metric && onSelectMetric)
           const isActive = Boolean(sec.metric && activeMetric === sec.metric)
           return (
-            <div
+            <Card
               key={sec.title}
-              className={`analytics-subtile ${isInteractive ? 'analytics-subtile--interactive' : ''} ${isActive ? 'is-active' : ''}`}
+              className={`analytics-subtile ${isInteractive ? 'analytics-subtile--interactive' : ''} ${isActive ? 'is-active' : ''} border border-zinc-800/80 bg-[#16161b]/90 hover:border-zinc-700/80 transition-all rounded-xl p-4 shadow-xs`}
               onClick={isInteractive ? () => onSelectMetric!(sec.metric!) : undefined}
               role={isInteractive ? 'button' : undefined}
               tabIndex={isInteractive ? 0 : undefined}
@@ -278,34 +274,41 @@ const OverviewCards = ({
                   ? (e) => {
                       if (e.key === 'Enter' || e.key === ' ') {
                         e.preventDefault()
-                      onSelectMetric!(sec.metric!)
+                        onSelectMetric!(sec.metric!)
+                      }
                     }
-                  }
-                : undefined
-            }
-            title={isInteractive ? `Click to switch timeline graph to ${sec.title}` : undefined}
-          >
-            <div className="analytics-subtile-head">
-              <span className="analytics-subtile-icon">{sec.icon}</span>
-              <span className="analytics-subtile-title">{sec.title}</span>
-              {isActive && <span className="analytics-subtile-active-tag">Active</span>}
-            </div>
-            <div className="analytics-subtile-val">
-              {isLoading ? (
-                '--'
-              ) : typeof sec.value === 'number' ? (
-                isNaN(sec.value) ? '0' : sec.value.toLocaleString()
-              ) : (
-                sec.value || '0'
-              )}
-            </div>
-            <small className="analytics-subtile-desc">{sec.description}</small>
-          </div>
-        )
-      })}
+                  : undefined
+              }
+              title={isInteractive ? `Click to switch timeline graph to ${sec.title}` : undefined}
+            >
+              <div className="analytics-subtile-head flex items-center justify-between gap-2 mb-2">
+                <div className="flex items-center gap-2">
+                  <span className="analytics-subtile-icon text-zinc-400">{sec.icon}</span>
+                  <span className="analytics-subtile-title text-xs font-semibold text-zinc-300">{sec.title}</span>
+                </div>
+                {isActive && (
+                  <span className="analytics-subtile-active-tag" aria-label="Active metric">
+                    Active
+                  </span>
+                )}
+              </div>
+              <div className="analytics-subtile-val text-lg font-bold text-zinc-100">
+                {isLoading ? (
+                  '--'
+                ) : typeof sec.value === 'number' ? (
+                  isNaN(sec.value) ? '0' : sec.value.toLocaleString()
+                ) : (
+                  sec.value || '0'
+                )}
+              </div>
+              <small className="analytics-subtile-desc text-[11px] text-zinc-500 block mt-1">{sec.description}</small>
+            </Card>
+          )
+        })}
       </div>
     </div>
   )
+
 }
 
 export default OverviewCards

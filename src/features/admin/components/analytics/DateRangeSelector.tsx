@@ -1,3 +1,4 @@
+import { Tabs } from '@heroui/react'
 import type { DateRangeDays } from '../../hooks/useAnalytics'
 
 interface DateRangeSelectorProps {
@@ -7,29 +8,32 @@ interface DateRangeSelectorProps {
 
 const DateRangeSelector = ({ days, onChange }: DateRangeSelectorProps) => {
   return (
-    <div className="analytics-range-segmented" role="group" aria-label="Select date range">
-      <button
-        type="button"
-        className={`analytics-range-pill ${days === 1 ? 'active' : ''}`}
-        onClick={() => onChange(1)}
-      >
-        1 Day
-      </button>
-      <button
-        type="button"
-        className={`analytics-range-pill ${days === 7 ? 'active' : ''}`}
-        onClick={() => onChange(7)}
-      >
-        7 Days
-      </button>
-      <button
-        type="button"
-        className={`analytics-range-pill ${days === 30 ? 'active' : ''}`}
-        onClick={() => onChange(30)}
-      >
-        30 Days
-      </button>
-    </div>
+    <Tabs
+      selectedKey={String(days)}
+      onSelectionChange={(key) => onChange(Number(key) as DateRangeDays)}
+      aria-label="Select date range"
+    >
+      <Tabs.List className="bg-[#1c1c24] border border-zinc-800 rounded-xl p-1 gap-1 flex items-center shadow-inner">
+        <Tabs.Tab
+          id="1"
+          className="px-3 py-1.5 rounded-lg text-xs font-semibold text-zinc-400 data-[selected=true]:bg-zinc-800 data-[selected=true]:text-white transition-all cursor-pointer"
+        >
+          1 Day
+        </Tabs.Tab>
+        <Tabs.Tab
+          id="7"
+          className="px-3 py-1.5 rounded-lg text-xs font-semibold text-zinc-400 data-[selected=true]:bg-zinc-800 data-[selected=true]:text-white transition-all cursor-pointer"
+        >
+          7 Days
+        </Tabs.Tab>
+        <Tabs.Tab
+          id="30"
+          className="px-3 py-1.5 rounded-lg text-xs font-semibold text-zinc-400 data-[selected=true]:bg-zinc-800 data-[selected=true]:text-white transition-all cursor-pointer"
+        >
+          30 Days
+        </Tabs.Tab>
+      </Tabs.List>
+    </Tabs>
   )
 }
 
