@@ -1,11 +1,15 @@
 /* Skeletons Container Fade */
 .projects-list-transition-wrapper {
   position: relative;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-areas: "stack";
   min-height: 400px;
 }
 
 .projects-list-skeleton-wrapper,
 .projects-list-content-wrapper {
+  grid-area: stack;
   transition: opacity 0.25s ease-in-out;
   display: flex;
   flex-direction: column;
@@ -16,11 +20,20 @@
 .projects-list-skeleton-wrapper.fade-out,
 .sidebar-fade-wrapper.fade-out {
   opacity: 0;
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
   pointer-events: none;
+}
+
+.projects-list-skeleton-wrapper--reserved,
+.sidebar-fade-wrapper--reserved {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.projects-list-skeleton-wrapper--reserved .skeleton-item,
+.projects-list-skeleton-wrapper.fade-out .skeleton-item,
+.sidebar-fade-wrapper--reserved .skeleton-item,
+.sidebar-fade-wrapper.fade-out .skeleton-item {
+  animation-play-state: paused;
 }
 
 .projects-list-content-wrapper.fade-in,
@@ -33,6 +46,7 @@
 }
 
 .sidebar-fade-wrapper {
+  grid-area: stack;
   transition: opacity 0.25s ease-in-out;
   width: 100%;
 }

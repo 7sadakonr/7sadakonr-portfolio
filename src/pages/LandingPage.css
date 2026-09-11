@@ -103,6 +103,10 @@
   background: transparent !important;
 }
 
+.landing-section.project-page-wrapper {
+  min-height: clamp(900px, 180vh, 2400px);
+}
+
 /* GLASSMORPHISM: Cards with a clear glass effect - matching navbar style */
 .glass-card,
 .contact-info-card,
@@ -677,8 +681,9 @@
   top: 35vh;
   height: fit-content;
   margin-top: 20px;
-  display: flex;
-  justify-content: center;
+  display: grid;
+  grid-template-areas: "stack";
+  justify-items: center;
   padding-left: clamp(20px, 4vw, 60px);
 }
 
