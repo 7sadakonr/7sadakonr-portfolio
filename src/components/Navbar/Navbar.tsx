@@ -1,7 +1,7 @@
-import React, { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import React, { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import './Navbar.css'
-import GlassSurface from '../GlassSurface/GlassSurface'
 import { scrollToTarget } from '../SmoothScroll/scrollController'
 import { ensureTargetReady, getOwningSection } from '../LazySection/sectionLoader'
 import type { CommandMenuItem } from '../CommandMenu/CommandMenu'
@@ -13,437 +13,54 @@ import { getProjectCatalog, subscribeToProjectCatalog } from '../../features/pro
 import { trackEvent } from '../../lib/analytics/trackEvent'
 
 const CommandMenu = lazy(loadCommandMenu)
-
-const NAVBAR_GLASS_PRESET =
-  /* NAVBAR_GLASS_PRESET_START */
-  {
-    "borderRadius": 25,
-    "borderWidth": 0.07,
-    "brightness": 77,
-    "opacity": 0.8,
-    "blur": 6,
-    "displace": 1,
-    "frostBlur": 5,
-    "frostGrain": 0,
-    "backgroundOpacity": 0.53,
-    "saturation": 2.13,
-    "distortionScale": 70,
-    "redOffset": 0,
-    "greenOffset": 5,
-    "blueOffset": 5,
-    "xChannel": "R",
-    "yChannel": "G",
-    "mixBlendMode": "darken"
-  } as const
-  /* NAVBAR_GLASS_PRESET_END */
-
-const NAV_ITEMS = [
-  { path: '/', label: 'HOME' },
-  { path: '/about', label: 'ABOUT' },
-  { path: '/project', label: 'PROJECT' },
-  { path: '/contact', label: 'CONTACT' },
-] as const
-
-const formatPillLabel = (label: string) => label.charAt(0) + label.slice(1).toLowerCase()
-
+const SHELL_SPRING = { type: 'spring', duration: 0.8, bounce: 0.2 } as const
+const CONTENT_SPRING = { type: 'spring', duration: 0.8, bounce: 0.35 } as const
+const NAV_ITEMS = [{ path: '/', label: 'HOME' }, { path: '/about', label: 'ABOUT' }, { path: '/project', label: 'PROJECT' }, { path: '/contact', label: 'CONTACT' }] as const
 const COMMAND_MENU_ITEMS: CommandMenuItem[] = [
   { id: 'nav-home', path: '/', label: 'HOME', category: 'Navigation', keywords: 'home landing start', targetId: 'home' },
   { id: 'nav-about', path: '/about', label: 'ABOUT', category: 'Navigation', keywords: 'about profile me', targetId: 'about' },
   { id: 'nav-project', path: '/project', label: 'PROJECTS', category: 'Navigation', keywords: 'projects work portfolio', targetId: 'projects' },
   { id: 'nav-contact', path: '/contact', label: 'CONTACT', category: 'Navigation', keywords: 'contact email hire social', targetId: 'contact' },
-
   { id: 'sec-about', path: '/about', label: 'About Me', category: 'Content', keywords: 'about me background story', targetId: 'about-me' },
   { id: 'sec-skills', path: '/about', label: 'My Skills', category: 'Content', keywords: 'skills html css javascript react figma tech', targetId: 'skills' },
+]
+type IslandView = 'navigation' | 'compact' | 'search' | 'command'
+const formatPillLabel = (label: string) => label.charAt(0) + label.slice(1).toLowerCase()
+const SearchIcon = () => <svg aria-hidden="true" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="m20 20-4-4" /></svg>
+const CloseIcon = () => <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m6 6 12 12M18 6 6 18" /></svg>
 
-] as const
-
-interface NavbarProps {
-  isInteractive?: boolean
+function useContentSize(view: IslandView, mobile: boolean) {
+  const ref = useRef<HTMLDivElement>(null)
+  const [size, setSize] = useState({ width: mobile ? 180 : 480, height: mobile ? 45 : 50 })
+  const update = useCallback(() => { const element = ref.current; if (!element) return; const next = { width: Math.ceil(element.offsetWidth), height: Math.ceil(element.offsetHeight) }; setSize(previous => previous.width === next.width && previous.height === next.height ? previous : next) }, [])
+  useLayoutEffect(update, [update, view, mobile])
+  useEffect(() => { const element = ref.current; if (!element || typeof ResizeObserver === 'undefined') return; const observer = new ResizeObserver(() => requestAnimationFrame(update)); observer.observe(element); return () => observer.disconnect() }, [update])
+  return [ref, size] as const
 }
 
+interface NavbarProps { isInteractive?: boolean }
 const Navbar = ({ isInteractive = true }: NavbarProps) => {
-  const indicatorRef = useRef<HTMLDivElement>(null)
-  const location = useLocation()
-  const navigate = useNavigate()
-  const [isCommandMenuOpen, setIsCommandMenuOpen] = useState(false)
-  const [shouldMountCommandMenu, setShouldMountCommandMenu] = useState(false)
-  const [hasInitialized, setHasInitialized] = useState(false)
-  const [isMobile, setIsMobile] = useState(false)
-  const [isIPad, setIsIPad] = useState(false)
-  const [isMac, setIsMac] = useState(true)
-  const [projects, setProjects] = useState(getProjectCatalog)
-  const navigationRequestRef = useRef(0)
-  const skipLocationScrollRef = useRef<string | null>(null)
-
-  const openCommandMenu = useCallback(() => {
-    setShouldMountCommandMenu(true)
-    setIsCommandMenuOpen(true)
-    if (!getProjectCatalog()) void loadProjectData().then(({ loadPublicProjects }) => loadPublicProjects()).catch(() => undefined)
-  }, [])
-
+  const location = useLocation(); const navigate = useNavigate(); const triggerRef = useRef<HTMLButtonElement>(null); const navigationRequestRef = useRef(0); const skipLocationScrollRef = useRef<string | null>(null); const closeTimerRef = useRef<number | null>(null); const reduceMotion = useReducedMotion()
+  const [isMobile, setIsMobile] = useState(false); const [isMac, setIsMac] = useState(true); const [activePath, setActivePath] = useState(location.pathname); const [view, setView] = useState<IslandView>('navigation'); const [shouldMountCommandMenu, setShouldMountCommandMenu] = useState(false); const [isCommandMenuOpen, setIsCommandMenuOpen] = useState(false); const [projects, setProjects] = useState(getProjectCatalog); const [pillLabel, setPillLabel] = useState('Home'); const [pillLabelAnimation, setPillLabelAnimation] = useState<'idle' | 'exit' | 'enter'>('idle'); const [sizerRef, measuredSize] = useContentSize(view, isMobile)
+  const currentLabel = NAV_ITEMS.find(item => item.path === activePath)?.label || 'HOME'; const currentPillLabel = formatPillLabel(currentLabel)
+  const commandMenuItems = useMemo<CommandMenuItem[]>(() => [...COMMAND_MENU_ITEMS, ...(projects ?? []).map((project, index) => ({ id: `project-${project.id}`, path: '/project', label: project.title, category: 'Projects', keywords: `${project.title} ${project.tech.join(' ')}`.toLowerCase(), targetId: `project-${index}` }))], [projects])
   useEffect(() => subscribeToProjectCatalog(setProjects), [])
-
-  const commandMenuItems = useMemo<CommandMenuItem[]>(() => [
-    ...COMMAND_MENU_ITEMS,
-    ...(projects ?? []).map((project, index) => ({
-      id: `project-${project.id}`,
-      path: '/project' as const,
-      label: project.title,
-      category: 'Projects',
-      keywords: `${project.title} ${project.tech.join(' ')}`.toLowerCase(),
-      targetId: `project-${index}` as const,
-    })),
-  ], [projects])
-
-
-  // Detect iPad and Mac
-  useEffect(() => {
-    const ua = navigator.userAgent;
-    const detectIPad = () => {
-      const isIPadUA = /iPad/.test(ua);
-      const isIPadOS = /Macintosh/.test(ua) && navigator.maxTouchPoints > 1;
-      return isIPadUA || isIPadOS;
-    };
-
-    setIsIPad(detectIPad());
-    setIsMac(/Mac|iPhone|iPod|iPad/i.test(ua));
-
-    const mql = window.matchMedia('(max-width: 1024px)');
-    setIsMobile(mql.matches);
-    const handleMediaChange = (e: MediaQueryListEvent) => setIsMobile(e.matches);
-    mql.addEventListener('change', handleMediaChange);
-    return () => mql.removeEventListener('change', handleMediaChange);
-  }, []);
-
-  const updateIndicatorPosition = useCallback(() => {
-    const activeLink = document.querySelector('.nav-item.active')
-    const navLinks = document.querySelector('.nav-links')
-    const indicator = indicatorRef.current
-
-    if (activeLink && navLinks && indicator) {
-      requestAnimationFrame(() => {
-        const parentRect = navLinks.getBoundingClientRect()
-        const rect = activeLink.getBoundingClientRect()
-
-        if (rect && parentRect) {
-          // offsetLeft and offsetTop are exactly relative to the nearest positioned ancestor (.nav-links)
-          const targetX = (activeLink as HTMLElement).offsetLeft;
-          const targetTop = (activeLink as HTMLElement).offsetTop;
-          const targetWidth = (activeLink as HTMLElement).offsetWidth;
-          const targetHeight = (activeLink as HTMLElement).offsetHeight;
-
-          requestAnimationFrame(() => {
-            if (!hasInitialized) {
-              const prev = indicator.style.transition
-              indicator.style.transition = 'none'
-              indicator.style.transform = `translateX(${targetX}px) translateY(${targetTop}px)`
-              indicator.style.width = `${targetWidth}px`
-              indicator.style.height = `${targetHeight}px`
-              
-              requestAnimationFrame(() => {
-                indicator.style.transition = prev
-                setHasInitialized(true)
-              })
-            } else {
-              indicator.style.transform = `translateX(${targetX}px) translateY(${targetTop}px)`
-              indicator.style.width = `${targetWidth}px`
-              indicator.style.height = `${targetHeight}px`
-            }
-          })
-        }
-      })
-    }
-  }, [hasInitialized])
-
-  // Initial position (no animation)
-  useEffect(() => {
-    if (!isIPad) {
-      const timeoutId = setTimeout(() => {
-        updateIndicatorPosition()
-      }, 100)
-
-      return () => clearTimeout(timeoutId)
-    }
-  }, [updateIndicatorPosition, isIPad])
-
-  // Update on route change (with animation)
-  useEffect(() => {
-    if (!isIPad && hasInitialized) {
-      const timeoutId = setTimeout(() => {
-        updateIndicatorPosition()
-      }, 50)
-
-      return () => clearTimeout(timeoutId)
-    }
-  }, [location.pathname, hasInitialized, updateIndicatorPosition, isIPad])
-
-  useEffect(() => {
-    if (!isIPad) {
-      const handleResize = () => {
-        updateIndicatorPosition()
-      }
-
-      window.addEventListener('resize', handleResize, { passive: true })
-      return () => window.removeEventListener('resize', handleResize)
-    }
-  }, [updateIndicatorPosition, isIPad])
-
-  useEffect(() => {
-    setIsCommandMenuOpen(false)
-  }, [location.pathname])
-
-  useEffect(() => {
-    if (isCommandMenuOpen) {
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = 'unset'
-    }
-
-    return () => {
-      document.body.style.overflow = 'unset'
-    }
-  }, [isCommandMenuOpen])
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && (e.key.toLowerCase() === 'k' || e.code === 'KeyK')) {
-        e.preventDefault()
-        if (isCommandMenuOpen) setIsCommandMenuOpen(false)
-        else openCommandMenu()
-      }
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [isCommandMenuOpen, openCommandMenu])
-
-  const [activePath, setActivePath] = useState(location.pathname)
-  const currentLabel = NAV_ITEMS.find(item => item.path === activePath)?.label || 'Home'
-  const currentPillLabel = formatPillLabel(currentLabel)
-  const [pillLabel, setPillLabel] = useState(currentPillLabel)
-  const [pillLabelAnimation, setPillLabelAnimation] = useState<'idle' | 'exit' | 'enter'>('idle')
-
-  // Update active path on mount and location change
-  useEffect(() => {
-    setActivePath(location.pathname)
-  }, [location.pathname])
-
-  // Listen for scroll events from LandingPage
-  useEffect(() => {
-    const handleLandingScroll = (path: string) => {
-      setActivePath(path)
-      if (location.pathname !== path) {
-        skipLocationScrollRef.current = path
-        navigate(path, { replace: true })
-      }
-    }
-
-    return subscribeToSectionChanges(handleLandingScroll)
-  }, [location.pathname, navigate])
-
-  // Update indicator when activePath changes (for LandingPage scroll)
-  useEffect(() => {
-    if (!isIPad && hasInitialized) {
-      // Wait for DOM to update after activePath state change
-      const timeoutId = setTimeout(() => {
-        updateIndicatorPosition()
-      }, 200)
-      return () => clearTimeout(timeoutId)
-    }
-  }, [activePath, hasInitialized, updateIndicatorPosition, isIPad])
-
-  const navigateToTarget = useCallback(async (path: string, targetId: string, updateHistory: boolean, options?: import('lenis').ScrollToOptions) => {
-    const navigationRequest = ++navigationRequestRef.current
-
-    if (getOwningSection(targetId)) {
-      await ensureTargetReady(targetId)
-      // Allow browser and Lenis a frame to calculate new section bounds
-      await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
-    }
-
-    if (navigationRequest !== navigationRequestRef.current) return
-
-    const element = document.getElementById(targetId) ?? document.getElementById(
-      getOwningSection(targetId) ?? 'home',
-    );
-    if (element) {
-      // Prevent scroll-spy from bouncing during smooth scroll
-      beginNavigation()
-
-      const offset = targetId.startsWith('project-') || targetId === 'skills' ? -window.innerHeight / 4 : 0;
-      scrollToTarget(element, { 
-        offset, 
-        ...options,
-        onComplete: () => {
-          resetNavigation()
-        }
-      });
-      if (updateHistory) {
-        skipLocationScrollRef.current = path
-        navigate(path)
-      }
-      setActivePath(path);
-
-      if (targetId.startsWith('project-')) {
-          const index = parseInt(targetId.replace('project-', ''), 10);
-          requestProjectTarget(index)
-      }
-    }
-  }, [navigate])
-
-  const handleNavClick = async (e: React.MouseEvent<HTMLAnchorElement>, path: string, explicitTargetId?: string) => {
-    e.preventDefault();
-    trackEvent('navbar_click', {
-      target_label: path,
-      target_id: explicitTargetId,
-      target_type: 'navbar_link',
-    });
-    setIsCommandMenuOpen(false);
-    await navigateToTarget(path, explicitTargetId ?? getNavigationTarget(path).targetId, true)
-  }
-
-  const [hasInitialNavigated, setHasInitialNavigated] = useState(false)
-
-  useEffect(() => {
-    if (!isInteractive) return
-    if (skipLocationScrollRef.current === location.pathname) {
-      skipLocationScrollRef.current = null
-      return
-    }
-    const target = getNavigationTarget(location.pathname)
-    const isFirstNav = !hasInitialNavigated
-    if (isFirstNav) setHasInitialNavigated(true)
-    
-    if (isFirstNav && target.path === '/' && window.scrollY < 10) {
-      return
-    }
-    
-    void navigateToTarget(target.path, target.targetId, false, { immediate: isFirstNav })
-  }, [isInteractive, location.pathname, navigateToTarget, hasInitialNavigated])
-
+  useEffect(() => { const query = window.matchMedia('(max-width: 1024px)'); const sync = () => setIsMobile(query.matches); sync(); setIsMac(/Mac|iPhone|iPod|iPad/i.test(navigator.userAgent)); query.addEventListener('change', sync); return () => query.removeEventListener('change', sync) }, [])
+  useEffect(() => { setActivePath(location.pathname) }, [location.pathname])
+  useEffect(() => subscribeToSectionChanges(path => { setActivePath(path); if (location.pathname !== path) { skipLocationScrollRef.current = path; navigate(path, { replace: true }) } }), [location.pathname, navigate])
   useEffect(() => resetNavigation, [])
-
-  useEffect(() => {
-    const dur = parseFloat(
-      getComputedStyle(document.documentElement).getPropertyValue("--text-swap-dur") || "150"
-    )
-
-    if (pillLabel === currentPillLabel) return
-
-    setPillLabelAnimation('exit')
-    const timeoutId = window.setTimeout(() => {
-      setPillLabel(currentPillLabel)
-      setPillLabelAnimation('enter')
-    }, dur)
-
-    return () => {
-      window.clearTimeout(timeoutId)
-    }
-  }, [currentPillLabel, pillLabel])
-
-  useEffect(() => {
-    if (pillLabelAnimation !== 'enter') return
-
-    let secondFrame = 0
-    const firstFrame = requestAnimationFrame(() => {
-      secondFrame = requestAnimationFrame(() => setPillLabelAnimation('idle'))
-    })
-
-    return () => {
-      cancelAnimationFrame(firstFrame)
-      cancelAnimationFrame(secondFrame)
-    }
-  }, [pillLabelAnimation])
-
-  return (
-    <>
-      {/* Desktop Navbar */}
-      {!(isMobile || isIPad) && (
-        <nav className="navbar" role="navigation" aria-label="Main navigation">
-          <GlassSurface
-            {...NAVBAR_GLASS_PRESET}
-            width={480}
-            height={50}
-          >
-            <ul className="nav-links">
-              <div
-                ref={indicatorRef}
-                className="nav-indicator t-tabs-pill"
-                aria-hidden="true"
-              />
-              {NAV_ITEMS.map(({ path, label }) => (
-                <li key={path}>
-                  <a
-                    href={path}
-                    onClick={(e) => handleNavClick(e, path)}
-                    className={activePath === path ? 'nav-item active' : 'nav-item'}
-                    aria-current={activePath === path ? 'page' : undefined}
-                  >
-                    {label}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </GlassSurface>
-
-          <div className="desktop-command-button-wrapper">
-            <GlassSurface
-              {...NAVBAR_GLASS_PRESET}
-              width={50}
-              height={50}
-            >
-              <button
-                className="desktop-command-btn"
-                onClick={openCommandMenu}
-                aria-label="Open command menu"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="11" cy="11" r="8"></circle>
-                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                </svg>
-              </button>
-            </GlassSurface>
-          </div>
-        </nav>
-      )}
-
-      {/* Mobile Fullscreen Navbar */}
-      {(isMobile || isIPad) && (
-        <nav className={`mobile-navbar-fullscreen ${isIPad ? 'show-for-ipad' : ''}`} role="navigation" aria-label="Mobile navigation">
-          <div className="mobile-pill-container">
-            <GlassSurface
-              {...NAVBAR_GLASS_PRESET}
-              width={180}
-              height={45}
-            >
-              <button
-                className="command-pill-button"
-                onClick={openCommandMenu}
-                aria-label="Open command menu"
-              >
-                <svg className="pill-search-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                <span className={`pill-text t-text-swap${pillLabelAnimation === 'exit' ? ' is-exit' : pillLabelAnimation === 'enter' ? ' is-enter-start' : ''}`}>{pillLabel}</span>
-                <span className="pill-shortcut">{isMac ? '⌘K' : 'Ctrl K'}</span>
-              </button>
-            </GlassSurface>
-          </div>
-        </nav>
-      )}
-
-      {shouldMountCommandMenu && (
-        <Suspense fallback={null}>
-          <CommandMenu
-            isOpen={isCommandMenuOpen}
-            onClose={() => setIsCommandMenuOpen(false)}
-            menuItems={commandMenuItems}
-            activePath={activePath}
-            handleNavClick={handleNavClick}
-          />
-        </Suspense>
-      )}
-
-    </>
-  )
+  useEffect(() => { if (pillLabel === currentPillLabel) return; setPillLabelAnimation('exit'); const timer = window.setTimeout(() => { setPillLabel(currentPillLabel); setPillLabelAnimation('enter') }, 150); return () => window.clearTimeout(timer) }, [currentPillLabel, pillLabel])
+  useEffect(() => { if (pillLabelAnimation !== 'enter') return; const frame = requestAnimationFrame(() => requestAnimationFrame(() => setPillLabelAnimation('idle'))); return () => cancelAnimationFrame(frame) }, [pillLabelAnimation])
+  const closeCommandMenu = useCallback(() => { if (!isCommandMenuOpen) return; setIsCommandMenuOpen(false); setView('search'); if (closeTimerRef.current) clearTimeout(closeTimerRef.current); closeTimerRef.current = window.setTimeout(() => { setView('navigation'); requestAnimationFrame(() => triggerRef.current?.focus({ preventScroll: true })) }, reduceMotion ? 0 : 520) }, [isCommandMenuOpen, reduceMotion])
+  useEffect(() => () => { if (closeTimerRef.current) clearTimeout(closeTimerRef.current) }, [])
+  const openCommandMenu = useCallback(() => { if (closeTimerRef.current) clearTimeout(closeTimerRef.current); setShouldMountCommandMenu(true); setView('search'); if (!getProjectCatalog()) void loadProjectData().then(({ loadPublicProjects }) => loadPublicProjects()).catch(() => undefined); requestAnimationFrame(() => requestAnimationFrame(() => { setIsCommandMenuOpen(true); setView('command') })) }, [])
+  useEffect(() => { const onKeyDown = (event: KeyboardEvent) => { if ((event.metaKey || event.ctrlKey) && (event.key.toLowerCase() === 'k' || event.code === 'KeyK')) { event.preventDefault(); if (isCommandMenuOpen) closeCommandMenu(); else openCommandMenu() } }; window.addEventListener('keydown', onKeyDown); return () => window.removeEventListener('keydown', onKeyDown) }, [closeCommandMenu, isCommandMenuOpen, openCommandMenu])
+  useEffect(() => { if (isMobile || isCommandMenuOpen) return; let frame = 0; let lastY = window.scrollY; const update = () => { frame = 0; const y = window.scrollY; const down = y > lastY + 2; lastY = y; if (y > 96 && down) setView(previous => previous === 'navigation' ? 'compact' : previous); else if (!down) setView(previous => previous === 'compact' ? 'navigation' : previous); document.documentElement.style.setProperty('--navbar-scroll-progress', String(Math.min(1, y / Math.max(1, document.documentElement.scrollHeight - window.innerHeight)))) }; const onScroll = () => { if (!frame) frame = requestAnimationFrame(update) }; window.addEventListener('scroll', onScroll, { passive: true }); onScroll(); return () => { window.removeEventListener('scroll', onScroll); if (frame) cancelAnimationFrame(frame) } }, [isCommandMenuOpen, isMobile])
+  const navigateToTarget = useCallback(async (path: string, targetId: string, updateHistory: boolean, options?: import('lenis').ScrollToOptions) => { const request = ++navigationRequestRef.current; if (getOwningSection(targetId)) { await ensureTargetReady(targetId); await new Promise<void>(resolve => requestAnimationFrame(() => resolve())) }; if (request !== navigationRequestRef.current) return; const element = document.getElementById(targetId) ?? document.getElementById(getOwningSection(targetId) ?? 'home'); if (!element) return; beginNavigation(); scrollToTarget(element, { offset: targetId.startsWith('project-') || targetId === 'skills' ? -window.innerHeight / 4 : 0, ...options, onComplete: resetNavigation }); if (updateHistory) { skipLocationScrollRef.current = path; navigate(path) }; setActivePath(path); if (targetId.startsWith('project-')) requestProjectTarget(parseInt(targetId.replace('project-', ''), 10)) }, [navigate])
+  const handleNavClick = useCallback(async (event: React.MouseEvent<HTMLAnchorElement>, path: string, targetId?: string) => { event.preventDefault(); trackEvent('navbar_click', { target_label: path, target_id: targetId, target_type: 'navbar_link' }); closeCommandMenu(); await navigateToTarget(path, targetId ?? getNavigationTarget(path).targetId, true) }, [closeCommandMenu, navigateToTarget])
+  useEffect(() => { if (!isInteractive || skipLocationScrollRef.current === location.pathname) { if (skipLocationScrollRef.current) skipLocationScrollRef.current = null; return }; const target = getNavigationTarget(location.pathname); void navigateToTarget(target.path, target.targetId, false, { immediate: window.scrollY < 10 }) }, [isInteractive, location.pathname, navigateToTarget])
+  const sharedSearch = <motion.span layoutId="navbar-search-icon"><SearchIcon /></motion.span>
+  const content = view === 'command' && shouldMountCommandMenu ? <Suspense fallback={<div className="island-search-loading">{sharedSearch}<span>Search…</span></div>}><CommandMenu isOpen={isCommandMenuOpen} onClose={closeCommandMenu} menuItems={commandMenuItems} activePath={activePath} handleNavClick={handleNavClick} /></Suspense> : view === 'search' ? <div className="island-search-loading">{sharedSearch}<span>Search…</span><CloseIcon /></div> : view === 'compact' ? <div className="island-progress" aria-label="Scroll progress"><span /></div> : isMobile ? <button ref={triggerRef} className="command-pill-button" onClick={openCommandMenu} aria-label="Open command menu"><SearchIcon /><span className={`pill-text t-text-swap${pillLabelAnimation === 'exit' ? ' is-exit' : pillLabelAnimation === 'enter' ? ' is-enter-start' : ''}`}>{pillLabel}</span><span className="pill-shortcut">{isMac ? '⌘K' : 'Ctrl K'}</span></button> : <ul className="nav-links">{NAV_ITEMS.map(({ path, label }) => <li key={path}><a href={path} onClick={event => handleNavClick(event, path)} className={activePath === path ? 'nav-item active' : 'nav-item'} aria-current={activePath === path ? 'page' : undefined}>{label}</a></li>)}</ul>
+  return <>{isCommandMenuOpen && <button className="island-backdrop" aria-label="Close command menu" onClick={closeCommandMenu} />}<nav className={`navbar ${isMobile ? 'navbar--mobile' : 'navbar--desktop'} ${isCommandMenuOpen ? 'navbar--expanded' : ''}`} role="navigation" aria-label="Main navigation" onPointerEnter={() => view === 'compact' && setView('navigation')} onFocusCapture={() => view === 'compact' && setView('navigation')}><motion.div className="dynamic-island-shell" initial={false} animate={measuredSize} transition={reduceMotion ? { duration: 0 } : SHELL_SPRING} style={{ borderRadius: 30 }}><div ref={sizerRef} className={`dynamic-island-sizer dynamic-island-sizer--${view}`}><AnimatePresence mode="popLayout" initial={false}><motion.div key={view} className="dynamic-island-content" initial={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: .9, y: -8, filter: 'blur(5px)' }} animate={reduceMotion ? { opacity: 1 } : { opacity: 1, scale: 1, y: 0, filter: 'blur(0px)' }} exit={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: .9, y: -6, transition: { duration: .1 } }} transition={reduceMotion ? { duration: .1 } : CONTENT_SPRING}>{content}</motion.div></AnimatePresence></div></motion.div>{!isMobile && (view === 'navigation' || view === 'compact') && <motion.button ref={triggerRef} layoutId="navbar-search-orb" className="desktop-command-btn" onClick={openCommandMenu} aria-label="Open command menu" whileTap={reduceMotion ? undefined : { scale: .9 }}>{sharedSearch}</motion.button>}</nav></>
 }
-
 export default Navbar
