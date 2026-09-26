@@ -12,10 +12,19 @@
 .command-menu-content-inner::-webkit-scrollbar-track { background: transparent; }
 .command-menu-content-inner::-webkit-scrollbar-thumb { border: 2px solid transparent; border-radius: 999px; background: rgba(255, 255, 255, .28); background-clip: padding-box; }
 .command-menu-content-inner::-webkit-scrollbar-thumb:hover { background-color: rgba(255, 255, 255, .42); }
-.command-group { padding: 4px 0 7px; }
-.command-group-heading { padding: 8px 8px 5px; color: rgba(255, 255, 255, .46); font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; }
+.command-group { padding: 4px 0 10px; }
+.command-group-heading { display: flex; align-items: center; gap: 8px; padding: 8px 8px 7px; color: rgba(255, 255, 255, .46); font-size: 11px; font-weight: 600; letter-spacing: .02em; }
+.command-group-heading::after { content: ""; height: 1px; flex: 1; background: rgba(255, 255, 255, .09); }
 .command-list { padding: 0; margin: 0; list-style: none; }
-.command-item { display: flex; align-items: center; min-height: 44px; padding: 0 10px; border-radius: 10px; color: rgba(255, 255, 255, .8); text-decoration: none; font-size: 15px; transition: background-color 150ms ease, color 150ms ease; }
+.command-list--pages, .command-list--projects { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 3px 8px; }
+.command-list--connect { display: grid; grid-template-columns: repeat(auto-fit, minmax(142px, 1fr)); gap: 3px 8px; }
+.command-item { display: flex; align-items: center; min-width: 0; min-height: 46px; padding: 0 8px; border-radius: 10px; color: rgba(255, 255, 255, .8); text-decoration: none; font-size: 15px; transition: background-color 150ms ease, color 150ms ease; }
+.command-item-icon { display: grid; flex: none; width: 34px; height: 34px; margin-right: 10px; place-items: center; border-radius: 11px; background: rgba(255, 255, 255, .075); color: rgba(255, 255, 255, .62); }
+.command-item--external { justify-content: space-between; gap: 12px; }
+.command-item-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.command-item-external-icon { display: grid; flex: none; place-items: center; color: rgba(255, 255, 255, .42); transition: color 150ms ease, transform 150ms ease; }
+.command-item--external:hover .command-item-external-icon, .command-item--external.selected .command-item-external-icon { color: rgba(255, 255, 255, .78); transform: translate(1px, -1px); }
+@media (max-width: 420px) { .command-list--connect { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .command-item:hover { background: rgba(255, 255, 255, .055); color: rgba(255, 255, 255, .94); }
 .command-item.selected { background: rgba(255, 255, 255, .09); color: #fff; }
 .command-item.active-path { font-weight: 600; }
