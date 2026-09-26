@@ -13,6 +13,8 @@ describe('command menu loading', () => {
     expect(navbar).toContain("lazy(loadCommandMenu)")
     expect(navbar).toContain('shouldMountCommandMenu')
     expect(navbar).not.toContain("import CommandMenu, { type CommandMenuItem }")
+    expect(navbar).not.toContain("GlassSurface")
+    expect(navbar).toContain("useContentSize")
     expect(warmup).toContain("loadCommandMenu")
   })
 })
