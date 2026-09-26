@@ -15,7 +15,7 @@
     "legacy_source_id": 2,
     "title": "Portfolio Website",
     "description": "A modern, responsive portfolio website showcasing my work and skills. Features include smooth animations, glass morphism UI design, universe-themed backgrounds with twinkling stars and shooting stars, interactive image magnifier, and mobile-optimized experience.",
-    "tech": ["React", "Vite", "TypeScript", "Lenis", "CSS"],
+    "tech": ["React", "Vite", "TypeScript", "CSS"],
     "image_source_path": "src/assets/img/portfolio_real_new.webp",
     "image_sha256": "e95b9162cfff9f81f7f449a08655c79a135bdb76ed77e562c8edb69cb46d958f",
     "live_url": "https://7sadakonr-portfolio.vercel.app",

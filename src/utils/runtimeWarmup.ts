@@ -15,3 +15,4 @@ export const loadPageEnd = lazyLoader(() => import('../components/PageEnd/PageEn
 
 export type LenisModule = Awaited<ReturnType<typeof loadLenis>>
 export type LenisInstance = InstanceType<LenisModule['default']>
+
