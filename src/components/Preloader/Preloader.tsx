@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import './Preloader.css';
+import { acquireScrollLock } from '../SmoothScroll/scrollController';
 
 interface PreloaderProps {
   onReveal?: () => void;
@@ -96,11 +97,8 @@ export const Preloader: React.FC<PreloaderProps> = ({ onReveal, onComplete }) =>
 
   // Block scrolling only while the visual curtain is present.
   useEffect(() => {
-    const originalBodyOverflow = document.body.style.overflow;
-    const originalHtmlOverflow = document.documentElement.style.overflow;
-    
-    document.body.style.overflow = 'hidden';
-    document.documentElement.style.overflow = 'hidden';
+    if (isComplete) return;
+    const releaseScrollLock = acquireScrollLock();
 
     const preventScroll = (e: Event) => {
       e.preventDefault();
@@ -110,12 +108,11 @@ export const Preloader: React.FC<PreloaderProps> = ({ onReveal, onComplete }) =>
     document.addEventListener('touchmove', preventScroll, { passive: false });
 
     return () => {
-      document.body.style.overflow = originalBodyOverflow;
-      document.documentElement.style.overflow = originalHtmlOverflow;
+      releaseScrollLock();
       document.removeEventListener('wheel', preventScroll);
       document.removeEventListener('touchmove', preventScroll);
     };
-  }, []);
+  }, [isComplete]);
 
   useEffect(() => {
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;

@@ -18,7 +18,7 @@ A responsive universe-themed portfolio focused on custom interface design, smoot
 
 This repository contains the source code for **7sadakonr.xyz**. The site is built with React and TypeScript and uses custom CSS effects rather than a 3D rendering library or GSAP.
 
-The current implementation combines route-based page loading, Lenis smooth scrolling, responsive glass-style components, custom background effects, a command menu, and a contact form powered by EmailJS.
+The current implementation combines route-based page loading, native browser scrolling, responsive glass-style components, custom background effects, a command menu, and a contact form powered by EmailJS.
 
 ---
 
@@ -28,7 +28,7 @@ The current implementation combines route-based page loading, Lenis smooth scrol
 - Universe-inspired aurora, firefly, and shooting-star effects
 - Glass-style surfaces and navigation components
 - Global command menu with keyboard shortcuts
-- Lenis-powered smooth scrolling
+- Native browser scrolling
 - Interactive project cards and image magnifier
 - Contact form delivery through EmailJS
 - Route-based lazy loading and code splitting
@@ -46,7 +46,7 @@ The current implementation combines route-based page loading, Lenis smooth scrol
 | Language | TypeScript | Typed components, pages, and utilities |
 | Build Tool | Vite 7.0.4 | Development server and production builds |
 | Routing | React Router 7.7 | Client-side routes and navigation |
-| Smooth Scrolling | Lenis 1.3.25 | Smooth scrolling and scroll control |
+| Scrolling | Native browser scrolling | Standard browser scroll behavior and scroll control |
 | Contact Form | EmailJS Browser 4.4 | Sending messages from the contact page |
 | Styling | Custom CSS | Glass effects, responsive layouts, and animations |
 | Image Tooling | Sharp 0.35 | Local image conversion and optimization script |
@@ -72,7 +72,7 @@ The current project does **not** use GSAP or Three.js.
 ## Performance Implementation
 
 - Route components are loaded lazily
-- React, React DOM, React Router, and Lenis are split into reusable vendor chunks
+- React, React DOM, and React Router are split into reusable vendor chunks
 - Production console statements and debugger calls are removed by Terser
 - Project images are available in optimized WebP formats; run `npm run images:convert` after updating their PNG sources
 - Animated components include performance-conscious rendering behavior

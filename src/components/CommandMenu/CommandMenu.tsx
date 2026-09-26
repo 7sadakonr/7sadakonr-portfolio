@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { motion } from 'motion/react'
 import { NavLink } from 'react-router-dom'
-import { pauseScroll, resumeScroll } from '../SmoothScroll/scrollController'
+import { acquireScrollLock } from '../SmoothScroll/scrollController'
 import { useSiteSettings } from '../../features/siteSettings/hooks/useSiteSettings'
 import { contactDisplayText, visibleContactLinks } from '../../features/siteSettings/validation/contactLinks'
 import type { ContactLink } from '../../features/siteSettings/types'
@@ -41,6 +41,7 @@ const CommandMenu: React.FC<CommandMenuProps> = ({ isOpen, onClose, menuItems, a
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedIndex, setSelectedIndex] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
+  const releaseScrollLockRef = useRef<(() => void) | null>(null)
   const settings = useSiteSettings()
   const allItems = useMemo<CommandMenuEntry[]>(() => [...menuItems, ...createConnectMenuItems(settings.contactLinks)], [menuItems, settings.contactLinks])
   const filteredItems = useMemo(() => { const term = searchTerm.toLowerCase(); return allItems.filter(item => item.label.toLowerCase().includes(term) || item.keywords.toLowerCase().includes(term)) }, [allItems, searchTerm])
@@ -50,11 +51,21 @@ const CommandMenu: React.FC<CommandMenuProps> = ({ isOpen, onClose, menuItems, a
 
   useEffect(() => {
     if (!isOpen) return
-    pauseScroll(); setSearchTerm('')
+    const releaseScrollLock = acquireScrollLock()
+    releaseScrollLockRef.current = releaseScrollLock
+    return () => {
+      releaseScrollLock()
+      if (releaseScrollLockRef.current === releaseScrollLock) releaseScrollLockRef.current = null
+    }
+  }, [isOpen])
+
+  useEffect(() => {
+    if (!isOpen) return
+    setSearchTerm('')
     const index = allItems.findIndex(item => !isConnectItem(item) && item.path === activePath && item.category === 'Navigation')
     setSelectedIndex(index < 0 ? 0 : index)
     const focus = window.setTimeout(() => inputRef.current?.focus({ preventScroll: true }), 80)
-    return () => { clearTimeout(focus); resumeScroll() }
+    return () => clearTimeout(focus)
   }, [activePath, allItems, isOpen])
 
   const selectItem = useCallback((event: React.MouseEvent<HTMLAnchorElement> | { preventDefault: () => void }, item: CommandMenuEntry) => {
@@ -66,6 +77,7 @@ const CommandMenu: React.FC<CommandMenuProps> = ({ isOpen, onClose, menuItems, a
       onClose()
       return
     }
+    releaseScrollLockRef.current?.()
     handleNavClick(event as React.MouseEvent<HTMLAnchorElement>, item.path, item.targetId)
     onClose()
   }, [handleNavClick, onClose])
@@ -92,7 +104,7 @@ const CommandMenu: React.FC<CommandMenuProps> = ({ isOpen, onClose, menuItems, a
   }
 
   if (!isOpen) return null
-  return <section className="command-menu-island" role="dialog" aria-modal="true" aria-label="Command menu" data-lenis-prevent>
+  return <section className="command-menu-island" role="dialog" aria-modal="true" aria-label="Command menu">
     <div className="command-search-row"><motion.span layoutId="navbar-search-icon"><SearchIcon /></motion.span><input ref={inputRef} type="text" className="command-search-input" placeholder="Search navigation, projects and links…" value={searchTerm} onChange={event => { setSearchTerm(event.target.value); setSelectedIndex(0) }} /><button className="command-close-btn" type="button" onClick={onClose} aria-label="Close menu"><CloseIcon /></button></div>
     <div className="command-menu-content-inner">{filteredItems.length ? <>{pageItems.length > 0 && <div className="command-group"><div className="command-group-heading">Pages</div><ul className="command-list command-list--pages">{pageItems.map(renderItem)}</ul></div>}{projectItems.length > 0 && <div className="command-group"><div className="command-group-heading">Projects</div><ul className="command-list command-list--projects">{projectItems.map(renderItem)}</ul></div>}{connectItems.length > 0 && <div className="command-group"><div className="command-group-heading">Connect</div><ul className="command-list command-list--connect">{connectItems.map(renderItem)}</ul></div>}</> : <div className="command-empty">No results found.</div>}</div>
   </section>

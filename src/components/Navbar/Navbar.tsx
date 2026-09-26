@@ -2,7 +2,7 @@ import React, { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useMemo
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import './Navbar.css'
-import { scrollToTarget } from '../SmoothScroll/scrollController'
+import { cancelScrollAnimation, scrollToTarget, type ScrollTargetOptions } from '../SmoothScroll/scrollController'
 import { ensureTargetReady, getOwningSection } from '../LazySection/sectionLoader'
 import type { CommandMenuItem } from '../CommandMenu/CommandMenu'
 import { getNavigationTarget } from '../../features/navigation/navigation.config'
@@ -58,7 +58,7 @@ const Navbar = ({ isInteractive = true }: NavbarProps) => {
   const closeSearchPreview = useCallback(() => { if (closeTimerRef.current) clearTimeout(closeTimerRef.current); setView('navigation'); requestAnimationFrame(() => triggerRef.current?.focus({ preventScroll: true })) }, [])
   const revealNavigation = useCallback(() => { setView(previous => { if (previous !== 'compact') return previous; progressRevealRef.current = true; return 'navigation' }) }, [])
   const releaseNavigationReveal = useCallback(() => { progressRevealRef.current = false }, [])
-  const releaseProgressNavigationLock = useCallback(() => { if (!progressNavigationLockRef.current) return; requestAnimationFrame(() => { if (!isNavigationInProgress()) progressNavigationLockRef.current = false }) }, [])
+  const releaseProgressNavigationLock = useCallback(() => { if (!progressNavigationLockRef.current) return; if (isNavigationInProgress()) { cancelScrollAnimation(); resetNavigation() }; requestAnimationFrame(() => { if (!isNavigationInProgress()) progressNavigationLockRef.current = false }) }, [])
   const closeCommandMenu = useCallback(() => {
     if (!isCommandMenuOpen) return
     setIsCommandMenuOpen(false)
@@ -128,7 +128,7 @@ const Navbar = ({ isInteractive = true }: NavbarProps) => {
     onScroll()
     return () => { window.removeEventListener('scroll', onScroll); if (frame) cancelAnimationFrame(frame) }
   }, [isCommandMenuOpen, isMobile])
-  const navigateToTarget = useCallback(async (path: string, targetId: string, updateHistory: boolean, options?: import('lenis').ScrollToOptions) => { const request = ++navigationRequestRef.current; if (getOwningSection(targetId)) { await ensureTargetReady(targetId); await new Promise<void>(resolve => requestAnimationFrame(() => resolve())) }; if (request !== navigationRequestRef.current) return; const element = document.getElementById(targetId) ?? document.getElementById(getOwningSection(targetId) ?? 'home'); if (!element) return; beginNavigation(); if (!isMobile) { progressRevealRef.current = false; progressNavigationLockRef.current = true; setView('navigation') }; const completeNavigation = () => { resetNavigation(); if (!isMobile) setView('navigation') }; scrollToTarget(element, { offset: targetId.startsWith('project-') || targetId === 'skills' ? -window.innerHeight / 4 : 0, ...options, onComplete: completeNavigation }); if (updateHistory) { skipLocationScrollRef.current = path; navigate(path) }; setActivePath(path); if (targetId.startsWith('project-')) requestProjectTarget(parseInt(targetId.replace('project-', ''), 10)) }, [isMobile, navigate])
+  const navigateToTarget = useCallback(async (path: string, targetId: string, updateHistory: boolean, options?: ScrollTargetOptions) => { const request = ++navigationRequestRef.current; if (getOwningSection(targetId)) { await ensureTargetReady(targetId); await new Promise<void>(resolve => requestAnimationFrame(() => resolve())) }; if (request !== navigationRequestRef.current) return; const element = document.getElementById(targetId) ?? document.getElementById(getOwningSection(targetId) ?? 'home'); if (!element) return; beginNavigation(); if (!isMobile) { progressRevealRef.current = false; progressNavigationLockRef.current = true; setView('navigation') }; const completeNavigation = () => { resetNavigation(); if (!isMobile) setView('navigation') }; scrollToTarget(element, { offset: targetId.startsWith('project-') || targetId === 'skills' ? -window.innerHeight / 4 : 0, ...options, onComplete: completeNavigation }); if (updateHistory) { skipLocationScrollRef.current = path; navigate(path) }; setActivePath(path); if (targetId.startsWith('project-')) requestProjectTarget(parseInt(targetId.replace('project-', ''), 10)) }, [isMobile, navigate])
   const handleNavClick = useCallback(async (event: React.MouseEvent<HTMLAnchorElement>, path: string, targetId?: string) => { event.preventDefault(); trackEvent('navbar_click', { target_label: path, target_id: targetId, target_type: 'navbar_link' }); closeCommandMenu(); await navigateToTarget(path, targetId ?? getNavigationTarget(path).targetId, true) }, [closeCommandMenu, navigateToTarget])
   useEffect(() => { if (!isInteractive || skipLocationScrollRef.current === location.pathname) { if (skipLocationScrollRef.current) skipLocationScrollRef.current = null; return }; const target = getNavigationTarget(location.pathname); void navigateToTarget(target.path, target.targetId, false, { immediate: window.scrollY < 10 }) }, [isInteractive, location.pathname, navigateToTarget])
   const sharedSearch = <motion.span layoutId="navbar-search-icon"><SearchIcon /></motion.span>
