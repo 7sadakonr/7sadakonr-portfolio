@@ -2,10 +2,6 @@ import { act, fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter, useNavigate } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('../src/components/GlassSurface/GlassSurface', () => ({
-  default: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-}))
-
 vi.mock('../src/components/CommandMenu/CommandMenu', () => ({
   default: ({ isOpen }: { isOpen: boolean }) => isOpen ? <div>Command menu</div> : null,
 }))

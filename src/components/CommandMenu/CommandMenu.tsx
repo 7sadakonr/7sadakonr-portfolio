@@ -1,382 +1,101 @@
-import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
-import { NavLink } from 'react-router-dom';
-import { pauseScroll, resumeScroll } from '../SmoothScroll/scrollController';
-import './CommandMenu.css';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { motion } from 'motion/react'
+import { NavLink } from 'react-router-dom'
+import { pauseScroll, resumeScroll } from '../SmoothScroll/scrollController'
+import { useSiteSettings } from '../../features/siteSettings/hooks/useSiteSettings'
+import { contactDisplayText, visibleContactLinks } from '../../features/siteSettings/validation/contactLinks'
+import type { ContactLink } from '../../features/siteSettings/types'
+import { trackEvent } from '../../lib/analytics/trackEvent'
+import './CommandMenu.css'
 
-export interface CommandMenuItem {
-  id: string;
-  path: string;
-  label: string;
-  category: string;
-  keywords: string;
-  targetId?: string;
+export interface CommandMenuItem { id: string; path: string; label: string; category: string; keywords: string; targetId?: string }
+export interface CommandMenuConnectItem { id: string; label: string; category: 'Connect'; keywords: string; contact: ContactLink }
+type CommandMenuEntry = CommandMenuItem | CommandMenuConnectItem
+interface CommandMenuProps { isOpen: boolean; onClose: () => void; menuItems: readonly CommandMenuItem[] | CommandMenuItem[]; activePath: string; handleNavClick: (event: React.MouseEvent<HTMLAnchorElement>, path: string, targetId?: string) => void }
+
+const SearchIcon = () => <svg aria-hidden="true" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="m20 20-4-4" /></svg>
+const CloseIcon = () => <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m6 6 12 12M18 6 6 18" /></svg>
+const ExternalLinkIcon = () => <svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 3h7v7" /><path d="m10 14 11-11" /><path d="M21 14v6a1 1 0 0 1-1 1H4a1 1 0 0 1 1-1V4a1 1 0 0 1 1-1h6" /></svg>
+const isConnectItem = (item: CommandMenuEntry): item is CommandMenuConnectItem => 'contact' in item
+const displayLabel = (label: string) => label.split(' ').map(word => word.charAt(0) + word.slice(1).toLowerCase()).join(' ')
+
+const CommandItemIcon = ({ item }: { item: CommandMenuEntry }) => {
+  const iconName = isConnectItem(item) ? item.contact.type : item.id.includes('home') ? 'home' : item.id.includes('about') ? 'user' : item.id.includes('project') ? 'folder' : item.id.includes('contact') ? 'phone' : item.id.includes('skill') ? 'list' : 'file'
+  const icon = iconName === 'home' ? <><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1Z" /><path d="M9 21v-6h6v6" /></> : iconName === 'user' ? <><circle cx="12" cy="8" r="4" /><path d="M4 21c.8-4 3.5-6 8-6s7.2 2 8 6" /></> : iconName === 'folder' ? <><path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" /><path d="M3 10h18" /></> : iconName === 'phone' ? <path d="M7 3h3l1.4 4-2 1.6a15 15 0 0 0 6 6L17 13l4 1.4v3c0 1.1-.9 2-2 2C10.2 19.4 4.6 13.8 4.6 5c0-1.1.9-2 2-2Z" /> : iconName === 'list' ? <><path d="M9 6h11M9 12h11M9 18h11" /><path d="M4 6h.01M4 12h.01M4 18h.01" /></> : iconName === 'email' ? <><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" /></> : iconName === 'github' ? <path d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.69c-2.78.61-3.37-1.18-3.37-1.18-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.61.07-.61 1.01.07 1.54 1.03 1.54 1.03.9 1.54 2.36 1.1 2.94.84.09-.65.35-1.1.63-1.35-2.22-.25-4.56-1.11-4.56-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02a9.6 9.6 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85v2.74c0 .27.18.58.69.48A10 10 0 0 0 12 2Z" /> : <><circle cx="12" cy="12" r="8" /><path d="M8 12h8M12 8v8" /></>
+  return <span className="command-item-icon" aria-hidden="true"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">{icon}</svg></span>
 }
 
-interface CommandMenuProps {
-  isOpen: boolean;
-  onClose: () => void;
-  menuItems: readonly CommandMenuItem[] | CommandMenuItem[];
-  activePath: string;
-  handleNavClick: (e: React.MouseEvent<HTMLAnchorElement>, path: string, targetId?: string) => void;
+export const createConnectMenuItems = (links: ContactLink[]): CommandMenuConnectItem[] => visibleContactLinks(links).map((contact) => {
+  const label = contactDisplayText(contact)
+  return { id: `connect-${contact.id}`, label, category: 'Connect', keywords: `${contact.type} ${contact.label} ${contact.value} ${label}`.toLowerCase(), contact }
+})
+
+const trackContactSelection = (contact: ContactLink) => {
+  const eventName = contact.type === 'email' ? 'email_click' : contact.type === 'linkedin' ? 'linkedin_click' : contact.type === 'github' ? 'github_profile_click' : 'contact_click'
+  let host: string | undefined
+  try { if (contact.url.startsWith('http')) host = new URL(contact.url).hostname } catch { /* Ignore URL parsing errors. */ }
+  trackEvent(eventName, { target_id: contact.id, target_label: contactDisplayText(contact), target_type: contact.type, destination_host: host })
 }
 
-const CommandMenu: React.FC<CommandMenuProps> = ({
-  isOpen,
-  onClose,
-  menuItems,
-  activePath,
-  handleNavClick
-}) => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedIndex, setSelectedIndex] = useState(0);
-  const [isClosing, setIsClosing] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
-  const [isClearing, setIsClearing] = useState(false);
-  const [clearingText, setClearingText] = useState("");
-  
-  const inputRef = useRef<HTMLInputElement>(null);
-  const mirrorRef = useRef<HTMLDivElement>(null);
-  const pholdRef = useRef<HTMLDivElement>(null);
-  const glowRef = useRef<HTMLDivElement>(null);
-  const wrapRef = useRef<HTMLDivElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+const CommandMenu: React.FC<CommandMenuProps> = ({ isOpen, onClose, menuItems, activePath, handleNavClick }) => {
+  const [searchTerm, setSearchTerm] = useState('')
+  const [selectedIndex, setSelectedIndex] = useState(0)
+  const inputRef = useRef<HTMLInputElement>(null)
+  const settings = useSiteSettings()
+  const allItems = useMemo<CommandMenuEntry[]>(() => [...menuItems, ...createConnectMenuItems(settings.contactLinks)], [menuItems, settings.contactLinks])
+  const filteredItems = useMemo(() => { const term = searchTerm.toLowerCase(); return allItems.filter(item => item.label.toLowerCase().includes(term) || item.keywords.toLowerCase().includes(term)) }, [allItems, searchTerm])
+  const pageItems = filteredItems.filter(item => !isConnectItem(item) && item.category !== 'Projects')
+  const projectItems = filteredItems.filter(item => !isConnectItem(item) && item.category === 'Projects')
+  const connectItems = filteredItems.filter(isConnectItem)
 
   useEffect(() => {
-    canvasRef.current = document.createElement("canvas");
-  }, []);
+    if (!isOpen) return
+    pauseScroll(); setSearchTerm('')
+    const index = allItems.findIndex(item => !isConnectItem(item) && item.path === activePath && item.category === 'Navigation')
+    setSelectedIndex(index < 0 ? 0 : index)
+    const focus = window.setTimeout(() => inputRef.current?.focus({ preventScroll: true }), 80)
+    return () => { clearTimeout(focus); resumeScroll() }
+  }, [activePath, allItems, isOpen])
 
-  const num = (name: string, fb: number) => {
-    const str = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-    if (!str) return fb;
-    let v = parseFloat(str);
-    if (Number.isNaN(v)) return fb;
-    if (str.endsWith('s') && !str.endsWith('ms')) v *= 1000;
-    return Number.isFinite(v) ? v : fb;
-  };
-
-  const bezier = (str: string) => {
-    const m = String(str).match(/cubic-bezier\(([-\d.]+),\s*([-\d.]+),\s*([-\d.]+),\s*([-\d.]+)\)/);
-    if (!m) return (t: number) => t;
-    const [x1 = 0, y1 = 0, x2 = 1, y2 = 1] = m.slice(1).map(parseFloat);
-    const cx = 3 * x1, bx = 3 * (x2 - x1) - cx, ax = 1 - cx - bx;
-    const cy = 3 * y1, by = 3 * (y2 - y1) - cy, ay = 1 - cy - by;
-    return (t: number) => {
-      if (t <= 0) return 0;
-      if (t >= 1) return 1;
-      let s = t;
-      for (let i = 0; i < 8; i++) {
-        const dx = ((ax * s + bx) * s + cx) * s - t;
-        const d = (3 * ax * s + 2 * bx) * s + cx;
-        if (Math.abs(dx) < 1e-6 || d === 0) break;
-        s -= dx / d;
-      }
-      return ((ay * s + by) * s + cy) * s;
-    };
-  };
-
-  const buildGlow = (text: string) => {
-    const canvas = canvasRef.current;
-    if (!canvas || !inputRef.current || !wrapRef.current) return "";
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return "";
-    
-    ctx.font = getComputedStyle(inputRef.current).font;
-    const rgb = "255,255,255";
-    const w = wrapRef.current.clientWidth || 280;
-    const padLeft = 52; 
-    const spread = num("--glow-spread", 1.5);
-    const layers: string[] = [];
-    let x = 0;
-    
-    const offsets: [number, number, number, number][] = [
-      [0, 0.8, 7, 0.22],
-      [1, 0.55, 8, 0.18],
-      [-1, 0.65, 6, 0.16],
-      [0.35, 0.9, 5, 0.14]
-    ];
-    
-    text.split(/(\s+)/).forEach((seg) => {
-      const segW = ctx.measureText(seg).width;
-      if (seg.trim()) {
-        const cx = padLeft + x + segW / 2;
-        const hw = Math.max(segW * 0.45, 8) * spread;
-        offsets.forEach(([mult, rwm, rh, a]) => {
-          const dx = mult === 0 ? 0 : mult === 1 ? hw * 0.45 : mult === -1 ? -hw * 0.4 : hw * 0.15;
-          const lx = (((cx + dx) / w) * 100).toFixed(2);
-          layers.push(
-            `radial-gradient(ellipse ${Math.max(hw * rwm, 2).toFixed(1)}px ${rh}px at ${lx}% 100%, rgba(${rgb},${a}), transparent)`
-          );
-        });
-      }
-      x += segW;
-    });
-    return layers.join(", ");
-  };
-
-  const clearWithAnimation = (e: React.MouseEvent) => {
-    e.preventDefault();
-    if (isClearing || !searchTerm || !inputRef.current || !mirrorRef.current || !pholdRef.current || !glowRef.current) return;
-    setIsClearing(true);
-    
-    const mirror = mirrorRef.current;
-    const phold = pholdRef.current;
-    const glow = glowRef.current;
-    
-    const keepFocus = document.activeElement === inputRef.current;
-    const textToClear = searchTerm.replace(/ /g, "\u00a0");
-    setClearingText(textToClear);
-    mirror.textContent = textToClear;
-    
-    const total = num("--clear-dur", 1000);
-    const outDur = num("--clear-out-dur", 400);
-    const inDur  = num("--clear-in-dur", 400);
-    const outFly = num("--clear-out-fly", 12);
-    const inFly  = num("--clear-in-fly", 12);
-    const blur   = num("--clear-blur", 2);
-    const delay  = num("--glow-delay", 50);
-    const peakAt = num("--glow-peak-at", 0.15);
-    const gOp    = num("--glow-opacity", 0.85); 
-    
-    const rootStyle = getComputedStyle(document.documentElement);
-    const easeOut = bezier(rootStyle.getPropertyValue("--clear-out-ease"));
-    const easeIn  = bezier(rootStyle.getPropertyValue("--clear-in-ease"));
-    
-    setSearchTerm("");
-    
-    glow.style.background = buildGlow(mirror.textContent);
-    glow.style.opacity = "0";
-    phold.style.transform = `translateY(-${inFly}px)`;
-    phold.style.opacity = "0.9";
-    phold.style.filter = `blur(${blur}px)`;
-    
-    const t0 = performance.now();
-    
-    const tick = (now: number) => {
-      const el = now - t0;
-      const eo = easeOut(Math.min(1, el / outDur));
-      mirror.style.transform = `translateY(${(eo * outFly).toFixed(1)}px)`;
-      mirror.style.opacity = (1 - eo).toFixed(3);
-      mirror.style.filter = `blur(${(eo * blur).toFixed(1)}px)`;
-
-      const ei = easeIn(Math.min(1, el / inDur));
-      phold.style.transform = `translateY(${(-inFly + ei * inFly).toFixed(1)}px)`;
-      phold.style.opacity = (0.9 + ei * 0.1).toFixed(3);
-      phold.style.filter = `blur(${(blur - ei * blur).toFixed(1)}px)`;
-
-      let g = 0;
-      if (el > delay) {
-        const gp = Math.min(1, (el - delay) / Math.max(1, total - delay));
-        g = gp < peakAt ? gp / peakAt : 1 - (gp - peakAt) / (1 - peakAt);
-      }
-      glow.style.opacity = (g * gOp).toFixed(3);
-
-      if (el < total) {
-        requestAnimationFrame(tick);
-      } else {
-        mirror.style.cssText = "";
-        phold.style.cssText = "";
-        setClearingText("");
-        glow.style.opacity = "0";
-        glow.style.background = "";
-        setIsClearing(false);
-        if (keepFocus) requestAnimationFrame(() => inputRef.current?.focus({ preventScroll: true }));
-      }
-    };
-    
-    requestAnimationFrame(tick);
-  };
-
-  const handleClose = useCallback(() => {
-    setIsClosing(true);
-    setIsMounted(false);
-    document.body.style.overflow = 'unset';
-    document.documentElement.style.overflow = 'unset';
-    resumeScroll();
-    const closeMs = parseFloat(
-      getComputedStyle(document.documentElement).getPropertyValue("--modal-close-dur")
-    ) || 150;
-    setTimeout(() => {
-      setIsClosing(false);
-      onClose();
-    }, closeMs);
-  }, [onClose]);
-
-  // Filter items based on search term
-  const filteredItems = useMemo(() => {
-    const term = searchTerm.toLowerCase();
-    return menuItems.filter((item: CommandMenuItem) => {
-      return item.label.toLowerCase().includes(term) || item.keywords.toLowerCase().includes(term);
-    });
-  }, [menuItems, searchTerm]);
-
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-      document.documentElement.style.overflow = 'hidden';
-      pauseScroll();
-      setSearchTerm('');
-      const currentIdx = menuItems.findIndex((item: CommandMenuItem) => item.path === activePath && item.category === 'Navigation');
-      setSelectedIndex(currentIdx !== -1 ? currentIdx : 0);
-      
-      setTimeout(() => {
-        setIsMounted(true);
-      }, 50);
-
-      // Focus input after animation
-      const timer = setTimeout(() => {
-        inputRef.current?.focus();
-      }, 100);
-      return () => {
-        clearTimeout(timer);
-        document.body.style.overflow = 'unset';
-        document.documentElement.style.overflow = 'unset';
-        resumeScroll();
-      };
-    } else {
-      document.body.style.overflow = 'unset';
-      document.documentElement.style.overflow = 'unset';
-      resumeScroll();
-      setIsMounted(false);
-      setIsClosing(false);
+  const selectItem = useCallback((event: React.MouseEvent<HTMLAnchorElement> | { preventDefault: () => void }, item: CommandMenuEntry) => {
+    event.preventDefault()
+    if (isConnectItem(item)) {
+      trackContactSelection(item.contact)
+      if (item.contact.url.startsWith('http')) window.open(item.contact.url, '_blank', 'noopener,noreferrer')
+      else window.location.assign(item.contact.url)
+      onClose()
+      return
     }
-  }, [isOpen, activePath, menuItems]);
+    handleNavClick(event as React.MouseEvent<HTMLAnchorElement>, item.path, item.targetId)
+    onClose()
+  }, [handleNavClick, onClose])
 
-  const handleItemSelect = useCallback((e: React.MouseEvent<HTMLAnchorElement> | { preventDefault: () => void }, item: CommandMenuItem) => {
-    e.preventDefault();
-    document.body.style.overflow = 'unset';
-    document.documentElement.style.overflow = 'unset';
-    resumeScroll();
-    handleNavClick(e as React.MouseEvent<HTMLAnchorElement>, item.path, item.targetId);
-    handleClose();
-  }, [handleNavClick, handleClose]);
-
-  // Handle keyboard navigation inside the menu
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (!isOpen) return;
-      
-      if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        if (filteredItems.length > 0) {
-          setSelectedIndex(prev => (prev + 1) % filteredItems.length);
-        }
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        if (filteredItems.length > 0) {
-          setSelectedIndex(prev => (prev - 1 + filteredItems.length) % filteredItems.length);
-        }
-      } else if (e.key === 'Enter') {
-        e.preventDefault();
-        if (filteredItems.length > 0) {
-          const item = filteredItems[selectedIndex];
-          if (item) {
-            handleItemSelect({ preventDefault: () => {} }, item);
-          }
-        }
-      } else if (e.key === 'Escape') {
-        e.preventDefault();
-        handleClose();
-      }
-    };
+    if (!isOpen) return
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') { event.preventDefault(); onClose() }
+      if (event.key === 'ArrowDown' && filteredItems.length) { event.preventDefault(); setSelectedIndex(index => (index + 1) % filteredItems.length) }
+      if (event.key === 'ArrowUp' && filteredItems.length) { event.preventDefault(); setSelectedIndex(index => (index - 1 + filteredItems.length) % filteredItems.length) }
+      if (event.key === 'Enter' && filteredItems[selectedIndex]) { event.preventDefault(); selectItem({ preventDefault: () => undefined }, filteredItems[selectedIndex]) }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [filteredItems, isOpen, onClose, selectItem, selectedIndex])
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, filteredItems, selectedIndex, handleItemSelect, handleClose]);
+  const renderItem = (item: CommandMenuEntry) => {
+    const index = filteredItems.findIndex(candidate => candidate.id === item.id)
+    const selected = index === selectedIndex
+    const className = `command-item${selected ? ' selected' : ''}${!isConnectItem(item) && activePath === item.path && item.category === 'Navigation' ? ' active-path' : ''}${isConnectItem(item) ? ' command-item--external' : ''}`
+    const pointerEnter = (event: React.PointerEvent<HTMLAnchorElement>) => event.pointerType === 'mouse' && setSelectedIndex(index)
+    if (isConnectItem(item)) return <li key={item.id}><a href={item.contact.url} className={className} onClick={event => selectItem(event, item)} onPointerEnter={pointerEnter}><CommandItemIcon item={item} /><span className="command-item-label">{item.label}</span><span className="command-item-external-icon"><ExternalLinkIcon /></span></a></li>
+    return <li key={item.id}><NavLink to={item.path} className={className} onClick={event => selectItem(event, item)} onPointerEnter={pointerEnter}><CommandItemIcon item={item} /><span className="command-item-label">{displayLabel(item.label)}</span></NavLink></li>
+  }
 
-  if (!isOpen && !isClosing) return null;
+  if (!isOpen) return null
+  return <section className="command-menu-island" role="dialog" aria-modal="true" aria-label="Command menu" data-lenis-prevent>
+    <div className="command-search-row"><motion.span layoutId="navbar-search-icon"><SearchIcon /></motion.span><input ref={inputRef} type="text" className="command-search-input" placeholder="Search navigation, projects and links…" value={searchTerm} onChange={event => { setSearchTerm(event.target.value); setSelectedIndex(0) }} /><button className="command-close-btn" type="button" onClick={onClose} aria-label="Close menu"><CloseIcon /></button></div>
+    <div className="command-menu-content-inner">{filteredItems.length ? <>{pageItems.length > 0 && <div className="command-group"><div className="command-group-heading">Pages</div><ul className="command-list command-list--pages">{pageItems.map(renderItem)}</ul></div>}{projectItems.length > 0 && <div className="command-group"><div className="command-group-heading">Projects</div><ul className="command-list command-list--projects">{projectItems.map(renderItem)}</ul></div>}{connectItems.length > 0 && <div className="command-group"><div className="command-group-heading">Connect</div><ul className="command-list command-list--connect">{connectItems.map(renderItem)}</ul></div>}</> : <div className="command-empty">No results found.</div>}</div>
+  </section>
+}
 
-  const stateClass = isMounted ? 'is-open' : isClosing ? 'is-closing' : '';
-
-  return (
-    <div className={`command-menu-overlay ${isMounted ? 'open' : ''}`} onClick={handleClose} data-lenis-prevent>
-      <div className="command-menu-bg" aria-hidden="true" />
-      <div 
-        className={`command-menu-modal ${stateClass}`} 
-        onClick={(e) => e.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
-      >
-        <div className="command-search-row">
-          <div ref={wrapRef} className={`command-search-wrapper t-modal t-clear ${stateClass} ${searchTerm ? 'has-value' : ''} ${isClearing ? 'is-clearing' : ''}`}>
-            <svg className="command-search-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="11" cy="11" r="8"></circle>
-              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-            </svg>
-            <input 
-              ref={inputRef}
-              type="text" 
-              className="command-search-input" 
-              placeholder=""
-              value={searchTerm}
-              onChange={(e) => {
-                setSearchTerm(e.target.value);
-                setSelectedIndex(0);
-              }}
-            />
-            <div className="t-clear-mirror" aria-hidden="true" ref={mirrorRef}>{isClearing ? clearingText : searchTerm.replace(/ /g, "\u00a0")}</div>
-            <div className="t-clear-placeholder" aria-hidden="true" ref={pholdRef}>Type a command or search...</div>
-            <div className="t-clear-glow" aria-hidden="true" ref={glowRef}></div>
-            {searchTerm && (
-              <button className="t-clear-btn" aria-label="Clear" onPointerDown={(e) => { if (document.activeElement === inputRef.current) e.preventDefault(); }} onClick={clearWithAnimation}>×</button>
-            )}
-          </div>
-          <button className={`command-close-btn t-modal ${stateClass}`} onClick={handleClose} aria-label="Close menu">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-          </button>
-        </div>
-
-        <div className={`command-menu-content t-modal ${stateClass}`}>
-          <div className="command-menu-content-inner">
-            {filteredItems.length > 0 ? (
-            (['Navigation', 'Content', 'Projects'] as const).map((cat: string) => {
-              const catItems = filteredItems.filter((i: CommandMenuItem) => i.category === cat);
-              if (catItems.length === 0) return null;
-
-              return (
-                <div className="command-group" key={cat}>
-                  <div className="command-group-heading">{cat}</div>
-                  <ul className="command-list">
-                    {catItems.map((item: CommandMenuItem) => {
-                      const index = filteredItems.findIndex((fi: CommandMenuItem) => fi.id === item.id);
-                      const isActivePath = activePath === item.path && item.category === 'Navigation';
-                      const isSelected = index === selectedIndex;
-                      return (
-                        <li key={item.id} className="command-item-wrapper">
-                          <NavLink
-                            to={item.path}
-                            className={`command-item ${isSelected ? 'selected' : ''} ${isActivePath ? 'active-path' : ''}`}
-                            onClick={(e) => handleItemSelect(e, item)}
-                            onPointerEnter={(e) => { if (e.pointerType === 'mouse') setSelectedIndex(index); }}
-                          >
-                            <div className="command-item-left">
-                              {item.label === 'HOME' && <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>}
-                              {item.label === 'ABOUT' && <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>}
-                              {item.label === 'PROJECTS' && <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>}
-                              {item.label === 'CONTACT' && <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>}
-                              {item.category === 'Content' && <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16c0 1.1.9 2 2 2h12a2 2 0 0 0 2-2V8l-6-6z"></path><path d="M14 3v5h5M16 13H8M16 17H8M10 9H8"></path></svg>}
-                              {item.category === 'Projects' && <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>}
-                              
-                              <span className="command-item-label">{item.category === 'Navigation' ? `Go to ${item.label}` : item.label}</span>
-                            </div>
-                          </NavLink>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </div>
-              );
-            })
-          ) : (
-            <div className="command-empty">
-              No results found.
-            </div>
-          )}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export default CommandMenu;
-
+export default CommandMenu
