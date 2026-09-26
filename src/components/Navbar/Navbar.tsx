@@ -7,7 +7,7 @@ import { ensureTargetReady, getOwningSection } from '../LazySection/sectionLoade
 import type { CommandMenuItem } from '../CommandMenu/CommandMenu'
 import { getNavigationTarget } from '../../features/navigation/navigation.config'
 import { requestProjectTarget, subscribeToSectionChanges } from '../../features/navigation/navigationEvents'
-import { beginNavigation, resetNavigation } from '../../features/navigation/navigationState'
+import { beginNavigation, isNavigationInProgress, resetNavigation } from '../../features/navigation/navigationState'
 import { loadCommandMenu, loadProjectData } from '../../utils/runtimeWarmup'
 import { getProjectCatalog, subscribeToProjectCatalog } from '../../features/projects/data/projectCatalogStore'
 import { trackEvent } from '../../lib/analytics/trackEvent'
@@ -16,7 +16,9 @@ const CommandMenu = lazy(loadCommandMenu)
 const SHELL_SPRING = { type: 'spring', duration: 0.8, bounce: 0.2 } as const
 const CONTENT_SPRING = { type: 'spring', duration: 0.8, bounce: 0.35 } as const
 const SCROLL_TOP_THRESHOLD = 96
+const SCROLL_BOTTOM_THRESHOLD = 12
 const SCROLL_DIRECTION_THRESHOLD = 8
+const SCROLL_INPUT_KEYS = new Set([' ', 'ArrowDown', 'ArrowUp', 'PageDown', 'PageUp', 'Home', 'End'])
 const NAV_ITEMS = [{ path: '/', label: 'HOME' }, { path: '/about', label: 'ABOUT' }, { path: '/project', label: 'PROJECT' }, { path: '/contact', label: 'CONTACT' }] as const
 const COMMAND_MENU_ITEMS: CommandMenuItem[] = [
   { id: 'nav-home', path: '/', label: 'HOME', category: 'Navigation', keywords: 'home landing start', targetId: 'home' },
@@ -42,7 +44,7 @@ function useContentSize(view: IslandView, mobile: boolean) {
 
 interface NavbarProps { isInteractive?: boolean }
 const Navbar = ({ isInteractive = true }: NavbarProps) => {
-  const location = useLocation(); const navigate = useNavigate(); const triggerRef = useRef<HTMLButtonElement>(null); const navigationRequestRef = useRef(0); const skipLocationScrollRef = useRef<string | null>(null); const closeTimerRef = useRef<number | null>(null); const progressRevealRef = useRef(false); const scrollProgressRef = useRef(0); const progressPercentageRef = useRef<HTMLSpanElement>(null); const reduceMotion = useReducedMotion()
+  const location = useLocation(); const navigate = useNavigate(); const triggerRef = useRef<HTMLButtonElement>(null); const navigationRequestRef = useRef(0); const skipLocationScrollRef = useRef<string | null>(null); const closeTimerRef = useRef<number | null>(null); const progressRevealRef = useRef(false); const progressNavigationLockRef = useRef(false); const scrollProgressRef = useRef(0); const progressPercentageRef = useRef<HTMLSpanElement>(null); const reduceMotion = useReducedMotion()
   const [isMobile, setIsMobile] = useState(false); const [isMac, setIsMac] = useState(true); const [activePath, setActivePath] = useState(location.pathname); const [view, setView] = useState<IslandView>('navigation'); const [shouldMountCommandMenu, setShouldMountCommandMenu] = useState(false); const [isCommandMenuOpen, setIsCommandMenuOpen] = useState(false); const [projects, setProjects] = useState(getProjectCatalog); const [pillLabel, setPillLabel] = useState('Home'); const [pillLabelAnimation, setPillLabelAnimation] = useState<'idle' | 'exit' | 'enter'>('idle'); const [sizerRef, measuredSize] = useContentSize(view, isMobile)
   const currentLabel = NAV_ITEMS.find(item => item.path === activePath)?.label || 'HOME'; const currentPillLabel = formatPillLabel(currentLabel)
   const commandMenuItems = useMemo<CommandMenuItem[]>(() => [...COMMAND_MENU_ITEMS, ...(projects ?? []).map((project, index) => ({ id: `project-${project.id}`, path: '/project', label: project.title, category: 'Projects', keywords: `${project.title} ${project.tech.join(' ')}`.toLowerCase(), targetId: `project-${index}` }))], [projects])
@@ -56,6 +58,7 @@ const Navbar = ({ isInteractive = true }: NavbarProps) => {
   const closeSearchPreview = useCallback(() => { if (closeTimerRef.current) clearTimeout(closeTimerRef.current); setView('navigation'); requestAnimationFrame(() => triggerRef.current?.focus({ preventScroll: true })) }, [])
   const revealNavigation = useCallback(() => { setView(previous => { if (previous !== 'compact') return previous; progressRevealRef.current = true; return 'navigation' }) }, [])
   const releaseNavigationReveal = useCallback(() => { progressRevealRef.current = false }, [])
+  const releaseProgressNavigationLock = useCallback(() => { if (!progressNavigationLockRef.current) return; requestAnimationFrame(() => { if (!isNavigationInProgress()) progressNavigationLockRef.current = false }) }, [])
   const closeCommandMenu = useCallback(() => {
     if (!isCommandMenuOpen) return
     setIsCommandMenuOpen(false)
@@ -72,6 +75,16 @@ const Navbar = ({ isInteractive = true }: NavbarProps) => {
   const openCommandMenu = useCallback(() => { if (closeTimerRef.current) clearTimeout(closeTimerRef.current); setShouldMountCommandMenu(true); if (isMobile) setView('search'); if (!getProjectCatalog()) void loadProjectData().then(({ loadPublicProjects }) => loadPublicProjects()).catch(() => undefined); requestAnimationFrame(() => requestAnimationFrame(() => { setIsCommandMenuOpen(true); setView('command') })) }, [isMobile])
   useEffect(() => { const onKeyDown = (event: KeyboardEvent) => { if ((event.metaKey || event.ctrlKey) && (event.key.toLowerCase() === 'k' || event.code === 'KeyK')) { event.preventDefault(); if (isCommandMenuOpen) closeCommandMenu(); else openCommandMenu() } }; window.addEventListener('keydown', onKeyDown); return () => window.removeEventListener('keydown', onKeyDown) }, [closeCommandMenu, isCommandMenuOpen, openCommandMenu])
   useEffect(() => {
+    if (isMobile) return
+    const onScrollKey = (event: KeyboardEvent) => { if (SCROLL_INPUT_KEYS.has(event.key)) releaseProgressNavigationLock() }
+    const onScrollbarPointerDown = (event: PointerEvent) => { if (event.clientX >= document.documentElement.clientWidth - 20) releaseProgressNavigationLock() }
+    window.addEventListener('wheel', releaseProgressNavigationLock, { passive: true })
+    window.addEventListener('touchstart', releaseProgressNavigationLock, { passive: true })
+    window.addEventListener('keydown', onScrollKey)
+    window.addEventListener('pointerdown', onScrollbarPointerDown, { passive: true })
+    return () => { window.removeEventListener('wheel', releaseProgressNavigationLock); window.removeEventListener('touchstart', releaseProgressNavigationLock); window.removeEventListener('keydown', onScrollKey); window.removeEventListener('pointerdown', onScrollbarPointerDown) }
+  }, [isMobile, releaseProgressNavigationLock])
+  useEffect(() => {
     if (isMobile || isCommandMenuOpen) return
     let frame = 0
     let lastY = window.scrollY
@@ -86,7 +99,15 @@ const Navbar = ({ isInteractive = true }: NavbarProps) => {
       scrollProgressRef.current = scrollProgress
       document.documentElement.style.setProperty('--navbar-scroll-progress', String(scrollProgress))
       if (progressPercentageRef.current) progressPercentageRef.current.textContent = `${Math.round(scrollProgress * 100)}%`
-      const atBottom = maxScroll > SCROLL_TOP_THRESHOLD && y >= maxScroll - 1
+      if (isNavigationInProgress()) {
+        accumulatedDelta = 0
+        return
+      }
+      if (progressNavigationLockRef.current) {
+        accumulatedDelta = 0
+        return
+      }
+      const atBottom = maxScroll > SCROLL_TOP_THRESHOLD && y >= maxScroll - SCROLL_BOTTOM_THRESHOLD
       if (y <= SCROLL_TOP_THRESHOLD || atBottom) {
         accumulatedDelta = 0
         setView(previous => previous === 'compact' ? 'navigation' : previous)
@@ -107,7 +128,7 @@ const Navbar = ({ isInteractive = true }: NavbarProps) => {
     onScroll()
     return () => { window.removeEventListener('scroll', onScroll); if (frame) cancelAnimationFrame(frame) }
   }, [isCommandMenuOpen, isMobile])
-  const navigateToTarget = useCallback(async (path: string, targetId: string, updateHistory: boolean, options?: import('lenis').ScrollToOptions) => { const request = ++navigationRequestRef.current; if (getOwningSection(targetId)) { await ensureTargetReady(targetId); await new Promise<void>(resolve => requestAnimationFrame(() => resolve())) }; if (request !== navigationRequestRef.current) return; const element = document.getElementById(targetId) ?? document.getElementById(getOwningSection(targetId) ?? 'home'); if (!element) return; beginNavigation(); scrollToTarget(element, { offset: targetId.startsWith('project-') || targetId === 'skills' ? -window.innerHeight / 4 : 0, ...options, onComplete: resetNavigation }); if (updateHistory) { skipLocationScrollRef.current = path; navigate(path) }; setActivePath(path); if (targetId.startsWith('project-')) requestProjectTarget(parseInt(targetId.replace('project-', ''), 10)) }, [navigate])
+  const navigateToTarget = useCallback(async (path: string, targetId: string, updateHistory: boolean, options?: import('lenis').ScrollToOptions) => { const request = ++navigationRequestRef.current; if (getOwningSection(targetId)) { await ensureTargetReady(targetId); await new Promise<void>(resolve => requestAnimationFrame(() => resolve())) }; if (request !== navigationRequestRef.current) return; const element = document.getElementById(targetId) ?? document.getElementById(getOwningSection(targetId) ?? 'home'); if (!element) return; beginNavigation(); if (!isMobile) { progressRevealRef.current = false; progressNavigationLockRef.current = true; setView('navigation') }; const completeNavigation = () => { resetNavigation(); if (!isMobile) setView('navigation') }; scrollToTarget(element, { offset: targetId.startsWith('project-') || targetId === 'skills' ? -window.innerHeight / 4 : 0, ...options, onComplete: completeNavigation }); if (updateHistory) { skipLocationScrollRef.current = path; navigate(path) }; setActivePath(path); if (targetId.startsWith('project-')) requestProjectTarget(parseInt(targetId.replace('project-', ''), 10)) }, [isMobile, navigate])
   const handleNavClick = useCallback(async (event: React.MouseEvent<HTMLAnchorElement>, path: string, targetId?: string) => { event.preventDefault(); trackEvent('navbar_click', { target_label: path, target_id: targetId, target_type: 'navbar_link' }); closeCommandMenu(); await navigateToTarget(path, targetId ?? getNavigationTarget(path).targetId, true) }, [closeCommandMenu, navigateToTarget])
   useEffect(() => { if (!isInteractive || skipLocationScrollRef.current === location.pathname) { if (skipLocationScrollRef.current) skipLocationScrollRef.current = null; return }; const target = getNavigationTarget(location.pathname); void navigateToTarget(target.path, target.targetId, false, { immediate: window.scrollY < 10 }) }, [isInteractive, location.pathname, navigateToTarget])
   const sharedSearch = <motion.span layoutId="navbar-search-icon"><SearchIcon /></motion.span>
