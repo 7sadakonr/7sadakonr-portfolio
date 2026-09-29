@@ -63,19 +63,7 @@ const ResumeDownloadMenu = ({ variant }: ResumeDownloadMenuProps) => {
         tabIndex={hero && !isOpen ? -1 : undefined}
         aria-hidden={hero && !isOpen ? true : undefined}
         onClick={() => {
-          let host: string | undefined
-          try {
-            if (option.href) host = new URL(option.href).hostname
-          } catch {
-            // Ignore URL parsing errors
-          }
-          trackEvent('resume_download', {
-            target_label: language === 'th' ? 'Resume (Thai)' : 'Resume (English)',
-            target_id: `resume-${language}`,
-            target_type: 'resume_link',
-            destination_host: host,
-            metadata: { language, variant },
-          })
+          trackEvent('resume_download')
           closeMenu()
         }}
       >

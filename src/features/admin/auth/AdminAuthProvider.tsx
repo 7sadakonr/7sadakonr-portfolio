@@ -12,17 +12,8 @@ interface AdminAuthContextValue {
 
 const AdminAuthContext = createContext<AdminAuthContextValue | null>(null)
 
-const syncAdminExclusion = async () => {
+const syncAdminExclusion = () => {
   setAdminOptOut(true)
-  if (!supabase || typeof window === 'undefined') return
-  try {
-    const visitorId = localStorage.getItem('portfolio_visitor_id')
-    if (visitorId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(visitorId)) {
-      await supabase.rpc('analytics_exclude_admin_visitor', { p_visitor_id: visitorId })
-    }
-  } catch {
-    // Ignore RPC failure if migration is pending
-  }
 }
 
 const hasAdminMembership = async (session: Session | null) => {
