@@ -3,77 +3,38 @@ import { createClient } from '@supabase/supabase-js'
 
 const ALLOWED_EVENTS = new Set([
   'page_view',
-  'section_view',
-  'scroll_depth',
-  'heartbeat',
   'project_open',
-  'project_github_click',
-  'project_demo_click',
   'resume_download',
-  'contact_click',
-  'email_click',
-  'linkedin_click',
-  'github_profile_click',
-  'navbar_click',
-  'external_link_click',
 ])
 
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-const MAX_BATCH_SIZE = 50
-const MAX_STRING_LEN = 500
+const MAX_BATCH_SIZE = 20
+const MAX_STRING_LEN = 256
 
-function sanitizeString(val: unknown, maxLen = MAX_STRING_LEN): string | null {
-  if (typeof val !== 'string') return null
+function sanitizeString(val: unknown, maxLen = MAX_STRING_LEN): string {
+  if (typeof val !== 'string') return ''
   const trimmed = val.trim()
-  if (!trimmed) return null
+  if (!trimmed) return ''
   return trimmed.slice(0, maxLen)
 }
 
-function parseUserAgent(ua: string | undefined): { device_type: string; browser: string; os: string } {
-  if (!ua) return { device_type: 'desktop', browser: 'Unknown', os: 'Unknown' }
-  const uaLower = ua.toLowerCase()
-  let device_type = 'desktop'
-  if (/mobile|android|iphone|ipod|phone/i.test(uaLower)) device_type = 'mobile'
-  else if (/ipad|tablet/i.test(uaLower)) device_type = 'tablet'
-
-  let browser = 'Other'
-  if (/edg\//i.test(ua)) browser = 'Edge'
-  else if (/chrome|crios/i.test(ua) && !/edg\//i.test(ua)) browser = 'Chrome'
-  else if (/safari/i.test(ua) && !/chrome|crios/i.test(ua)) browser = 'Safari'
-  else if (/firefox|fxios/i.test(ua)) browser = 'Firefox'
-  else if (/opr\//i.test(ua)) browser = 'Opera'
-
-  let os = 'Other'
-  if (/windows/i.test(ua)) os = 'Windows'
-  else if (/macintosh|mac os/i.test(ua)) os = 'macOS'
-  else if (/android/i.test(ua)) os = 'Android'
-  else if (/iphone|ipad|ipod/i.test(ua)) os = 'iOS'
-  else if (/linux/i.test(ua)) os = 'Linux'
-
-  return { device_type, browser, os }
+function sanitizeCountry(val: unknown): string {
+  if (typeof val !== 'string') return ''
+  const trimmed = val.trim().toUpperCase()
+  if (!/^[A-Z]{2,8}$/.test(trimmed)) return ''
+  return trimmed
 }
 
 interface RawEvent {
-  event_id?: unknown
   event_name?: unknown
   page?: unknown
-  section?: unknown
-  target_type?: unknown
-  target_id?: unknown
-  target_label?: unknown
   project_slug?: unknown
-  destination_host?: unknown
-  metadata?: unknown
-}
-
-interface RawPayload {
-  session_id?: unknown
-  visitor_id?: unknown
-  landing_path?: unknown
   referrer_host?: unknown
   utm_source?: unknown
   utm_medium?: unknown
   utm_campaign?: unknown
+}
+
+interface RawPayload {
   events?: unknown
 }
 
@@ -108,7 +69,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     process.env.VITE_SUPABASE_SECRET_KEY
 
   if (!supabaseUrl || !supabaseServiceKey) {
-    console.warn('[Analytics API] SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY is missing.')
     res.setHeader('X-Analytics-Status', 'missing-credentials')
     res.status(204).end()
     return
@@ -130,122 +90,65 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       return
     }
 
-    const sessionId = typeof payload.session_id === 'string' && UUID_REGEX.test(payload.session_id) ? payload.session_id : null
-    const visitorId = typeof payload.visitor_id === 'string' && UUID_REGEX.test(payload.visitor_id) ? payload.visitor_id : null
+    const rawEvents = Array.isArray(payload.events) ? payload.events : []
 
-    if (!sessionId || !visitorId) {
-      res.status(400).json({ error: 'Invalid session_id or visitor_id' })
+    if (rawEvents.length === 0) {
+      res.status(204).end()
       return
     }
-
-    const rawEvents = Array.isArray(payload.events) ? payload.events : []
 
     if (rawEvents.length > MAX_BATCH_SIZE) {
       res.status(400).json({ error: `Exceeded max batch size of ${MAX_BATCH_SIZE}` })
       return
     }
 
-    // Geolocation from Vercel request headers (optional, never store IP)
-    const country = sanitizeString(req.headers['x-vercel-ip-country'], 64)
-    const region = sanitizeString(req.headers['x-vercel-ip-country-region'], 64)
-    const city = sanitizeString(req.headers['x-vercel-ip-city'], 128)
+    // Geolocation from Vercel request headers: Country only, no IP stored
+    const countryHeader = Array.isArray(req.headers['x-vercel-ip-country'])
+      ? req.headers['x-vercel-ip-country'][0]
+      : req.headers['x-vercel-ip-country']
+    const country = sanitizeCountry(countryHeader)
 
-    const uaHeader = Array.isArray(req.headers['user-agent']) ? req.headers['user-agent'][0] : req.headers['user-agent']
-    const uaInfo = parseUserAgent(uaHeader)
-
-    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
-      auth: { persistSession: false },
-    })
-
-    // Check if visitor is an excluded admin
-    const { data: isExcluded } = await supabase
-      .from('analytics_admin_exclusions')
-      .select('visitor_id')
-      .eq('visitor_id', visitorId)
-      .maybeSingle()
-
-    if (isExcluded) {
-      res.setHeader('X-Analytics-Status', 'admin-opt-out')
-      res.status(204).end()
-      return
-    }
-
-    const nowIso = new Date().toISOString()
-
-    // 1. Upsert session
-    const { error: sessionError } = await supabase.from('analytics_sessions').upsert(
-      {
-        session_id: sessionId,
-        visitor_id: visitorId,
-        landing_path: sanitizeString(payload.landing_path),
-        referrer_host: sanitizeString(payload.referrer_host),
-        utm_source: sanitizeString(payload.utm_source, 128),
-        utm_medium: sanitizeString(payload.utm_medium, 128),
-        utm_campaign: sanitizeString(payload.utm_campaign, 128),
-        country,
-        region,
-        city,
-        device_type: uaInfo.device_type,
-        browser: uaInfo.browser,
-        os: uaInfo.os,
-        last_seen_at: nowIso,
-      },
-      { onConflict: 'session_id' },
-    )
-    if (sessionError) {
-      console.error('[Analytics API] Session upsert error:', sessionError.message)
-    }
-
-    // 2. Validate & prepare events
     const sanitizedEvents: Array<{
-      event_id: string
-      session_id: string
-      visitor_id: string
       event_name: string
-      page: string | null
-      section: string | null
-      target_type: string | null
-      target_id: string | null
-      target_label: string | null
-      project_slug: string | null
-      destination_host: string | null
-      metadata: Record<string, unknown> | null
-      created_at: string
+      page: string
+      project_slug: string
+      referrer_host: string
+      utm_source: string
+      utm_medium: string
+      utm_campaign: string
     }> = []
 
     for (const item of rawEvents as RawEvent[]) {
       if (!item || typeof item !== 'object') continue
-      const eventId = typeof item.event_id === 'string' && UUID_REGEX.test(item.event_id) ? item.event_id : null
-      const eventName = typeof item.event_name === 'string' && ALLOWED_EVENTS.has(item.event_name) ? item.event_name : null
+      const eventName = typeof item.event_name === 'string' && ALLOWED_EVENTS.has(item.event_name)
+        ? item.event_name
+        : null
 
-      if (!eventId || !eventName) continue
+      if (!eventName) continue
 
       sanitizedEvents.push({
-        event_id: eventId,
-        session_id: sessionId,
-        visitor_id: visitorId,
         event_name: eventName,
-        page: sanitizeString(item.page),
-        section: sanitizeString(item.section, 64),
-        target_type: sanitizeString(item.target_type, 64),
-        target_id: sanitizeString(item.target_id, 128),
-        target_label: sanitizeString(item.target_label, 256),
+        page: sanitizeString(item.page, 256),
         project_slug: sanitizeString(item.project_slug, 128),
-        destination_host: sanitizeString(item.destination_host, 128),
-        metadata: item.metadata && typeof item.metadata === 'object' && !Array.isArray(item.metadata)
-          ? (item.metadata as Record<string, unknown>)
-          : null,
-        created_at: nowIso,
+        referrer_host: sanitizeString(item.referrer_host, 128),
+        utm_source: sanitizeString(item.utm_source, 128),
+        utm_medium: sanitizeString(item.utm_medium, 128),
+        utm_campaign: sanitizeString(item.utm_campaign, 128),
       })
     }
 
     if (sanitizedEvents.length > 0) {
-      const { error: eventsError } = await supabase.from('analytics_events').upsert(sanitizedEvents, {
-        onConflict: 'event_id',
-        ignoreDuplicates: true,
+      const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+        auth: { persistSession: false },
       })
-      if (eventsError) {
-        console.error('[Analytics API] Events upsert error:', eventsError.message)
+
+      const { error } = await supabase.rpc('analytics_record_events', {
+        p_events: sanitizedEvents,
+        p_country: country,
+      })
+
+      if (error) {
+        console.error('[Analytics API] Error recording aggregate events:', error.message)
       }
     }
 

@@ -25,42 +25,14 @@ const ProjectSection = () => {
     if (project) {
       trackEvent('project_open', {
         project_slug: project.id,
-        target_id: `project-${index}`,
-        target_label: project.title,
-        target_type: 'sidebar_item',
       })
     }
   }
 
-  const handleSidebarLiveClick = (index: number, item: { id?: string; label: string; liveUrl?: string }) => {
-    const project = projects[index]
-    const slug = item.id || project?.id
-    const title = item.label || project?.title
-    let host: string | undefined
-    try {
-      if (item.liveUrl) host = new URL(item.liveUrl).hostname
-    } catch {
-      // Ignore URL parse errors
-    }
-    trackEvent('project_demo_click', {
-      project_slug: slug,
-      target_label: title,
-      target_type: 'sidebar_live_button',
-      destination_host: host,
-    })
+  const handleSidebarLiveClick = (_index: number, _item: { id?: string; label: string; liveUrl?: string }) => {
   }
 
-  const handleSidebarGithubClick = (index: number, item: { id?: string; label: string }) => {
-    const project = projects[index]
-    const slug = item.id || project?.id
-    const title = item.label || project?.title
-
-    trackEvent('project_github_click', {
-      project_slug: slug,
-      target_label: title,
-      target_type: 'sidebar_github_button',
-      destination_host: 'github.com',
-    })
+  const handleSidebarGithubClick = (_index: number, _item: { id?: string; label: string }) => {
   }
 
   return (

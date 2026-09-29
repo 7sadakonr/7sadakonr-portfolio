@@ -4,7 +4,6 @@ import {
   sendContactEmail as deliverContactEmail,
   type EmailJsConfig,
 } from '../services/emailService'
-import { trackEvent } from '../../../lib/analytics/trackEvent'
 
 type ContactFormDependencies = {
   config?: EmailJsConfig | null
@@ -31,11 +30,7 @@ export const useContactForm = ({
     setIsSubmitting(true)
     setSubmitStatus(null)
 
-    trackEvent('contact_click', {
-      target_label: 'Contact Form Submission',
-      target_type: 'form',
-      section: 'contact',
-    })
+
 
     const currentForm = form.current
     if (!config || !currentForm) {

@@ -4,10 +4,9 @@ import DateRangeSelector from '../components/analytics/DateRangeSelector'
 import OverviewCards from '../components/analytics/OverviewCards'
 import InteractionChart from '../components/analytics/InteractionChart'
 import UtmTable from '../components/analytics/UtmTable'
+import TopCountriesTable from '../components/analytics/TopCountriesTable'
 import ProjectPerformanceTable from '../components/analytics/ProjectPerformanceTable'
 import TopInteractions from '../components/analytics/TopInteractions'
-import ConversionFunnel from '../components/analytics/ConversionFunnel'
-import RecentSessions from '../components/analytics/RecentSessions'
 
 const AdminAnalyticsPage = () => {
   const {
@@ -24,13 +23,10 @@ const AdminAnalyticsPage = () => {
     utmCampaigns,
     projectPerformance,
     topInteractions,
-    funnel,
-    recentSessions,
+    topCountries,
     isVercelSynced,
     isVisitorDataAvailable,
     refetch,
-    fetchSessionDetail,
-    fetchSessionsByDate,
   } = useAnalytics()
 
   const metricTotal = overview
@@ -49,7 +45,7 @@ const AdminAnalyticsPage = () => {
       <header className="analytics-header">
         <div>
           <div className="analytics-eyebrow-row">
-            <span className="admin-eyebrow">Behavioral &amp; Conversion Analytics</span>
+            <span className="admin-eyebrow">Aggregate &amp; Privacy-First Analytics</span>
             <div className="analytics-live-status-pill" title={`Auto-refreshes every 15 seconds. Last updated: ${lastUpdated.toLocaleTimeString()}`}>
               <span className="analytics-live-pulse-dot" />
               <span>Live Sync</span>
@@ -63,7 +59,7 @@ const AdminAnalyticsPage = () => {
           </div>
           <h1 className="analytics-page-title">Portfolio Analytics</h1>
           <p className="analytics-page-description">
-            Unified audience &amp; engagement: Vercel past traffic, custom project clicks, resume downloads, and visitor journeys.
+            Privacy-first audience &amp; engagement: aggregate traffic, project interest, resume downloads, and referral distribution without persistent visitor tracking.
           </p>
         </div>
 
@@ -142,14 +138,14 @@ const AdminAnalyticsPage = () => {
         />
       </section>
 
-      {/* 3. Grid: UTM Attribution & Conversion Funnel */}
+      {/* 3. Grid: UTM Attribution & Top Countries */}
       <div className="analytics-grid-row">
         <section className="analytics-block" aria-label="Campaign performance">
           <UtmTable data={utmCampaigns} isLoading={isLoading} />
         </section>
 
-        <section className="analytics-block" aria-label="Conversion funnel">
-          <ConversionFunnel data={funnel} isLoading={isLoading} />
+        <section className="analytics-block" aria-label="Geographic distribution">
+          <TopCountriesTable data={topCountries} isLoading={isLoading} />
         </section>
       </div>
 
@@ -163,16 +159,6 @@ const AdminAnalyticsPage = () => {
           <TopInteractions data={topInteractions} isLoading={isLoading} />
         </section>
       </div>
-
-      {/* 5. Recent Visitor Journeys */}
-      <section className="analytics-block" aria-label="Recent visitor journeys">
-        <RecentSessions
-          sessions={recentSessions}
-          isLoading={isLoading}
-          fetchDetail={fetchSessionDetail}
-          fetchByDate={fetchSessionsByDate}
-        />
-      </section>
     </div>
   )
 }

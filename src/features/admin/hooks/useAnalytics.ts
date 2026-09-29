@@ -10,6 +10,7 @@ export interface AnalyticsOverviewData {
   visitors_today: number | null
   visitors_yesterday: number | null
   active_now: number
+  page_views?: number
   interactions: number
   interactions_prev: number
   interactions_today: number
@@ -59,81 +60,9 @@ export interface TopInteractionRow {
   total: number
 }
 
-export interface GoalMetric {
-  sessions: number
-  events: number
-  rate: number
-}
-
-export interface SectionRetentionItem {
-  section: string
-  label: string
-  sessions: number
-  rate: number
-}
-
-export interface FunnelData {
-  sessions: number
-  visitors?: number
-  viewed_projects: number
-  opened_project: number
-  clicked_link: number
-  converted: number
-  goals?: {
-    resume_downloads: GoalMetric
-    project_engagement: GoalMetric
-    demo_views: GoalMetric
-    github_inspects: GoalMetric
-    contact_intents: GoalMetric
-  }
-  section_retention?: SectionRetentionItem[]
-}
-
-export interface RecentSessionItem {
-  session_id: string
-  visitor_short: string
-  started_at: string
-  last_seen_at: string
-  landing_path: string | null
-  referrer_host?: string | null
-  utm_source: string | null
-  utm_campaign: string | null
-  country: string | null
-  device_type: string | null
-  event_count: number
-  duration_seconds: number
-}
-
-export interface SessionEvent {
-  event_name: string
-  page: string | null
-  section: string | null
-  target_label: string | null
-  project_slug: string | null
-  destination_host: string | null
-  metadata: Record<string, unknown> | null
-  created_at: string
-}
-
-export interface SessionDetailData {
-  session: {
-    session_id: string
-    visitor_short: string
-    started_at: string
-    last_seen_at: string
-    landing_path: string | null
-    referrer_host: string | null
-    utm_source: string | null
-    utm_medium: string | null
-    utm_campaign: string | null
-    country: string | null
-    region: string | null
-    city: string | null
-    device_type: string | null
-    browser: string | null
-    os: string | null
-  }
-  events: SessionEvent[]
+export interface TopCountryRow {
+  country: string
+  count: number
 }
 
 export type TimeSeriesMetric = 'visitors' | 'interactions' | 'project_opens' | 'external_clicks' | 'resume_downloads'
@@ -156,8 +85,7 @@ export function useAnalytics(initialDays: DateRangeDays = 1) {
   const [utmCampaigns, setUtmCampaigns] = useState<UtmCampaignRow[]>([])
   const [projectPerformance, setProjectPerformance] = useState<ProjectPerformanceRow[]>([])
   const [topInteractions, setTopInteractions] = useState<TopInteractionRow[]>([])
-  const [funnel, setFunnel] = useState<FunnelData | null>(null)
-  const [recentSessions, setRecentSessions] = useState<RecentSessionItem[]>([])
+  const [topCountries, setTopCountries] = useState<TopCountryRow[]>([])
 
   const [isVercelSynced, setIsVercelSynced] = useState<boolean>(false)
 
@@ -184,26 +112,22 @@ export function useAnalytics(initialDays: DateRangeDays = 1) {
         utmRes,
         projectRes,
         topRes,
-        funnelRes,
-        recentRes,
+        countryRes,
         vercelData,
         tsInteractionsRes,
         tsOpensRes,
-        tsClicksRes,
         tsResumeRes,
       ] = await Promise.all([
         supabase.rpc('analytics_overview', { p_from, p_to }),
         supabase.rpc('analytics_utm_campaigns', { p_from, p_to }),
         supabase.rpc('analytics_project_performance', { p_from, p_to }),
         supabase.rpc('analytics_top_interactions', { p_from, p_to }),
-        supabase.rpc('analytics_funnel', { p_from, p_to }),
-        supabase.rpc('analytics_recent_sessions', { p_limit: 50 }),
+        Promise.resolve(supabase.rpc('analytics_top_countries', { p_from, p_to })).catch(() => ({ data: [], error: null })),
         fetch(`/api/vercel-traffic?days=${days}`)
           .then(async (r) => (r.ok ? r.json() : null))
           .catch(() => null),
         Promise.resolve(supabase.rpc('analytics_timeseries', { p_from, p_to, p_metric: 'interactions' })).catch(() => ({ data: [], error: null })),
         Promise.resolve(supabase.rpc('analytics_timeseries', { p_from, p_to, p_metric: 'project_opens' })).catch(() => ({ data: [], error: null })),
-        Promise.resolve(supabase.rpc('analytics_timeseries', { p_from, p_to, p_metric: 'external_clicks' })).catch(() => ({ data: [], error: null })),
         Promise.resolve(supabase.rpc('analytics_timeseries', { p_from, p_to, p_metric: 'resume_downloads' })).catch(() => ({ data: [], error: null })),
       ])
 
@@ -211,8 +135,6 @@ export function useAnalytics(initialDays: DateRangeDays = 1) {
       if (utmRes.error) throw utmRes.error
       if (projectRes.error) throw projectRes.error
       if (topRes.error) throw topRes.error
-      if (funnelRes.error) throw funnelRes.error
-      if (recentRes.error) throw recentRes.error
 
       const rawData = (overviewRes.data && typeof overviewRes.data === 'object' ? overviewRes.data : {}) as Record<string, unknown>
 
@@ -233,80 +155,7 @@ export function useAnalytics(initialDays: DateRangeDays = 1) {
       const rawExternalClicks = toSafeNum(rawData.external_clicks, 0)
       const rawResumeDownloads = toSafeNum(rawData.resume_downloads, 0)
       const rawSessions = toSafeNum(rawData.sessions, 0)
-      const rawAvgEvents = toSafeNum(rawData.avg_session_events, 0)
-
-      // Identify current admin visitor in this browser to exclude from live counters
-      const adminVisitorId = typeof window !== 'undefined' ? localStorage.getItem('portfolio_visitor_id') : null
-      const adminVisitorShort = adminVisitorId ? adminVisitorId.slice(0, 8).toLowerCase() : null
-
-      // Filter out admin's own sessions from recentRes.data
-      const rawRecent = Array.isArray(recentRes.data) ? (recentRes.data as RecentSessionItem[]) : []
-      const filteredRecent = rawRecent.filter((s) => {
-        const vShort = (s.visitor_short || '').toLowerCase()
-        const sId = (s.session_id || '').toLowerCase()
-        const isSelf = adminVisitorId && (vShort === adminVisitorShort || sId === adminVisitorId.toLowerCase())
-        return !isSelf
-      })
-
-      // Ensure referrer_host is populated for inbound origin styling (e.g. GitHub referrals)
-      if (filteredRecent.length > 0 && filteredRecent.some((s) => s.referrer_host === undefined)) {
-        try {
-          const sessionIds = filteredRecent.map((s) => s.session_id)
-          const { data: sessionRows } = await supabase
-            .from('analytics_sessions')
-            .select('session_id, referrer_host, utm_source, utm_campaign')
-            .in('session_id', sessionIds)
-
-          if (sessionRows && sessionRows.length > 0) {
-            const sessionMap = new Map(sessionRows.map((r) => [r.session_id, r]))
-            for (const s of filteredRecent) {
-              const match = sessionMap.get(s.session_id)
-              if (match) {
-                if (s.referrer_host === undefined) {
-                  s.referrer_host = match.referrer_host ?? null
-                }
-                if (!s.utm_source && match.utm_source) {
-                  s.utm_source = match.utm_source
-                }
-                if (!s.utm_campaign && match.utm_campaign) {
-                  s.utm_campaign = match.utm_campaign
-                }
-              }
-            }
-          }
-        } catch {
-          // Proceed gracefully without failing dashboard load
-        }
-      }
-
-      // Hourly buckets map for 1-day view (24 hours)
-      const hourlyInteractionsMap = new Map<string, number>()
-      for (const key of rollingHourKeys(fromDate, toDate)) {
-        hourlyInteractionsMap.set(key, 0)
-      }
-
-      if (filteredRecent.length > 0) {
-        for (const s of filteredRecent) {
-          const sDate = new Date(s.started_at || s.last_seen_at || Date.now())
-          if (!isNaN(sDate.getTime()) && sDate >= fromDate && sDate <= toDate) {
-            const hKey = hourBucket(sDate)
-            if (hourlyInteractionsMap.has(hKey)) {
-              const evCount = toSafeNum(s.event_count, 1)
-              hourlyInteractionsMap.set(hKey, (hourlyInteractionsMap.get(hKey) || 0) + evCount)
-            }
-          }
-        }
-      }
-
-      // Active interactions sum (real intentional actions: demo, github, resume, contact, project opens)
-      const activeInteractionsSum = Array.isArray(topRes.data) && (topRes.data as TopInteractionRow[]).length > 0
-        ? (topRes.data as TopInteractionRow[]).reduce((sum, item) => sum + toSafeNum(item.total, 0), 0)
-        : (rawProjectOpens + rawExternalClicks + rawResumeDownloads)
-
-      // Exclude passive telemetry (page_views, section_views, scroll_depths) if database overview counted all events
-      const calibratedInteractions = (rawInteractions > activeInteractionsSum && activeInteractionsSum > 0)
-        ? activeInteractionsSum
-        : (activeInteractionsSum > 0 ? activeInteractionsSum : rawInteractions)
+      const rawPageViews = toSafeNum(rawData.page_views, 0)
 
       interface VercelPayload {
         configured?: boolean
@@ -317,6 +166,7 @@ export function useAnalytics(initialDays: DateRangeDays = 1) {
         visitorDailyDataAvailable?: boolean
         totalPageviews?: number
         topReferrers?: Array<{ referrer: string; count: number }>
+        topCountries?: Array<{ country: string; count: number }>
       }
 
       const vercelTraffic = vercelData && (vercelData as VercelPayload).configured ? (vercelData as VercelPayload) : null
@@ -343,7 +193,8 @@ export function useAnalytics(initialDays: DateRangeDays = 1) {
         visitors_today: dailyAvailable ? dailyVisitors.get(todayIso) ?? 0 : null,
         visitors_yesterday: dailyAvailable ? dailyVisitors.get(yesterdayIso) ?? 0 : null,
         active_now: 0,
-        interactions: calibratedInteractions,
+        page_views: rawPageViews,
+        interactions: rawInteractions,
         interactions_prev: rawInteractionsPrev,
         interactions_today: rawInteractionsToday,
         interactions_yesterday: rawInteractionsYesterday,
@@ -351,7 +202,7 @@ export function useAnalytics(initialDays: DateRangeDays = 1) {
         external_clicks: rawExternalClicks,
         resume_downloads: rawResumeDownloads,
         sessions: rawSessions,
-        avg_session_events: rawAvgEvents,
+        avg_session_events: 0,
       }
       setOverview(mergedOverview)
 
@@ -376,8 +227,6 @@ export function useAnalytics(initialDays: DateRangeDays = 1) {
       // Helper to match hourly point from RPC
       const matchHourlyCount = (arr: TimeSeriesPoint[], key: string): number => {
         const exact = arr.find((point) => hourBucket(point.date) === key)
-        // Legacy RPC rows contain UTC HH:00 only. Duplicate boundary hours are
-        // ambiguous: do not merge records that could belong to different dates.
         const legacy = arr.filter((point) => point.date === formatAnalyticsHour(key))
         const found = exact ?? (legacy.length === 1 ? legacy[0] : undefined)
         return found ? toSafeNum(found.count, 0) : 0
@@ -393,40 +242,14 @@ export function useAnalytics(initialDays: DateRangeDays = 1) {
 
       // 2.2 Process 'interactions' series
       const rawInteractionsArray = Array.isArray(tsInteractionsRes.data) ? (tsInteractionsRes.data as TimeSeriesPoint[]) : []
-      const rawInteractionsSum = rawInteractionsArray.reduce((acc, pt) => acc + toSafeNum(pt.count, 0), 0)
       const processedInteractions: TimeSeriesPoint[] = dateKeys.map((key) => {
         if (isHourly) {
-          const sessionEvCount = hourlyInteractionsMap.get(key) || 0
           const rpcCount = matchHourlyCount(rawInteractionsArray, key)
-          return { date: key, count: Math.max(sessionEvCount, rpcCount) }
+          return { date: key, count: rpcCount }
         }
-
         const found = rawInteractionsArray.find((p) => String(p.date || '').slice(0, 10) === key)
-        let count = found ? toSafeNum(found.count, 0) : 0
-        if (rawInteractionsSum > 0 && calibratedInteractions < rawInteractionsSum) {
-          count = Math.round((count / rawInteractionsSum) * calibratedInteractions)
-        }
-        return { date: key, count }
+        return { date: key, count: found ? toSafeNum(found.count, 0) : 0 }
       })
-
-      if (isHourly) {
-        const interactionsSum = processedInteractions.reduce((acc, p) => acc + p.count, 0)
-        if (interactionsSum === 0 && calibratedInteractions > 0) {
-          const curHKey = hourBucket(toDate)
-          const curPt = processedInteractions.find((p) => p.date === curHKey)
-          if (curPt) {
-            curPt.count = calibratedInteractions
-          }
-        }
-      } else {
-        const interactionsSum = processedInteractions.reduce((acc, p) => acc + p.count, 0)
-        if (interactionsSum === 0 && calibratedInteractions > 0) {
-          const lastPt = processedInteractions[processedInteractions.length - 1]
-          if (lastPt) {
-            lastPt.count = calibratedInteractions
-          }
-        }
-      }
 
       // 2.3 Process 'project_opens' series
       const rawOpensArray = Array.isArray(tsOpensRes.data) ? (tsOpensRes.data as TimeSeriesPoint[]) : []
@@ -439,16 +262,8 @@ export function useAnalytics(initialDays: DateRangeDays = 1) {
         return { date: key, count: found ? toSafeNum(found.count, 0) : 0 }
       })
 
-      // 2.4 Process 'external_clicks' series
-      const rawClicksArray = Array.isArray(tsClicksRes.data) ? (tsClicksRes.data as TimeSeriesPoint[]) : []
-      const processedClicks: TimeSeriesPoint[] = dateKeys.map((key) => {
-        if (isHourly) {
-          const rpcCount = matchHourlyCount(rawClicksArray, key)
-          return { date: key, count: rpcCount }
-        }
-        const found = rawClicksArray.find((p) => String(p.date || '').slice(0, 10) === key)
-        return { date: key, count: found ? toSafeNum(found.count, 0) : 0 }
-      })
+      // 2.4 Process 'external_clicks' series (empty in aggregate model)
+      const processedClicks: TimeSeriesPoint[] = dateKeys.map((key) => ({ date: key, count: 0 }))
 
       // 2.5 Process 'resume_downloads' series
       const rawResumeArray = Array.isArray(tsResumeRes.data) ? (tsResumeRes.data as TimeSeriesPoint[]) : []
@@ -488,10 +303,31 @@ export function useAnalytics(initialDays: DateRangeDays = 1) {
       }
       setUtmCampaigns(mergedUtm)
 
+      // 4. Countries: Merge Supabase aggregate countries with Vercel countries
+      const dbCountries = (countryRes.data as TopCountryRow[]) || []
+      const countryMap = new Map<string, number>()
+      for (const row of dbCountries) {
+        if (row.country) {
+          countryMap.set(row.country.toUpperCase(), (countryMap.get(row.country.toUpperCase()) || 0) + toSafeNum(row.count, 0))
+        }
+      }
+      if (vercelTraffic?.topCountries) {
+        for (const c of vercelTraffic.topCountries) {
+          if (c.country) {
+            const code = c.country.toUpperCase()
+            if (!countryMap.has(code)) {
+              countryMap.set(code, toSafeNum(c.count, 0))
+            }
+          }
+        }
+      }
+      const mergedCountries: TopCountryRow[] = Array.from(countryMap.entries())
+        .map(([country, count]) => ({ country, count }))
+        .sort((a, b) => b.count - a.count)
+      setTopCountries(mergedCountries)
+
       setProjectPerformance((projectRes.data as ProjectPerformanceRow[]) || [])
       setTopInteractions((topRes.data as TopInteractionRow[]) || [])
-      setFunnel(funnelRes.data as FunnelData)
-      setRecentSessions(filteredRecent)
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to load analytics data'
       setError(message)
@@ -548,7 +384,7 @@ export function useAnalytics(initialDays: DateRangeDays = 1) {
     }
   }, [fetchData])
 
-  // Deep traffic insights (peak hour/day, averages, busiest time window)
+  // Traffic insights (peak hour/day, averages, busiest time window)
   const trafficInsights = useMemo<TrafficInsights>(() => {
     const currentSeries = timeseriesMap[metric] || []
     if (!currentSeries || currentSeries.length === 0) {
@@ -622,94 +458,6 @@ export function useAnalytics(initialDays: DateRangeDays = 1) {
     }
   }, [timeseriesMap, metric, days])
 
-  const fetchSessionDetail = useCallback(async (sessionId: string): Promise<SessionDetailData | null> => {
-    if (!supabase) return null
-    try {
-      const { data, error } = await supabase.rpc('analytics_session_detail', { p_session_id: sessionId })
-      if (error || !data) return null
-      return data as SessionDetailData
-    } catch {
-      return null
-    }
-  }, [])
-
-  const fetchSessionsByDate = useCallback(async (dateStr: string): Promise<RecentSessionItem[]> => {
-    if (!supabase) return []
-    try {
-      const parts = dateStr.split('-').map(Number)
-      const year = parts[0]
-      const month = parts[1]
-      const day = parts[2]
-      if (year === undefined || month === undefined || day === undefined || isNaN(year) || isNaN(month) || isNaN(day)) {
-        return []
-      }
-      const start = new Date(year, month - 1, day, 0, 0, 0, 0).toISOString()
-      const end = new Date(year, month - 1, day, 23, 59, 59, 999).toISOString()
-
-      const { data: sessionRows, error } = await supabase
-        .from('analytics_sessions')
-        .select('session_id, visitor_id, started_at, last_seen_at, landing_path, referrer_host, utm_source, utm_campaign, country, device_type')
-        .gte('started_at', start)
-        .lte('started_at', end)
-        .order('started_at', { ascending: false })
-        .limit(100)
-
-      if (error || !sessionRows) return []
-
-      const adminVisitorId = typeof window !== 'undefined' ? localStorage.getItem('portfolio_visitor_id') : null
-      const adminVisitorShort = adminVisitorId ? adminVisitorId.slice(0, 8).toLowerCase() : null
-
-      const filtered = sessionRows.filter((s) => {
-        const vId = (s.visitor_id || '').toLowerCase()
-        const sId = (s.session_id || '').toLowerCase()
-        const isSelf =
-          adminVisitorId &&
-          (vId === adminVisitorId.toLowerCase() ||
-            sId === adminVisitorId.toLowerCase() ||
-            (adminVisitorShort && vId.startsWith(adminVisitorShort)))
-        return !isSelf
-      })
-
-      if (filtered.length === 0) return []
-
-      const sessionIds = filtered.map((s) => s.session_id)
-      const { data: eventRows } = await supabase
-        .from('analytics_events')
-        .select('session_id')
-        .in('session_id', sessionIds)
-
-      const countMap = new Map<string, number>()
-      if (eventRows) {
-        for (const ev of eventRows) {
-          countMap.set(ev.session_id, (countMap.get(ev.session_id) || 0) + 1)
-        }
-      }
-
-      return filtered.map((s) => {
-        const startMs = new Date(s.started_at).getTime()
-        const endMs = new Date(s.last_seen_at || s.started_at).getTime()
-        const durationSeconds = Math.max(0, Math.round((endMs - startMs) / 1000))
-
-        return {
-          session_id: s.session_id,
-          visitor_short: s.visitor_id ? s.visitor_id.slice(0, 8) : 'anon',
-          started_at: s.started_at,
-          last_seen_at: s.last_seen_at || s.started_at,
-          landing_path: s.landing_path,
-          referrer_host: s.referrer_host,
-          utm_source: s.utm_source,
-          utm_campaign: s.utm_campaign,
-          country: s.country,
-          device_type: s.device_type,
-          event_count: countMap.get(s.session_id) || 1,
-          duration_seconds: durationSeconds,
-        }
-      })
-    } catch {
-      return []
-    }
-  }, [])
-
   return {
     days,
     setDays,
@@ -724,12 +472,9 @@ export function useAnalytics(initialDays: DateRangeDays = 1) {
     utmCampaigns,
     projectPerformance,
     topInteractions,
-    funnel,
-    recentSessions,
+    topCountries,
     isVercelSynced,
     isVisitorDataAvailable: isVercelSynced,
     refetch: fetchData,
-    fetchSessionDetail,
-    fetchSessionsByDate,
   }
 }

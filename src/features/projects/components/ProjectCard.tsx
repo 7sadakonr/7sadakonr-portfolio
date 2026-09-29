@@ -19,36 +19,15 @@ const ProjectCard = ({ project, index, projectRef, onMouseProjectEnter }: Projec
   const handleCardClick = () => {
     trackEvent('project_open', {
       project_slug: project.id,
-      target_id: `project-${index}`,
-      target_label: project.title,
-      target_type: 'project_card',
     })
   }
 
   const handleLiveClick = (e: React.MouseEvent) => {
     e.stopPropagation()
-    let host: string | undefined
-    try {
-      if (project.liveUrl) host = new URL(project.liveUrl).hostname
-    } catch {
-      // Ignore URL parse errors
-    }
-    trackEvent('project_demo_click', {
-      project_slug: project.id,
-      target_label: project.title,
-      target_type: 'demo_button',
-      destination_host: host,
-    })
   }
 
   const handleGithubClick = (e: React.MouseEvent) => {
     e.stopPropagation()
-    trackEvent('project_github_click', {
-      project_slug: project.id,
-      target_label: project.title,
-      target_type: 'github_button',
-      destination_host: 'github.com',
-    })
   }
 
   return (
