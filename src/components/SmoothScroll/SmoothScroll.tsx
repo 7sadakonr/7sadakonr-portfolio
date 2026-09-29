@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef } from 'react'
+import 'lenis/dist/lenis.css'
 import { loadLenis, type LenisInstance } from '../../utils/runtimeWarmup'
 import {
   REDUCED_MOTION_QUERY,
@@ -47,9 +48,6 @@ export default function SmoothScroll({ children, isPrepared, isEnabled }: Smooth
   const wakeLenis = useCallback(() => {
     const lenis = lenisRef.current
     if (!lenis || !canAnimate() || lenis.isStopped || lenis.isScrolling !== 'smooth') return
-
-    // Lenis retains the external RAF timestamp; reset it after a sleeping period
-    // so the first active frame does not advance by the entire idle duration.
     if (requestRef.current === null) lenis.time = 0
     startRafLoop()
   }, [canAnimate, startRafLoop])
@@ -57,11 +55,7 @@ export default function SmoothScroll({ children, isPrepared, isEnabled }: Smooth
   tickRef.current = (time) => {
     const lenis = lenisRef.current
     requestRef.current = null
-    if (!lenis || !canAnimate() || lenis.isStopped) {
-      stopRafLoop()
-      return
-    }
-
+    if (!lenis || !canAnimate() || lenis.isStopped) return
     lenis.raf(time)
     if (lenis.isScrolling === 'smooth') startRafLoop()
   }
@@ -90,20 +84,19 @@ export default function SmoothScroll({ children, isPrepared, isEnabled }: Smooth
     void loadLenis().then(({ default: Lenis }) => {
       if (disposed || motionPreferenceRef.current?.matches || lenisRef.current) return
       const lenis = new Lenis({
-        duration: 0.9,
-        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+        duration: 0.6,
+        easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
         orientation: 'vertical',
         gestureOrientation: 'vertical',
         smoothWheel: true,
-        wheelMultiplier: 0.5,
-        touchMultiplier: 1.5,
+        wheelMultiplier: 1,
+        touchMultiplier: 1,
         syncTouch: false,
       })
       lenisRef.current = lenis
       setActiveLenis(lenis)
       syncAvailability()
     })
-
     return () => { disposed = true }
   }, [syncAvailability])
 
@@ -141,7 +134,7 @@ export default function SmoothScroll({ children, isPrepared, isEnabled }: Smooth
     motionPreference.addEventListener('change', handleMotionPreferenceChange)
     window.addEventListener('wheel', handleUserInteraction, { passive: true })
     window.addEventListener('touchstart', handleUserInteraction, { passive: true })
-    window.addEventListener('keydown', handleUserInteraction, { passive: true })
+    window.addEventListener('keydown', handleUserInteraction)
     window.addEventListener('pointerdown', handlePointerDown, { passive: true })
 
     return () => {

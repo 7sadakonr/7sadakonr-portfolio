@@ -130,7 +130,7 @@ body {
   width: 100%;
   margin: 0;
   padding: 0;
-  overflow-x: hidden;
+  overflow-x: clip;
   background: #0d0d0f;
   -webkit-text-size-adjust: 100%;
   -ms-text-size-adjust: 100%;
@@ -143,7 +143,7 @@ body {
 /* Prevent horizontal scrolling on mobile */
 html,
 body {
-  overflow-x: hidden;
+  overflow-x: clip;
   max-width: 100vw;
   /* Disable iOS pull-to-refresh completely */
   overscroll-behavior: none;

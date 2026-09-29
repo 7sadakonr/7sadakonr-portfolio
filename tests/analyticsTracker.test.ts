@@ -7,40 +7,83 @@ import {
   _resetAnalyticsForTesting,
 } from '../src/lib/analytics/tracker'
 
-describe('Analytics Tracker', () => {
+describe('Privacy-First Analytics Tracker', () => {
   beforeEach(() => {
     localStorage.clear()
     _resetAnalyticsForTesting()
     vi.restoreAllMocks()
   })
 
-  it('initializes anonymous visitor_id and persists in localStorage', () => {
+  it('proves no persistent visitor_id is created in localStorage on init', () => {
     initAnalytics()
-    const visitorId = localStorage.getItem('portfolio_visitor_id')
-    expect(visitorId).toBeDefined()
-    expect(visitorId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)
+    expect(localStorage.getItem('portfolio_visitor_id')).toBeNull()
   })
 
-  it('reuses existing visitor_id across multiple init calls', () => {
+  it('proves no session metadata or session_id is created in localStorage on init', () => {
     initAnalytics()
-    const firstId = localStorage.getItem('portfolio_visitor_id')
-
-    // Reset module state but keep localStorage to simulate subsequent page visit
-    _resetAnalyticsForTesting()
-    initAnalytics()
-    const secondId = localStorage.getItem('portfolio_visitor_id')
-
-    expect(firstId).toBe(secondId)
+    expect(localStorage.getItem('portfolio_session_meta')).toBeNull()
   })
 
-  it('stores and maintains session metadata with 30-minute inactivity limit', () => {
-    initAnalytics()
-    const rawSession = localStorage.getItem('portfolio_session_meta')
-    expect(rawSession).not.toBeNull()
+  it('purges legacy visitor_id and session_meta from localStorage if present', () => {
+    localStorage.setItem('portfolio_visitor_id', 'old-visitor-uuid')
+    localStorage.setItem('portfolio_session_meta', JSON.stringify({ sessionId: 'old-session' }))
 
-    const meta = JSON.parse(rawSession!)
-    expect(meta.sessionId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)
-    expect(meta.lastSeen).toBeGreaterThan(0)
+    initAnalytics()
+
+    expect(localStorage.getItem('portfolio_visitor_id')).toBeNull()
+    expect(localStorage.getItem('portfolio_session_meta')).toBeNull()
+  })
+
+  it('proves no analytics identifier is stored in localStorage after tracking events', () => {
+    initAnalytics()
+    trackEvent('page_view', { page: '/' })
+    trackEvent('project_open', { project_slug: 'test-project' })
+    trackEvent('resume_download')
+
+    // localStorage must not contain any analytics identifiers
+    const allKeys = Object.keys(localStorage)
+    expect(allKeys.filter((k) => k !== 'portfolio_admin_opt_out')).toHaveLength(0)
+  })
+
+  it('accepts only allowed aggregate events and rejects removed event types', () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }))
+    global.fetch = fetchMock
+
+    // Disallowed tracking events must be ignored
+    trackEvent('section_view', { section: 'hero' })
+    trackEvent('scroll_depth', { depth: 50 } as any)
+    trackEvent('heartbeat')
+    trackEvent('contact_click', { target_label: 'Contact' } as any)
+    trackEvent('email_click', { target_label: 'Email' } as any)
+    trackEvent('navbar_click', { target_label: 'Nav' } as any)
+    trackEvent('project_demo_click', { project_slug: 'demo' } as any)
+    trackEvent('project_github_click', { project_slug: 'gh' } as any)
+
+    // Allowed event
+    trackEvent('project_open', { project_slug: 'my-project' })
+
+    expect(fetchMock).toHaveBeenCalled()
+    const callBody = JSON.parse(fetchMock.mock.calls[0][1].body as string)
+    expect(callBody.events).toHaveLength(1)
+    expect(callBody.events[0].event_name).toBe('project_open')
+    expect(callBody.events[0].project_slug).toBe('my-project')
+    expect(callBody.events[0].visitor_id).toBeUndefined()
+    expect(callBody.events[0].session_id).toBeUndefined()
+    expect(callBody.visitor_id).toBeUndefined()
+    expect(callBody.session_id).toBeUndefined()
+  })
+
+  it('sends privacy-safe payload for resume downloads without identifiers', () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }))
+    global.fetch = fetchMock
+
+    trackEvent('resume_download')
+
+    expect(fetchMock).toHaveBeenCalled()
+    const callBody = JSON.parse(fetchMock.mock.calls[0][1].body as string)
+    expect(callBody.events[0].event_name).toBe('resume_download')
+    expect(callBody.events[0].visitor_id).toBeUndefined()
+    expect(callBody.events[0].session_id).toBeUndefined()
   })
 
   it('tracks events safely without throwing errors even if fetch fails', () => {
@@ -50,32 +93,16 @@ describe('Analytics Tracker', () => {
     expect(() => {
       trackEvent('project_open', {
         project_slug: 'nyeta',
-        target_label: 'Nyeta',
       })
     }).not.toThrow()
   })
 
-  it('tracks external links and resume downloads properly', () => {
-    expect(() => {
-      trackEvent('resume_download', {
-        target_label: 'Resume (English)',
-        destination_host: 'supabase.co',
-      })
-      trackEvent('project_github_click', {
-        project_slug: 'slipzen',
-        destination_host: 'github.com',
-      })
-    }).not.toThrow()
-  })
-
-  it('opts out admin when setAdminOptOut(true) is called and cleans session meta', () => {
+  it('opts out admin when setAdminOptOut(true) is called without using visitor identifiers', () => {
     initAnalytics()
-    expect(localStorage.getItem('portfolio_session_meta')).not.toBeNull()
-
     setAdminOptOut(true)
     expect(isAdminOptOut()).toBe(true)
     expect(localStorage.getItem('portfolio_admin_opt_out')).toBe('true')
-    expect(localStorage.getItem('portfolio_session_meta')).toBeNull()
+    expect(localStorage.getItem('portfolio_visitor_id')).toBeNull()
 
     const fetchMock = vi.fn()
     global.fetch = fetchMock
@@ -85,9 +112,7 @@ describe('Analytics Tracker', () => {
   })
 
   it('opts out automatically when visiting /admin routes', () => {
-    const originalLocation = window.location
-    delete (window as unknown as { location?: unknown }).location
-    window.location = { ...originalLocation, pathname: '/admin/analytics' } as Location
+    window.history.pushState({}, '', '/admin/analytics')
 
     expect(isAdminOptOut()).toBe(true)
 
@@ -96,6 +121,6 @@ describe('Analytics Tracker', () => {
     trackEvent('project_open', { project_slug: 'test' })
     expect(fetchMock).not.toHaveBeenCalled()
 
-    window.location = originalLocation
+    window.history.pushState({}, '', '/')
   })
 })

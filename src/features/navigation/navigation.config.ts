@@ -5,6 +5,7 @@ const TOP_LEVEL_TARGETS: Record<LandingPath, NavigationTarget> = {
   '/about': { path: '/about', targetId: 'about' },
   '/project': { path: '/project', targetId: 'projects' },
   '/contact': { path: '/contact', targetId: 'contact' },
+  '/privacy': { path: '/privacy', targetId: 'privacy' },
 }
 
 const SECTION_ROUTES: Record<string, LandingPath> = {
@@ -14,6 +15,7 @@ const SECTION_ROUTES: Record<string, LandingPath> = {
   skills: '/about',
   projects: '/project',
   contact: '/contact',
+  privacy: '/privacy',
 }
 
 export const getNavigationTarget = (path: string): NavigationTarget =>

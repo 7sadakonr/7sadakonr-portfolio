@@ -1,4 +1,4 @@
-export type LandingPath = '/' | '/about' | '/project' | '/contact'
+export type LandingPath = '/' | '/about' | '/project' | '/contact' | '/privacy'
 
 export type NavigationTargetId =
   | 'home'
@@ -7,6 +7,7 @@ export type NavigationTargetId =
   | 'skills'
   | 'projects'
   | 'contact'
+  | 'privacy'
   | `project-${number}`
 
 export interface NavigationTarget {
