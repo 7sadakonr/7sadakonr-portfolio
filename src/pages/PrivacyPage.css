@@ -1,0 +1,329 @@
+/* Privacy Page Styles — Balanced 2-Column Split Layout with About Bento & Scales */
+
+.privacy-page-wrapper {
+  --about-outline-color: rgba(255, 255, 255, 0.1);
+  width: 100%;
+  position: relative;
+  box-sizing: border-box;
+}
+
+/* Hero Section */
+.privacy-hero-tag {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 12px;
+}
+
+/* Ensure scale rulers on both sides have complete left and right boundary lines */
+#privacy-policy .about-bento-scale-left {
+  border-left: 1px solid var(--about-outline-color) !important;
+  border-right: 1px solid var(--about-outline-color) !important;
+}
+
+#privacy-policy .about-bento-scale-right {
+  border-left: 1px solid var(--about-outline-color) !important;
+  border-right: 1px solid var(--about-outline-color) !important;
+}
+
+/* 2-Column Split Layout inside .about-bento-container */
+.privacy-bento-split-layout {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.privacy-bento-split-row {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: clamp(24px, 3.5vw, 48px);
+  padding: clamp(32px, 4.5vh, 48px) 0;
+  border-top: none;
+  border-bottom: none;
+  align-items: start;
+}
+
+/* Dashed divider only between section rows (not on very top or very bottom) */
+.privacy-bento-split-row + .privacy-bento-split-row {
+  border-top: 1px dashed rgba(255, 255, 255, 0.12);
+}
+
+@media (max-width: 860px) {
+  .privacy-bento-split-row {
+    grid-template-columns: 1fr;
+    gap: 20px;
+    padding: 28px 0;
+  }
+}
+
+/* Left Sticky Sidebar */
+.privacy-bento-sidebar {
+  position: relative;
+  width: 100%;
+  padding-left: clamp(20px, 2.5vw, 36px);
+  box-sizing: border-box;
+}
+
+.privacy-bento-sticky {
+  position: sticky;
+  top: 110px;
+}
+
+@media (max-width: 860px) {
+  .privacy-bento-sidebar {
+    padding-left: 0;
+  }
+
+  .privacy-bento-sticky {
+    position: static;
+  }
+}
+
+.privacy-section-num {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.45);
+  letter-spacing: 0.08em;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.privacy-section-heading {
+  font-family: "Outfit", sans-serif;
+  font-size: clamp(2rem, 2.8vw, 2.6rem);
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.12;
+  margin: 0 0 4px;
+}
+
+.privacy-section-subheading {
+  font-family: "Outfit", sans-serif;
+  font-size: clamp(1.2rem, 1.8vw, 1.5rem);
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.45);
+  line-height: 1.25;
+  margin: 0;
+}
+
+/* Right Bento Column */
+.privacy-bento-main {
+  width: 100%;
+  min-width: 0;
+  padding-right: clamp(20px, 2.5vw, 36px);
+  box-sizing: border-box;
+}
+
+@media (max-width: 860px) {
+  .privacy-bento-main {
+    padding-right: 0;
+  }
+}
+
+.privacy-bento-main .bento-card {
+  height: auto;
+  border-radius: clamp(16px, 2vw, 22px);
+  background: rgba(15, 15, 18, 0.45);
+  border: 1px solid var(--about-outline-color);
+  padding: clamp(20px, 2.5vw, 32px);
+  /* Strictly NO hover transform */
+  transform: none !important;
+  transition: none !important;
+}
+
+/* Sub-Cards Grid (Section 01) */
+.privacy-subcard-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-top: 18px;
+}
+
+@media (max-width: 680px) {
+  .privacy-subcard-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.privacy-subcard {
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transform: none !important;
+  transition: none !important;
+}
+
+.privacy-subcard-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.privacy-subcard-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.75);
+  flex-shrink: 0;
+}
+
+.privacy-subcard-title {
+  font-family: "Outfit", sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #fff;
+  margin: 0;
+}
+
+/* Stacked Dashed List (Section 02) */
+.privacy-tool-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.privacy-tool-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 18px;
+  border-radius: 12px;
+  border: 1px dashed rgba(255, 255, 255, 0.13);
+  background: rgba(255, 255, 255, 0.015);
+  transform: none !important;
+  transition: none !important;
+}
+
+.privacy-tool-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.75);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.privacy-tool-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.privacy-tool-title {
+  font-family: "Outfit", sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #fff;
+  margin: 0;
+}
+
+.privacy-tool-desc {
+  font-family: "Outfit", sans-serif;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.65);
+  line-height: 1.55;
+  margin: 0;
+}
+
+/* Section 03 Sub-block & Bottom bar */
+.privacy-retention-block {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 16px 18px;
+  margin-top: 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.privacy-retention-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.75);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.privacy-outside-meta-bar {
+  width: 100%;
+  max-width: 1440px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 24px clamp(20px, 2.5vw, 36px) 0;
+  margin-top: clamp(24px, 3vh, 36px);
+  border-top: 1px dashed rgba(255, 255, 255, 0.12);
+  box-sizing: border-box;
+}
+
+@media (max-width: 860px) {
+  .privacy-outside-meta-bar {
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
+
+.privacy-inquiries {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.privacy-inquiries-label {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.privacy-inquiries-link {
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 500;
+  font-size: 0.95rem;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.privacy-inquiries-link:hover {
+  color: #ffffff;
+  text-decoration: underline;
+}
+
+.privacy-timestamp {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.45);
+  font-family: var(--font-mono, monospace);
+}

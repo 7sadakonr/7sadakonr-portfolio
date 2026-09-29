@@ -21,6 +21,10 @@ export interface SpaceBackgroundProps extends ComponentPropsWithoutRef<"div"> {
   motion?: SpaceMotion;
   /** Whether to show the planet silhouette at the bottom of the container. Default: true */
   showPlanet?: boolean;
+  /** Whether to show the nebula/aurora at the bottom of the container. Default: true */
+  showNebula?: boolean;
+  /** Whether to show stars/fireflies. Default: true */
+  showStars?: boolean;
   /** Custom colors for the background elements. */
   colors?: SpaceBackgroundColors;
   /** Starts animated effects only after the Hero is ready to receive input. */
@@ -39,6 +43,8 @@ export function SpaceBackground({
   style,
   motion = "subtle",
   showPlanet = true,
+  showNebula = true,
+  showStars = true,
   colors,
   isActive = true,
   ...rest
@@ -60,35 +66,37 @@ export function SpaceBackground({
       {...rest}
     >
       <div className="space-background__base" aria-hidden="true" />
-      <div className="space-background__nebula" aria-hidden="true">
-        <div className="space-background__aurora space-background__aurora--back" />
-        <div className="space-background__aurora space-background__aurora--front" />
-        <div className="space-background__streaks">
-          {STREAK_DATA.map((streak) => (
-            <div
-              key={streak.id}
-              className="space-background__streak"
-              style={
-                {
-                  "--streak-rotate": streak.baseRotate,
-                  "--streak-left": streak.left,
-                  "--streak-width": streak.width,
-                  "--streak-height": streak.height,
-                  "--streak-bottom": streak.bottom,
-                  "--streak-color": `var(${streak.colorVar})`,
-                  "--streak-percent": streak.colorPercent,
-                  "--streak-anim": `space-aurora-streak-drift-${streak.animationType}`,
-                  "--streak-duration": streak.animationDuration,
-                  "--streak-delay": streak.animationDelay,
-                  "--streak-clip-path": streak.clipPath || "none",
-                  transform: `rotate(${streak.baseRotate})`,
-                } as CSSProperties
-              }
-            />
-          ))}
+      {showNebula && (
+        <div className="space-background__nebula" aria-hidden="true">
+          <div className="space-background__aurora space-background__aurora--back" />
+          <div className="space-background__aurora space-background__aurora--front" />
+          <div className="space-background__streaks">
+            {STREAK_DATA.map((streak) => (
+              <div
+                key={streak.id}
+                className="space-background__streak"
+                style={
+                  {
+                    "--streak-rotate": streak.baseRotate,
+                    "--streak-left": streak.left,
+                    "--streak-width": streak.width,
+                    "--streak-height": streak.height,
+                    "--streak-bottom": streak.bottom,
+                    "--streak-color": `var(${streak.colorVar})`,
+                    "--streak-percent": streak.colorPercent,
+                    "--streak-anim": `space-aurora-streak-drift-${streak.animationType}`,
+                    "--streak-duration": streak.animationDuration,
+                    "--streak-delay": streak.animationDelay,
+                    "--streak-clip-path": streak.clipPath || "none",
+                    transform: `rotate(${streak.baseRotate})`,
+                  } as CSSProperties
+                }
+              />
+            ))}
+          </div>
         </div>
-      </div>
-      {isActive && (
+      )}
+      {isActive && showStars && (
         <Suspense fallback={null}>
           <Fireflies count={10} enabled={isActive} />
         </Suspense>

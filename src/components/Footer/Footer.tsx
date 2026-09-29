@@ -5,7 +5,6 @@ import { getProjectCatalog, subscribeToProjectCatalog } from '../../features/pro
 import { useSiteSettings } from '../../features/siteSettings/hooks/useSiteSettings'
 import { contactDisplayText, firstVisibleContact, visibleContactLinks } from '../../features/siteSettings/validation/contactLinks'
 import { trackEvent } from '../../lib/analytics/trackEvent'
-import type { ContactLink } from '../../features/siteSettings/types'
 import './Footer.css'
 
 const Footer = () => {
@@ -17,35 +16,7 @@ const Footer = () => {
 
   useEffect(() => subscribeToProjectCatalog(setProjects), [])
 
-  const handleContactClick = (contact: ContactLink) => {
-    let eventName = 'contact_click'
-    if (contact.type === 'email') eventName = 'email_click'
-    else if (contact.type === 'linkedin') eventName = 'linkedin_click'
-    else if (contact.type === 'github') eventName = 'github_profile_click'
 
-    let host: string | undefined
-    try {
-      if (contact.url.startsWith('http')) host = new URL(contact.url).hostname
-    } catch {
-      // Ignore URL parsing errors
-    }
-
-    trackEvent(eventName, {
-      target_id: contact.id,
-      target_label: contactDisplayText(contact),
-      target_type: contact.type,
-      destination_host: host,
-      metadata: { source: 'footer' },
-    })
-  }
-
-  const handleEmailSubjectClick = (subject: string) => {
-    trackEvent('email_click', {
-      target_label: `Email (${subject})`,
-      target_type: 'email_subject_link',
-      metadata: { subject, source: 'footer' },
-    })
-  }
 
   return (
     <footer className="site-footer" aria-label="Site footer">
@@ -70,6 +41,7 @@ const Footer = () => {
                 <li><a href="#about">About me</a></li>
                 <li><a href="#projects">Projects</a></li>
                 <li><a href="#contact">Contact</a></li>
+                <li><a href="/privacy">Privacy Policy</a></li>
               </ul>
             </section>
             <section className="site-footer__column">
@@ -82,8 +54,6 @@ const Footer = () => {
                       onClick={() => {
                         trackEvent('project_open', {
                           project_slug: project.id,
-                          target_label: project.title,
-                          target_type: 'footer_project_link',
                         })
                       }}
                     >
@@ -103,7 +73,6 @@ const Footer = () => {
                       href={contact.url}
                       target={contact.url.startsWith('http') ? '_blank' : undefined}
                       rel={contact.url.startsWith('http') ? 'noopener noreferrer' : undefined}
-                      onClick={() => handleContactClick(contact)}
                     >
                       {contactDisplayText(contact)}
                     </a>
@@ -116,9 +85,9 @@ const Footer = () => {
               <section className="site-footer__column">
                 <h2>Available for</h2>
                 <ul>
-                  <li><a href={emailHref('Project inquiry')} onClick={() => handleEmailSubjectClick('Project inquiry')}>Web projects</a></li>
-                  <li><a href={emailHref('Collaboration')} onClick={() => handleEmailSubjectClick('Collaboration')}>Collaboration</a></li>
-                  <li><a href={emailHref('Hello')} onClick={() => handleEmailSubjectClick('Hello')}>Say hello</a></li>
+                  <li><a href={emailHref('Project inquiry')}>Web projects</a></li>
+                  <li><a href={emailHref('Collaboration')}>Collaboration</a></li>
+                  <li><a href={emailHref('Hello')}>Say hello</a></li>
                 </ul>
               </section>
             )}

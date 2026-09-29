@@ -17,8 +17,6 @@ import { isNavigationInProgress } from './features/navigation/navigationState'
 import { Seo } from './components/Seo/Seo'
 import { scheduleBelowFoldHydration } from './components/LazySection/sectionLoader'
 import { initAnalytics } from './lib/analytics/tracker'
-import { initSectionTracking } from './lib/analytics/sections'
-import { initScrollTracking } from './lib/analytics/scroll'
 
 import './pages/LandingPageShell.css'
 
@@ -31,6 +29,7 @@ const PageEnd = lazy(loadPageEnd)
 const Navbar = lazy(loadNavbar)
 const Analytics = lazy(() => import('@vercel/analytics/react').then(({ Analytics: Component }) => ({ default: Component })))
 const AdminRoutes = lazy(() => import('./features/admin/AdminRoutes'))
+const PrivacyPage = lazy(() => import('./pages/PrivacyPage'))
 
 function PortfolioApp() {
   const [isCriticalReady, setIsCriticalReady] = useState(false)
@@ -48,12 +47,9 @@ function PortfolioApp() {
     return scheduleBelowFoldHydration()
   }, [isInteractive])
 
-  // Initialize hybrid analytics when page is interactive
+  // Initialize analytics when page is interactive
   useEffect(() => {
     if (!isInteractive) return
-
-    let cleanupSections: (() => void) | undefined
-    let cleanupScroll: (() => void) | undefined
 
     const idle = typeof window !== 'undefined' && typeof window.requestIdleCallback === 'function'
       ? window.requestIdleCallback
@@ -61,16 +57,12 @@ function PortfolioApp() {
 
     const idleHandle = idle(() => {
       initAnalytics()
-      cleanupSections = initSectionTracking()
-      cleanupScroll = initScrollTracking()
     })
 
     return () => {
       if (typeof window !== 'undefined' && typeof window.cancelIdleCallback === 'function' && typeof idleHandle === 'number') {
         window.cancelIdleCallback(idleHandle)
       }
-      cleanupSections?.()
-      cleanupScroll?.()
     }
   }, [isInteractive])
 
@@ -146,6 +138,7 @@ function App() {
     <Router>
       <Routes>
         <Route path="/admin/*" element={<Suspense fallback={null}><AdminRoutes /></Suspense>} />
+        <Route path="/privacy" element={<Suspense fallback={null}><PrivacyPage /></Suspense>} />
         <Route path="*" element={<PortfolioApp />} />
       </Routes>
     </Router>
