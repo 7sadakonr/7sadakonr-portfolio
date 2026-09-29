@@ -37,10 +37,12 @@ function PortfolioApp() {
   const isInteractive = isCriticalReady && !isPreloaderVisible
 
   useEffect(() => {
+    if (!isInteractive) return
+
     void import('./features/siteSettings/api/siteSettingsRepository')
       .then(({ loadSiteSettings }) => loadSiteSettings())
       .catch(() => { /* defaults remain visible when settings are unavailable */ })
-  }, [])
+  }, [isInteractive])
 
   useEffect(() => {
     if (!isInteractive) return
