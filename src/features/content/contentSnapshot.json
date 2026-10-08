@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-08T21:40:06.983Z",
+  "generatedAt": "2026-10-08T23:11:32.856Z",
   "projects": [
     {
       "id": "4650fa7b-dd49-4363-b597-d1691cdd8a20",
@@ -47,30 +47,6 @@
       "legacy_source_id": 2,
       "created_at": "2026-08-22T23:16:29.309017+00:00",
       "updated_at": "2026-09-14T08:46:08.947668+00:00"
-    },
-    {
-      "id": "e61b7fa4-cc76-4dfb-badb-ecfae15a5464",
-      "title": "Zendix File Transfer",
-      "description": "Zendix is a peer-to-peer file and clipboard sharing web app. Transfer files and text directly between devices without uploading to the cloud.",
-      "image_url": "https://hyshjbnpbotzytrznmky.supabase.co/storage/v1/object/public/project-images/legacy/3/c982740a11cc433572d68abc90d05a4a37e09d597cc01e74061182d90273041a.webp",
-      "image_storage_path": "legacy/3/c982740a11cc433572d68abc90d05a4a37e09d597cc01e74061182d90273041a.webp",
-      "live_url": "https://zendix-file.vercel.app/",
-      "github_url": "https://github.com/7sadakonr/Zendix-Filetransfer-Web-App",
-      "tech": [
-        "React",
-        "Vite",
-        "Tailwind CSS",
-        "Zustand",
-        "PeerJS (WebRTC)",
-        "React Router"
-      ],
-      "is_in_progress": true,
-      "is_visible": true,
-      "sort_order": 2,
-      "fallback_gradient": null,
-      "legacy_source_id": 3,
-      "created_at": "2026-08-22T23:16:29.309017+00:00",
-      "updated_at": "2026-09-22T03:59:50.736147+00:00"
     },
     {
       "id": "c9721b01-97bc-4be2-a2d8-1087977efe0c",
