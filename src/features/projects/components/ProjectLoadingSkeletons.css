@@ -1,157 +1,160 @@
-/* Skeletons Container Fade */
+/* Skeleton <-> content crossfade: both stack in the same grid cell so the
+   ghost cards fade out while the real cards fade in at the same position. */
 .projects-list-transition-wrapper {
-  position: relative;
+  display: grid;
   min-height: 400px;
 }
 
 .projects-list-skeleton-wrapper,
 .projects-list-content-wrapper {
-  transition: opacity 0.25s ease-in-out;
+  grid-area: 1 / 1;
   display: flex;
   flex-direction: column;
   gap: clamp(40px, 6vh, 70px);
   width: 100%;
 }
 
-.projects-list-skeleton-wrapper.fade-out,
-.sidebar-fade-wrapper.fade-out {
+.projects-list-skeleton-wrapper {
+  transition: opacity 240ms ease-out;
+}
+
+.projects-list-skeleton-wrapper[data-phase="pending"] {
   opacity: 0;
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
+}
+
+.projects-list-skeleton-wrapper[data-phase="leaving"] {
+  opacity: 0;
   pointer-events: none;
 }
 
-.projects-list-content-wrapper.fade-in,
-.sidebar-fade-wrapper.fade-in {
-  opacity: 1;
-}
-.projects-list-content-wrapper.pre-fade-in,
-.sidebar-fade-wrapper.pre-fade-in {
-  opacity: 0;
+.sidebar-stack {
+  display: grid;
 }
 
-.sidebar-fade-wrapper {
-  transition: opacity 0.25s ease-in-out;
-  width: 100%;
-}
-
-/* Base Pulse */
-@keyframes skeleton-pulse {
-  0% {
-    opacity: 0.6;
-  }
-  100% {
-    opacity: 0.3;
-  }
+.sidebar-stack > * {
+  grid-area: 1 / 1;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  @keyframes skeleton-pulse {
-    0% { opacity: 0.5; }
-    100% { opacity: 0.5; }
-  }
-  .projects-list-skeleton-wrapper,
-  .projects-list-content-wrapper {
+  .projects-list-skeleton-wrapper {
     transition: none;
   }
 }
 
-.skeleton-item {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 4px;
-  animation: skeleton-pulse 1.5s ease-in-out infinite alternate;
-}
-
-/* Project Card Skeleton */
-.project-card-skeleton {
-  padding: clamp(24px, 3.5vw, 40px) 10px;
-}
-
+/* Project Card Skeleton: the real .project-card / .project-preview rules from
+   LandingPage.css apply, so only the ghost fills are defined here. */
 .project-card-skeleton .project-preview {
-  aspect-ratio: 16 / 9;
-  border-radius: clamp(14px, 2vw, 20px);
-  padding: 5px;
+  pointer-events: none;
 }
 
 .project-card-skeleton .project-preview-inner {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  box-shadow: none;
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-.project-card-skeleton .project-info {
-  margin-top: clamp(25px, 4vw, 45px);
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+.project-card-skeleton .skeleton-ghost {
+  display: block;
 }
 
-.project-card-skeleton .skeleton-desc-line {
-  height: clamp(14px, 1.8vw, 16px);
-  width: 100%;
-}
-.project-card-skeleton .skeleton-desc-line.short {
-  width: 80%;
-}
-.project-card-skeleton .skeleton-desc-line.shorter {
-  width: 60%;
+.skeleton-info-lines {
+  display: grid;
+  gap: 0.7em;
+  font-size: clamp(13px, 1.8vw, 16px);
 }
 
-.project-card-skeleton .skeleton-tech-badges {
-  display: flex;
-  gap: 8px;
-  margin-top: 10px;
-}
-.project-card-skeleton .skeleton-badge {
-  height: 28px;
-  width: 80px;
+.skeleton-info-lines span {
+  height: 1em;
   border-radius: 999px;
 }
-.project-card-skeleton .skeleton-badge:nth-child(2) { width: 100px; }
-.project-card-skeleton .skeleton-badge:nth-child(3) { width: 60px; }
+.skeleton-info-lines span:nth-child(2) { width: 88%; }
+.skeleton-info-lines span:nth-child(3) { width: 56%; }
 
-.project-card-skeleton .skeleton-actions {
+.skeleton-info-pills {
   display: flex;
-  gap: 16px;
-  margin-top: 24px;
+  gap: 8px;
 }
-.project-card-skeleton .skeleton-button {
-  height: 48px;
-  width: 140px;
+
+.skeleton-info-pills span {
+  width: 84px;
+  height: 30px;
+  border-radius: 20px;
+}
+
+.skeleton-info-actions span {
+  flex: 1;
+  height: clamp(40px, 5.4vw, 48px);
   border-radius: 50px;
 }
 
-/* Project Sidebar Skeleton */
+/* Project Sidebar Skeleton: geometry comes from LineSidebar.css */
 .project-sidebar-skeleton {
-  width: 100%;
+  transition: opacity 240ms ease-out;
+  pointer-events: none;
+}
+
+.project-sidebar-skeleton[data-phase="pending"],
+.project-sidebar-skeleton[data-phase="leaving"] {
+  opacity: 0;
+}
+
+.project-sidebar-skeleton .skeleton-sidebar-ghost {
+  color: transparent;
+  border-radius: 999px;
+  user-select: none;
+}
+
+.project-sidebar-skeleton .line-sidebar__index {
+  min-width: 2ch;
+}
+
+.skeleton-sidebar-detail {
+  padding-top: 8px;
+}
+
+.skeleton-sidebar-lines {
+  display: grid;
+  gap: 0.6rem;
+  width: 320px;
+  max-width: 100%;
+}
+
+.skeleton-sidebar-lines span {
+  display: block;
+  height: 0.9rem;
+  border-radius: 999px;
+}
+.skeleton-sidebar-lines span:last-child { width: 55%; }
+
+.skeleton-sidebar-pills {
   display: flex;
-  flex-direction: column;
-  gap: 20px;
-  padding: 20px 0;
-  align-items: flex-end; /* Align right like real sidebar */
+  flex-wrap: wrap;
+  gap: 8px;
+  max-width: 340px;
+  margin-top: 12px;
 }
 
-.project-sidebar-skeleton .skeleton-sidebar-item {
+.skeleton-sidebar-pills span {
+  width: 72px;
+  height: 30px;
+  border-radius: 20px;
+}
+
+.skeleton-sidebar-actions {
   display: flex;
-  align-items: center;
-  gap: 16px;
-  height: 24px;
-  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 16px;
+  padding-bottom: 12px;
 }
 
-.project-sidebar-skeleton .skeleton-sidebar-text {
-  height: 14px;
-  width: 100px;
+.skeleton-sidebar-actions span {
+  width: 110px;
+  height: 34px;
+  border-radius: 50px;
 }
-.project-sidebar-skeleton .skeleton-sidebar-item:nth-child(2) .skeleton-sidebar-text { width: 130px; }
-.project-sidebar-skeleton .skeleton-sidebar-item:nth-child(3) .skeleton-sidebar-text { width: 80px; }
-.project-sidebar-skeleton .skeleton-sidebar-item:nth-child(4) .skeleton-sidebar-text { width: 110px; }
 
-.project-sidebar-skeleton .skeleton-sidebar-marker {
-  width: 60px;
-  height: 2px;
+@media (prefers-reduced-motion: reduce) {
+  .project-sidebar-skeleton {
+    transition: none;
+  }
 }
 
 /* Admin Project Row Skeleton */

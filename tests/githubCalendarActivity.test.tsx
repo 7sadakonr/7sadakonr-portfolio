@@ -188,8 +188,17 @@ describe('GitHub activity card', () => {
         await screen.findByRole('img', { name: '3 contributions in 2026' })
 
         await waitFor(() => {
-            expect(observed.some((element) => element.classList.contains('github-calendar-activity-frame'))).toBe(true)
+            expect(observed.some((element) => element.classList.contains('github-calendar-content-shell'))).toBe(true)
         })
+    })
+
+    it('keeps document scrolling available while contribution data is pending', () => {
+        vi.stubGlobal('fetch', vi.fn(() => new Promise(() => undefined)))
+        render(<GithubCalendar username="7sadakonr" colorSchema="purple" />)
+
+        expect(document.body.style.overflow).toBe('')
+        expect(document.documentElement.style.overflow).toBe('')
+        expect(screen.getByLabelText('Loading GitHub contributions')).not.toBeNull()
     })
 
     it('shows only the top three repositories in the expanded activity panel', async () => {
