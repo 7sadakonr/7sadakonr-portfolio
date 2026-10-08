@@ -4,6 +4,9 @@ import GitHubActivity, {
     type RepoContribution,
 } from '../ui/github-activity'
 import DotPattern from '../DotPattern/DotPattern'
+import { useSkeletonPresence } from '../../hooks/useDelayedLoading'
+import { GithubActivitySkeleton } from './GithubCalendarSkeleton'
+import { triggerResize } from '../SmoothScroll/scrollController'
 import './GithubCalendar.css'
 
 type ColorSchema = 'green' | 'blue' | 'purple' | 'orange' | 'gray'
@@ -270,10 +273,36 @@ const GithubCalendar = ({ username, className = '', colorSchema = 'green' }: Git
                 setIsVisible(true)
                 observer.disconnect()
             }
-        }, { rootMargin: '0px', threshold: 0 })
+        }, { rootMargin: '800px 0px', threshold: 0 })
 
         if (containerRef.current) observer.observe(containerRef.current)
         return () => observer.disconnect()
+    }, [])
+
+    useEffect(() => {
+        const element = containerRef.current
+        if (!element || typeof ResizeObserver === 'undefined') return
+
+        let frame: number | null = null
+        let lastWidth = 0
+        let lastHeight = 0
+        const notify = () => {
+            frame = null
+            const { width, height } = element.getBoundingClientRect()
+            if (width === lastWidth && height === lastHeight) return
+            lastWidth = width
+            lastHeight = height
+            triggerResize()
+        }
+        const observer = new ResizeObserver(() => {
+            if (frame === null) frame = requestAnimationFrame(notify)
+        })
+        observer.observe(element)
+        if (frame === null) frame = requestAnimationFrame(notify)
+        return () => {
+            observer.disconnect()
+            if (frame !== null) cancelAnimationFrame(frame)
+        }
     }, [])
 
     useEffect(() => {
@@ -412,6 +441,8 @@ const GithubCalendar = ({ username, className = '', colorSchema = 'green' }: Git
         [repositories],
     )
     const activityLoading = loading
+    const skeletonPhase = useSkeletonPresence(activityLoading)
+    const showSkeleton = skeletonPhase !== 'idle'
     const statItems = [
         { label: 'Followers', value: stats?.followers, tone: 'followers', icon: <FollowersIcon /> },
         { label: 'Public Repos', value: stats?.repositories, tone: 'repositories', icon: <RepositoriesIcon /> },
@@ -424,15 +455,10 @@ const GithubCalendar = ({ username, className = '', colorSchema = 'green' }: Git
             className={['github-calendar', `github-calendar--${colorSchema}`, className].filter(Boolean).join(' ')}
             aria-busy={activityLoading}
         >
-            {activityLoading ? (
-                <section className="github-calendar-main github-calendar-main--state">
-                    <div className="github-calendar-loading" aria-label="Loading GitHub contributions">
-                        <div className="github-calendar-loading-header" />
-                        <div className="github-calendar-loading-grid" />
-                    </div>
-                </section>
-            ) : error || !data ? (
-                <section className="github-calendar-main github-calendar-main--state">
+            <div ref={activityRef} className="github-calendar-content-shell">
+                {showSkeleton && <GithubActivitySkeleton phase={skeletonPhase} />}
+                {!activityLoading && (error || !data ? (
+                <section className="github-calendar-main github-calendar-main--state skeleton-content-enter">
                     <div className="github-calendar-error" role="alert">
                         <span>GitHub activity is unavailable right now.</span>
                         <a href={`https://github.com/${username}`} target="_blank" rel="noreferrer">
@@ -440,8 +466,8 @@ const GithubCalendar = ({ username, className = '', colorSchema = 'green' }: Git
                         </a>
                     </div>
                 </section>
-            ) : (
-                <div ref={activityRef} className="github-calendar-activity-frame">
+                ) : (
+                <div className="github-calendar-activity-frame skeleton-content-enter">
                     <GitHubActivity
                         username={username}
                         contributions={activityContributions}
@@ -454,7 +480,8 @@ const GithubCalendar = ({ username, className = '', colorSchema = 'green' }: Git
                         style={{ ...ACTIVITY_THEME, width: '100%' }}
                     />
                 </div>
-            )}
+                ))}
+            </div>
 
             <aside className="github-calendar-stats" aria-label={`GitHub statistics for ${username}`}>
                 {statItems.map((item) => (

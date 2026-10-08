@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useState, type ReactNode } from 'react'
+import { Suspense, useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import {
   isSectionReady,
   isSectionRequested,
@@ -16,24 +16,21 @@ interface LazySectionProps {
   canLoad?: boolean
 }
 
-const SectionReady = ({ id, children }: LazySectionProps) => {
+const SectionReady = ({ id, children, onReady }: LazySectionProps & { onReady: () => void }) => {
   useEffect(() => {
     markSectionReady(id)
-  }, [id])
+    onReady()
+  }, [id, onReady])
 
   return children
 }
 
-const SectionPlaceholder = ({ id }: { id?: LazySectionId }) => (
-  <div className={`lazy-section-placeholder${id ? ` lazy-section-placeholder--${id}` : ''}`} aria-hidden="true">
-    <div className="lazy-section-placeholder__glow" />
-  </div>
-)
-
 const LazySection = ({ id, children, canLoad = true }: LazySectionProps) => {
   const [shouldRender, setShouldRender] = useState(() => isSectionRequested(id))
   const [isReady, setIsReady] = useState(() => isSectionReady(id))
+  const [isContentReady, setIsContentReady] = useState(() => isSectionReady(id))
   const [isEffectActive, setIsEffectActive] = useState(false)
+  const contentRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const unsubscribe = subscribeToSectionRequests((requestedId) => {
@@ -41,35 +38,25 @@ const LazySection = ({ id, children, canLoad = true }: LazySectionProps) => {
     })
 
     if (isSectionRequested(id)) setShouldRender(true)
-
     if (!canLoad) return unsubscribe
 
     const element = document.getElementById(id)
     if (!element || shouldRender) return unsubscribe
 
-    const prefetchObserver = new IntersectionObserver(
-      (entries) => {
-        if (!entries.some((entry) => entry.isIntersecting)) return
+    const prefetchObserver = new IntersectionObserver((entries) => {
+      if (!entries.some((entry) => entry.isIntersecting)) return
+      prefetchSection(id)
+      prefetchObserver.disconnect()
+    }, { rootMargin: '0px 0px 1200px 0px', threshold: 0 })
 
-        prefetchSection(id)
-        prefetchObserver.disconnect()
-      },
-      { rootMargin: '0px 0px -64px 0px', threshold: 0 },
-    )
-    
-    const mountObserver = new IntersectionObserver(
-      (entries) => {
-        if (!entries.some((entry) => entry.isIntersecting)) return
-
-        void ensureTargetReady(id)
-        mountObserver.disconnect()
-      },
-      { rootMargin: '0px 0px -180px 0px', threshold: 0 },
-    )
+    const mountObserver = new IntersectionObserver((entries) => {
+      if (!entries.some((entry) => entry.isIntersecting)) return
+      void ensureTargetReady(id)
+      mountObserver.disconnect()
+    }, { rootMargin: '0px 0px 600px 0px', threshold: 0 })
 
     prefetchObserver.observe(element)
     mountObserver.observe(element)
-
     return () => {
       prefetchObserver.disconnect()
       mountObserver.disconnect()
@@ -78,65 +65,81 @@ const LazySection = ({ id, children, canLoad = true }: LazySectionProps) => {
   }, [canLoad, id, shouldRender])
 
   useEffect(() => {
-    if (!canLoad) return
+    if (!canLoad || !shouldRender || isReady) return
+    let active = true
+    void requestSection(id).then(() => {
+      if (active) setIsReady(true)
+    })
+    return () => { active = false }
+  }, [canLoad, id, isReady, shouldRender])
 
+  useEffect(() => {
+    if (!canLoad) return
     const element = document.getElementById(id)
     if (!element || typeof IntersectionObserver === 'undefined') return
 
-    const observer = new IntersectionObserver(
-      ([entry]) => setIsEffectActive(Boolean(entry?.isIntersecting) && !document.hidden),
-      { rootMargin: '150px 0px', threshold: 0 },
-    )
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        setIsEffectActive(false)
-        return
-      }
+    const observer = new IntersectionObserver(([entry]) => {
+      setIsEffectActive(Boolean(entry?.isIntersecting) && !document.hidden)
+    }, { rootMargin: '150px 0px', threshold: 0 })
+
+    const onVisibilityChange = () => {
+      if (document.hidden) return setIsEffectActive(false)
       const rect = element.getBoundingClientRect()
       setIsEffectActive(rect.bottom >= -150 && rect.top <= window.innerHeight + 150)
     }
 
     observer.observe(element)
-    document.addEventListener('visibilitychange', handleVisibilityChange)
+    document.addEventListener('visibilitychange', onVisibilityChange)
     return () => {
       observer.disconnect()
-      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      document.removeEventListener('visibilitychange', onVisibilityChange)
     }
   }, [canLoad, id])
 
   useEffect(() => {
-    if (!canLoad || !shouldRender || isReady) return
-
-    let isActive = true
-    void requestSection(id).then(() => {
-      if (isActive) {
-        setIsReady(true)
-        requestAnimationFrame(() => {
-          import('../SmoothScroll/scrollController').then(({ triggerResize }) => {
-            triggerResize()
-          })
-        })
-      }
-    })
-
-    return () => {
-      isActive = false
+    if (!isContentReady || !contentRef.current || typeof ResizeObserver === 'undefined') return
+    let frame: number | null = null
+    let triggerResize: (() => void) | undefined
+    const requestResize = () => {
+      if (frame !== null) return
+      frame = requestAnimationFrame(() => {
+        frame = null
+        triggerResize?.()
+      })
     }
-  }, [canLoad, id, isReady, shouldRender])
+
+    void import('../SmoothScroll/scrollController').then(({ triggerResize: resize }) => {
+      triggerResize = resize
+      requestResize()
+    })
+    const observer = new ResizeObserver(requestResize)
+    observer.observe(contentRef.current)
+    return () => {
+      observer.disconnect()
+      if (frame !== null) cancelAnimationFrame(frame)
+    }
+  }, [isContentReady])
+
+  const handleContentReady = useCallback(() => {
+    setIsContentReady(true)
+    setIsReady(true)
+    requestAnimationFrame(() => {
+      void import('../SmoothScroll/scrollController').then(({ triggerResize }) => triggerResize())
+    })
+  }, [])
 
   return (
     <section
       id={id}
-      className={`lazy-section${isReady ? ' is-ready' : ''}${isEffectActive ? ' is-effect-active' : ''}`}
-      aria-busy={shouldRender && !isReady ? true : undefined}
+      className={`lazy-section lazy-section--${id}${isReady ? ' is-ready' : ''}${isEffectActive ? ' is-effect-active' : ''}`}
+      data-loading={!isContentReady ? 'true' : undefined}
+      aria-busy={!isContentReady ? true : undefined}
     >
-      {shouldRender ? (
-        <Suspense fallback={<SectionPlaceholder id={id} />}>
-          <SectionReady id={id}>{children}</SectionReady>
-        </Suspense>
-      ) : (
-        <SectionPlaceholder id={id} />
-      )}
+      <div className={`lazy-section-handoff${isContentReady ? ' is-content-ready' : ''}`}>
+        {shouldRender && <div ref={contentRef} className="lazy-section-handoff-content">
+          <Suspense fallback={null}><SectionReady id={id} onReady={handleContentReady}>{children}</SectionReady></Suspense>
+        </div>}
+      </div>
     </section>
   )
 }

@@ -1,6 +1,5 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import './HeroPage.css'
-import { scrollToTarget } from '../components/SmoothScroll/scrollController';
 import TextReveal from '../components/Animation/TextReveal';
 
 interface HeroPageProps {
@@ -55,13 +54,6 @@ const HeroPage = ({ effectsEnabled = true, onCriticalReady }: HeroPageProps) => 
     criticalReadyRef.current = true;
     setIsImageReady(true);
     onCriticalReady?.();
-  };
-
-  const handleExploreClick = () => {
-    const aboutSection = document.getElementById('about');
-    if (aboutSection) {
-      scrollToTarget(aboutSection, { offset: 0 });
-    }
   };
 
   return (
@@ -131,18 +123,6 @@ const HeroPage = ({ effectsEnabled = true, onCriticalReady }: HeroPageProps) => 
               className="hero-reveal-line hero-reveal--3"
             />
           </picture>
-        </div>
-
-        <div className="hero-mask-line hero-btn-mask">
-          <button className={`explore-button hero-reveal-line hero-reveal--4${isEffectActive ? ' is-effect-active' : ''}`} onClick={handleExploreClick}>
-            <span className="explore-text">Explore</span>
-            <div className="explore-icon">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M12 5L19 12L12 19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </div>
-          </button>
         </div>
       </div>
     </main>

@@ -1,13 +1,63 @@
 @layer theme, base, components, utilities;
 @import "tailwindcss/theme.css" layer(theme);
 @import "tailwindcss/utilities.css" layer(utilities);
+@import "./components/arc/foundation.css";
 @import "./transitions.css";
+
+.arc-ui {
+  color-scheme: dark;
+  --background: #0d0d0f;
+  --surface: #202024;
+  --surface-raised: #29292f;
+  --surface-muted: #303036;
+  --foreground: #f4f4f5;
+  --text-secondary: rgba(255, 255, 255, 0.66);
+  --text-muted: rgba(255, 255, 255, 0.5);
+  --border: rgba(255, 255, 255, 0.15);
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.26);
+  --accent: #a66df4;
+  --accent-strong: #c7a4fb;
+  --accent-subtle: rgb(166 109 244 / 0.18);
+}
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
 }
+
+/* Skeleton placeholders: a quiet, breathing ghost shape (no shimmer sweep),
+   plus a shared crossfade used when real content replaces one. */
+:root {
+  --skeleton-fill: rgba(255, 255, 255, 0.035);
+  --skeleton-line: rgba(255, 255, 255, 0.07);
+}
+
+.skeleton-ghost {
+  background: var(--skeleton-fill);
+  animation: skeleton-breathe 2.1s ease-in-out infinite;
+}
+
+.skeleton-content-enter {
+  animation: skeleton-content-in 360ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes skeleton-breathe {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+
+@keyframes skeleton-content-in {
+  from { opacity: 0; transform: translateY(6px); filter: blur(4px); }
+  to { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-ghost { animation: none; }
+  .skeleton-content-enter { animation: none; }
+}
+
 /* latin-ext */
 @font-face {
   font-family: 'Outfit';
