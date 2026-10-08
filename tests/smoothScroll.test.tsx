@@ -34,6 +34,8 @@ describe('smooth scroll controller', () => {
       removeEventListener: vi.fn(),
     })))
     vi.stubGlobal('scrollTo', vi.fn())
+    vi.stubGlobal('requestAnimationFrame', vi.fn(() => 1))
+    vi.stubGlobal('cancelAnimationFrame', vi.fn())
     Object.defineProperty(window, 'scrollY', { configurable: true, value: 120 })
     document.body.style.overflow = ''
     document.documentElement.style.overflow = ''
@@ -56,7 +58,27 @@ describe('smooth scroll controller', () => {
     const view = render(<SmoothScroll isPrepared isEnabled><div>content</div></SmoothScroll>)
 
     await waitFor(() => expect(runtime.loadLenis).toHaveBeenCalledOnce())
-    expect(MockLenis.instances[0]?.options).toMatchObject({ duration: 0.6, wheelMultiplier: 1, touchMultiplier: 1, smoothWheel: true, syncTouch: false })
+    expect(MockLenis.instances[0]?.options).toMatchObject({
+      lerp: 0.085,
+      wheelMultiplier: 0.85,
+      touchMultiplier: 1,
+      smoothWheel: true,
+      syncTouch: false,
+      overscroll: true,
+      autoRaf: false,
+    })
+    view.unmount()
+  })
+
+  it('wakes the RAF loop from Lenis idle after a wheel interaction', async () => {
+    finePointer = true
+    const view = render(<SmoothScroll isPrepared isEnabled><div>content</div></SmoothScroll>)
+
+    await waitFor(() => expect(MockLenis.instances).toHaveLength(1))
+    expect(MockLenis.instances[0]?.isScrolling).toBe(false)
+    window.dispatchEvent(new Event('wheel'))
+
+    expect(requestAnimationFrame).toHaveBeenCalled()
     view.unmount()
   })
 

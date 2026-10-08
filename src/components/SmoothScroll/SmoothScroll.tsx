@@ -47,9 +47,11 @@ export default function SmoothScroll({ children, isPrepared, isEnabled }: Smooth
 
   const wakeLenis = useCallback(() => {
     const lenis = lenisRef.current
-    if (!lenis || !canAnimate() || lenis.isStopped || lenis.isScrolling !== 'smooth') return
-    if (requestRef.current === null) lenis.time = 0
-    startRafLoop()
+    if (!lenis || !canAnimate() || lenis.isStopped) return
+    if (requestRef.current === null) {
+      lenis.time = 0
+      startRafLoop()
+    }
   }, [canAnimate, startRafLoop])
 
   tickRef.current = (time) => {
@@ -84,14 +86,17 @@ export default function SmoothScroll({ children, isPrepared, isEnabled }: Smooth
     void loadLenis().then(({ default: Lenis }) => {
       if (disposed || motionPreferenceRef.current?.matches || lenisRef.current) return
       const lenis = new Lenis({
-        duration: 0.6,
-        easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
         orientation: 'vertical',
         gestureOrientation: 'vertical',
         smoothWheel: true,
-        wheelMultiplier: 1,
+        lerp: 0.085,
+        wheelMultiplier: 0.85,
         touchMultiplier: 1,
         syncTouch: false,
+        overscroll: true,
+        // This component owns the RAF so visibility, reduced-motion, and
+        // scroll-lock state can pause Lenis without a second RAF loop.
+        autoRaf: false,
       })
       lenisRef.current = lenis
       setActiveLenis(lenis)

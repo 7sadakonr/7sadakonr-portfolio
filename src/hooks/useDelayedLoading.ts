@@ -1,48 +1,70 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
-export const useDelayedLoading = (isLoading: boolean, delayMs = 180, minDisplayMs = 200) => {
-  const [showSkeleton, setShowSkeleton] = useState(false)
-  // We need a ref to keep track of when the skeleton was actually shown
-  // to avoid closure staleness issues in the useEffect.
+/**
+ * Lifecycle of a skeleton placeholder relative to a loading flag:
+ * - `pending`  loading just started; mounted but not yet visible (a fast load never reaches `visible`)
+ * - `visible`  shown after `delayMs`, held for at least `minVisibleMs`
+ * - `leaving`  loading finished; fading out for `exitMs`
+ * - `idle`     unmounted
+ */
+export type SkeletonPhase = 'pending' | 'visible' | 'leaving' | 'idle'
+
+interface SkeletonPresenceOptions {
+  delayMs?: number
+  minVisibleMs?: number
+  exitMs?: number
+}
+
+export const useSkeletonPresence = (
+  isLoading: boolean,
+  { delayMs = 200, minVisibleMs = 400, exitMs = 240 }: SkeletonPresenceOptions = {},
+): SkeletonPhase => {
+  const [phase, setPhase] = useState<SkeletonPhase>(() => (isLoading ? 'pending' : 'idle'))
+  const visibleAtRef = useRef<number | null>(null)
 
   useEffect(() => {
-    let timeoutId: ReturnType<typeof setTimeout>
-    let minDisplayTimeoutId: ReturnType<typeof setTimeout>
-    let isMounted = true
-    let skeletonShownTime = 0
-
     if (isLoading) {
-      setShowSkeleton(false) // Reset on new load if it was false
-      timeoutId = setTimeout(() => {
-        if (isMounted) {
-          setShowSkeleton(true)
-          skeletonShownTime = Date.now()
-        }
-      }, delayMs)
-    } else {
-      setShowSkeleton((currentlyShowing) => {
-        if (currentlyShowing) {
-          const elapsedTime = Date.now() - skeletonShownTime
-          const remainingTime = Math.max(0, minDisplayMs - elapsedTime)
-          
-          if (remainingTime > 0) {
-             minDisplayTimeoutId = setTimeout(() => {
-               if (isMounted) setShowSkeleton(false)
-             }, remainingTime)
-             return true
-          }
-          return false
-        }
-        return false
-      })
+      if (phase === 'idle') {
+        setPhase('pending')
+        return undefined
+      }
+      if (phase === 'pending') {
+        const timeoutId = window.setTimeout(() => {
+          visibleAtRef.current = Date.now()
+          setPhase('visible')
+        }, delayMs)
+        return () => window.clearTimeout(timeoutId)
+      }
+      if (phase === 'leaving') {
+        visibleAtRef.current = Date.now()
+        setPhase('visible')
+      }
+      return undefined
     }
 
-    return () => {
-      isMounted = false
-      clearTimeout(timeoutId)
-      clearTimeout(minDisplayTimeoutId)
+    if (phase === 'pending') {
+      setPhase('idle')
+      return undefined
     }
-  }, [isLoading, delayMs, minDisplayMs])
 
-  return showSkeleton
+    if (phase === 'visible') {
+      const visibleAt = visibleAtRef.current ?? Date.now()
+      const remaining = Math.max(0, minVisibleMs - (Date.now() - visibleAt))
+      const timeoutId = window.setTimeout(() => setPhase('leaving'), remaining)
+      return () => window.clearTimeout(timeoutId)
+    }
+
+    return undefined
+  }, [isLoading, phase, delayMs, minVisibleMs])
+
+  useEffect(() => {
+    if (phase !== 'leaving') return
+    const timeoutId = window.setTimeout(() => {
+      visibleAtRef.current = null
+      setPhase('idle')
+    }, exitMs)
+    return () => window.clearTimeout(timeoutId)
+  }, [phase, exitMs])
+
+  return phase
 }

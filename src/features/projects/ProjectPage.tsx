@@ -1,23 +1,31 @@
-import { useMemo } from 'react'
+import { useMemo, useRef } from 'react'
 import '../../pages/LandingPage.css'
 import AnimatedContent from '../../components/Animation/AnimatedContent'
 import TextReveal from '../../components/Animation/TextReveal'
 import { createProjectSidebarItems } from './data/projectSidebarItems'
+import { PROJECT_HERO_SUBTITLE } from './data/projectHeroCopy'
 import ProjectCard from './components/ProjectCard'
 import ProjectSidebar from './components/ProjectSidebar'
 import ProjectCardSkeleton from './components/ProjectCardSkeleton'
 import ProjectSidebarSkeleton from './components/ProjectSidebarSkeleton'
 import { useActiveProject } from './hooks/useActiveProject'
 import { useProjects } from './hooks/useProjects'
-import { useDelayedLoading } from '../../hooks/useDelayedLoading'
+import { useSkeletonPresence } from '../../hooks/useDelayedLoading'
 import { trackEvent } from '../../lib/analytics/trackEvent'
+
+const PROJECT_SKELETON_COUNT = 3
 
 const ProjectSection = () => {
   const { projects, isLoading, error, retry } = useProjects()
-  const showSkeleton = useDelayedLoading(isLoading, 180, 200)
-  
+  const skeletonPhase = useSkeletonPresence(isLoading, { delayMs: 120 })
+  const showSkeleton = skeletonPhase !== 'idle'
+
   const { activeProjectIndex, setActiveProjectIndex, setProjectRef, scrollToProject } = useActiveProject(projects.length)
   const sidebarItems = useMemo(() => createProjectSidebarItems(projects), [projects])
+  const contentIsReady = !isLoading && !error && projects.length > 0
+  // Latched on first ready render: cards replacing a visible skeleton fade in place instead of rising 16px.
+  const replacedSkeleton = useRef<boolean | null>(null)
+  if (contentIsReady && replacedSkeleton.current === null) replacedSkeleton.current = showSkeleton
 
   const handleSidebarItemClick = (index: number) => {
     scrollToProject(index)
@@ -27,12 +35,6 @@ const ProjectSection = () => {
         project_slug: project.id,
       })
     }
-  }
-
-  const handleSidebarLiveClick = (_index: number, _item: { id?: string; label: string; liveUrl?: string }) => {
-  }
-
-  const handleSidebarGithubClick = (_index: number, _item: { id?: string; label: string }) => {
   }
 
   return (
@@ -49,7 +51,7 @@ const ProjectSection = () => {
           <TextReveal
             as="p"
             className="project-hero-subtitle"
-            text="Explore my latest work showcasing creativity, technical skills, and passion for building meaningful digital experiences."
+            text={PROJECT_HERO_SUBTITLE}
             delay={0.25}
             stagger={0.025}
           />
@@ -63,24 +65,22 @@ const ProjectSection = () => {
                 <button type="button" onClick={retry}>Try again</button>
               </div>
             )}
-            
+
             {!isLoading && !showSkeleton && !error && projects.length === 0 && (
               <div className="projects-state">No projects available.</div>
             )}
 
-            <div className={`projects-list-skeleton-wrapper ${!showSkeleton ? 'fade-out' : ''}`}>
-              {showSkeleton && !error && (
-                <>
-                  <ProjectCardSkeleton />
-                  <ProjectCardSkeleton />
-                  <ProjectCardSkeleton />
-                </>
-              )}
-            </div>
+            {showSkeleton && !error && (
+              <div className="projects-list-skeleton-wrapper" data-phase={skeletonPhase}>
+                {Array.from({ length: PROJECT_SKELETON_COUNT }, (_, index) => (
+                  <ProjectCardSkeleton key={index} />
+                ))}
+              </div>
+            )}
 
-            <div className={`projects-list-content-wrapper ${!showSkeleton && !isLoading && !error && projects.length > 0 ? 'fade-in' : 'pre-fade-in'}`}>
-              {!showSkeleton && !error && projects.map((project, index) => (
-                <AnimatedContent key={project.id} direction="up" distance={60} delay={index * 0.1} triggerOnce>
+            <div className={`projects-list-content-wrapper${contentIsReady ? ' skeleton-content-enter' : ''}`}>
+              {contentIsReady && projects.map((project, index) => (
+                <AnimatedContent key={project.id} direction="up" distance={replacedSkeleton.current ? 0 : 16} delay={index * 0.1} triggerOnce>
                   <ProjectCard
                     project={project}
                     index={index}
@@ -93,20 +93,18 @@ const ProjectSection = () => {
           </section>
 
           <aside className="projects-sidebar">
-            <div className={`sidebar-fade-wrapper ${!showSkeleton ? 'fade-out' : ''}`}>
-              {showSkeleton && !error && <ProjectSidebarSkeleton />}
-            </div>
-            
-            <div className={`sidebar-fade-wrapper ${!showSkeleton && !isLoading && !error && projects.length > 0 ? 'fade-in' : 'pre-fade-in'}`}>
-              {!showSkeleton && !error && projects.length > 0 && (
-                <ProjectSidebar
-                  items={sidebarItems}
-                  activeIndex={activeProjectIndex}
-                  onItemClick={handleSidebarItemClick}
-                  onLiveClick={handleSidebarLiveClick}
-                  onGithubClick={handleSidebarGithubClick}
-                />
-              )}
+            <div className="sidebar-stack">
+              {showSkeleton && !error && <ProjectSidebarSkeleton phase={skeletonPhase} />}
+
+              <div className={contentIsReady ? 'skeleton-content-enter' : undefined}>
+                {contentIsReady && (
+                  <ProjectSidebar
+                    items={sidebarItems}
+                    activeIndex={activeProjectIndex}
+                    onItemClick={handleSidebarItemClick}
+                  />
+                )}
+              </div>
             </div>
           </aside>
         </div>
