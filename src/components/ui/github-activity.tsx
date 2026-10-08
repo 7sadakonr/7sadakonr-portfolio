@@ -9,6 +9,7 @@ import {
   type Transition,
 } from "motion/react";
 import { cn } from "@/lib/utils";
+import { Tooltip as ArcTooltip } from "@/components/arc/tooltip/tooltip";
 
 export type ContributionLevel = 0 | 1 | 2 | 3 | 4;
 
@@ -49,12 +50,8 @@ const SPRING = { type: "spring", bounce: 0.2, duration: 0.62 } as const;
 const HEADER_SPRING = { ...SPRING, bounce: 0.45 } as const;
 const ROW_SPRING = { ...SPRING, bounce: 0.26, delay: 0.08 } as const;
 const ROW_OFFSET = 16;
-const CELL_FADE = { duration: 0.2, ease: EASE_OUT } as const;
 const TOOLTIP_FADE = { duration: 0.14, ease: EASE_OUT } as const;
 const TOOLTIP_EDGE = 8;
-const COLUMN_STAGGER = 0.012;
-const LABEL_BLUR = 6;
-const LABEL_REVEAL = { duration: 0.45, ease: EASE_OUT } as const;
 
 const LEVELS = [0, 1, 2, 3, 4] as const;
 
@@ -321,7 +318,6 @@ const ContributionGrid = ({
 
   const cap = Math.min(weeks.length, weeksFor(months));
   const visible = weeks.slice(-Math.min(cap, columns ?? cap));
-  const sweepEnd = (visible.length - 1) * COLUMN_STAGGER + CELL_FADE.duration;
 
   const hover = (day: Contribution) => (event: React.PointerEvent) => {
     const cell = event.currentTarget.getBoundingClientRect();
@@ -337,19 +333,9 @@ const ContributionGrid = ({
       className="relative"
     >
       {showMonths && (
-        <motion.div
+        <div
           className="flex justify-center"
           style={{ gap, marginBottom: gap }}
-          initial={
-            reduceMotion
-              ? false
-              : { opacity: 0, filter: `blur(${LABEL_BLUR}px)` }
-          }
-          animate={{ opacity: 1, filter: "blur(0px)" }}
-          transition={{
-            ...LABEL_REVEAL,
-            delay: reduceMotion ? 0 : sweepEnd,
-          }}
         >
           {toMonthLabels(visible).map((month, index) => (
             <div
@@ -364,38 +350,35 @@ const ContributionGrid = ({
               )}
             </div>
           ))}
-        </motion.div>
+        </div>
       )}
 
-      <div
+      <motion.div
         className="flex justify-center overflow-hidden"
         style={{ gap }}
         onPointerLeave={() => setHovered(undefined)}
+        initial={reduceMotion ? false : { opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={reduceMotion ? { duration: 0 } : { duration: 0.18, ease: EASE_OUT }}
       >
         {visible.map((week, weekIndex) => (
           <div key={weekIndex} className="flex flex-col" style={{ gap }}>
             {week.map((day) => (
-              <motion.div
+              <div
                 key={day.date}
                 onPointerEnter={hover(day)}
                 className="shrink-0 rounded-[3px] bg-foreground/[0.08]"
                 style={{ width: cellSize, height: cellSize }}
-                initial={reduceMotion ? false : { opacity: 0, scale: 0.4 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{
-                  ...CELL_FADE,
-                  delay: reduceMotion ? 0 : weekIndex * COLUMN_STAGGER,
-                }}
               >
                 <div
                   className="h-full w-full rounded-[3px]"
                   style={scale[day.level] ?? scale[0]}
                 />
-              </motion.div>
+              </div>
             ))}
           </div>
         ))}
-      </div>
+      </motion.div>
 
       <AnimatePresence>
         {hovered && (
@@ -678,18 +661,18 @@ const GitHubActivity = ({
                 </div>
               )}
 
-              <button
-                type="button"
-                onClick={toggle}
-                aria-expanded={open}
-                aria-controls={`${uid}-panel`}
-                aria-label={
-                  open ? "Hide top repositories" : "Show top repositories"
-                }
-                className="grid size-7 shrink-0 place-items-center rounded-full bg-card"
-              >
-                <Chevron open={open} transition={transition} />
-              </button>
+              <ArcTooltip content={open ? "Hide top repositories" : "Show top repositories"}>
+                <button
+                  type="button"
+                  onClick={toggle}
+                  aria-expanded={open}
+                  aria-controls={`${uid}-panel`}
+                  aria-label={open ? "Hide top repositories" : "Show top repositories"}
+                  className="grid size-7 shrink-0 place-items-center rounded-full bg-card"
+                >
+                  <Chevron open={open} transition={transition} />
+                </button>
+              </ArcTooltip>
             </div>
           </motion.div>
 

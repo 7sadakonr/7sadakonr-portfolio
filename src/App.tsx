@@ -37,15 +37,15 @@ function PortfolioApp() {
   const isInteractive = isCriticalReady && !isPreloaderVisible
 
   useEffect(() => {
+    if (!isInteractive) return
+    return scheduleBelowFoldHydration()
+  }, [isInteractive])
+
+  useEffect(() => {
     void import('./features/siteSettings/api/siteSettingsRepository')
       .then(({ loadSiteSettings }) => loadSiteSettings())
       .catch(() => { /* defaults remain visible when settings are unavailable */ })
   }, [])
-
-  useEffect(() => {
-    if (!isInteractive) return
-    return scheduleBelowFoldHydration()
-  }, [isInteractive])
 
   // Initialize analytics when page is interactive
   useEffect(() => {

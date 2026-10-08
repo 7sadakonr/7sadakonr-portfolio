@@ -20,6 +20,7 @@
     "@emailjs/browser": "^4.4.1",
     "@heroui/react": "^3.2.5",
     "@heroui/styles": "^3.2.5",
+    "@radix-ui/react-tooltip": "^1.2.16",
     "@supabase/supabase-js": "^2.112.3",
     "@vercel/analytics": "^1.6.1",
     "clsx": "^2.1.1",
@@ -35,7 +36,6 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.30.1",
-    "@rollup/rollup-linux-x64-gnu": "^4.63.5",
     "@tailwindcss/vite": "^4.3.3",
     "@testing-library/react": "^16.3.2",
     "@types/node": "^26.4.1",
@@ -55,5 +55,8 @@
     "typescript-eslint": "^8.64.0",
     "vite": "^7.0.4",
     "vitest": "^4.1.10"
+  },
+  "optionalDependencies": {
+    "@rollup/rollup-linux-x64-gnu": "^4.63.5"
   }
 }
