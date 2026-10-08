@@ -273,7 +273,7 @@ const GithubCalendar = ({ username, className = '', colorSchema = 'green' }: Git
                 setIsVisible(true)
                 observer.disconnect()
             }
-        }, { rootMargin: '0px', threshold: 0 })
+        }, { rootMargin: '800px 0px', threshold: 0 })
 
         if (containerRef.current) observer.observe(containerRef.current)
         return () => observer.disconnect()

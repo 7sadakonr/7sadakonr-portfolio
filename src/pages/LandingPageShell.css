@@ -28,14 +28,6 @@
 .lazy-section-handoff-content { opacity: 0; transform: translateY(4px); transition: opacity 180ms ease-out, transform 180ms ease-out; }
 .lazy-section-handoff.is-content-ready .lazy-section-handoff-content { opacity: 1; transform: translateY(0); }
 
-/* Skeleton overlay: built from the real section classes, so ghosts sit where the content renders. */
-.lazy-section-placeholder { position: absolute; z-index: 1; inset: 0; pointer-events: none; }
-.lazy-section-skeleton .skeleton-ghost { background: var(--skeleton-fill); }
-.lazy-section-skeleton { opacity: 1; transition: opacity 180ms ease-out; }
-.lazy-section-skeleton[data-phase="pending"],
-.lazy-section-skeleton[data-phase="leaving"] { opacity: 0; }
-
 @media (prefers-reduced-motion: reduce) {
-  .lazy-section-handoff-content,
-  .lazy-section-skeleton { transition: none; }
+  .lazy-section-handoff-content { transition: none; }
 }
