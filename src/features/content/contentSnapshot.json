@@ -1,0 +1,177 @@
+{
+  "generatedAt": "2026-10-08T21:40:06.983Z",
+  "projects": [
+    {
+      "id": "4650fa7b-dd49-4363-b597-d1691cdd8a20",
+      "title": "Nyeta",
+      "description": "Nyeta is a real-time visual assistance platform for the visually impaired. It integrates WebRTC for volunteer calling and Llama 3.2 Vision AI for automated visual queries via an accessible, voice-controlled UI.",
+      "image_url": null,
+      "image_storage_path": null,
+      "live_url": "https://nyeta.vercel.app",
+      "github_url": "https://github.com/7sadakonr/Nyeta",
+      "tech": [
+        "Next.js",
+        "Tailwind CSS",
+        "Pusher",
+        "PeerJS",
+        "Llama 3.2 Vision",
+        "Groq API"
+      ],
+      "is_in_progress": true,
+      "is_visible": true,
+      "sort_order": 0,
+      "fallback_gradient": "linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)",
+      "legacy_source_id": 4,
+      "created_at": "2026-08-22T23:16:29.309017+00:00",
+      "updated_at": "2026-09-11T13:37:10.539921+00:00"
+    },
+    {
+      "id": "36493980-3c2b-446d-bf88-19a5e7c48872",
+      "title": "Portfolio Website",
+      "description": "A modern, responsive portfolio website showcasing my work and skills. Features include smooth animations, glass morphism UI design, universe-themed backgrounds with twinkling stars and shooting stars, interactive image magnifier, and mobile-optimized experience.",
+      "image_url": "https://hyshjbnpbotzytrznmky.supabase.co/storage/v1/object/public/project-images/legacy/2/e95b9162cfff9f81f7f449a08655c79a135bdb76ed77e562c8edb69cb46d958f.webp",
+      "image_storage_path": "legacy/2/e95b9162cfff9f81f7f449a08655c79a135bdb76ed77e562c8edb69cb46d958f.webp",
+      "live_url": "https://7sadakonr-portfolio.vercel.app",
+      "github_url": "https://github.com/7sadakonr/7sadakonr-portfolio",
+      "tech": [
+        "React",
+        "Vite",
+        "TypeScript",
+        "Lenis",
+        "CSS"
+      ],
+      "is_in_progress": false,
+      "is_visible": true,
+      "sort_order": 1,
+      "fallback_gradient": null,
+      "legacy_source_id": 2,
+      "created_at": "2026-08-22T23:16:29.309017+00:00",
+      "updated_at": "2026-09-14T08:46:08.947668+00:00"
+    },
+    {
+      "id": "e61b7fa4-cc76-4dfb-badb-ecfae15a5464",
+      "title": "Zendix File Transfer",
+      "description": "Zendix is a peer-to-peer file and clipboard sharing web app. Transfer files and text directly between devices without uploading to the cloud.",
+      "image_url": "https://hyshjbnpbotzytrznmky.supabase.co/storage/v1/object/public/project-images/legacy/3/c982740a11cc433572d68abc90d05a4a37e09d597cc01e74061182d90273041a.webp",
+      "image_storage_path": "legacy/3/c982740a11cc433572d68abc90d05a4a37e09d597cc01e74061182d90273041a.webp",
+      "live_url": "https://zendix-file.vercel.app/",
+      "github_url": "https://github.com/7sadakonr/Zendix-Filetransfer-Web-App",
+      "tech": [
+        "React",
+        "Vite",
+        "Tailwind CSS",
+        "Zustand",
+        "PeerJS (WebRTC)",
+        "React Router"
+      ],
+      "is_in_progress": true,
+      "is_visible": true,
+      "sort_order": 2,
+      "fallback_gradient": null,
+      "legacy_source_id": 3,
+      "created_at": "2026-08-22T23:16:29.309017+00:00",
+      "updated_at": "2026-09-22T03:59:50.736147+00:00"
+    },
+    {
+      "id": "c9721b01-97bc-4be2-a2d8-1087977efe0c",
+      "title": "Todo-List",
+      "description": "A full-stack task management application with secure JWT authentication, complete CRUD operations, and a dashboard featuring productivity analytics with Recharts. Users can manage tasks with advanced filtering by status and enjoy a responsive UI with smooth animations.",
+      "image_url": "https://hyshjbnpbotzytrznmky.supabase.co/storage/v1/object/public/project-images/legacy/1/0b2e1fe0de88633bd2fc6a216ebd8d092ea90a26fdcba2f656b155d1f78b0a2e.webp",
+      "image_storage_path": "legacy/1/0b2e1fe0de88633bd2fc6a216ebd8d092ea90a26fdcba2f656b155d1f78b0a2e.webp",
+      "live_url": "https://7sadakonr-todo-list.vercel.app",
+      "github_url": "https://github.com/7sadakonr/Todo-List",
+      "tech": [
+        "Next.js",
+        "React",
+        "TypeScript",
+        "Tailwind CSS",
+        "Node.js",
+        "Express",
+        "Prisma",
+        "PostgreSQL",
+        "JWT"
+      ],
+      "is_in_progress": false,
+      "is_visible": true,
+      "sort_order": 3,
+      "fallback_gradient": null,
+      "legacy_source_id": 1,
+      "created_at": "2026-08-22T23:16:29.309017+00:00",
+      "updated_at": "2026-08-22T23:17:13.508726+00:00"
+    },
+    {
+      "id": "d02e5cbc-186d-4175-9530-56a8d548b288",
+      "title": "Slipzen",
+      "description": "Slipzen is a personal finance and receipt management app that turns receipts into structured expenses using AI. Track spending, manage budgets, organize transactions, and explore useful financial insights in one mobile workflow.",
+      "image_url": "https://hyshjbnpbotzytrznmky.supabase.co/storage/v1/object/public/project-images/projects/d02e5cbc-186d-4175-9530-56a8d548b288/6da5232d-97bb-489e-80eb-bc298331cc7f.png",
+      "image_storage_path": "projects/d02e5cbc-186d-4175-9530-56a8d548b288/6da5232d-97bb-489e-80eb-bc298331cc7f.png",
+      "live_url": null,
+      "github_url": "https://github.com/7sadakonr/Slipzen",
+      "tech": [
+        "React Native",
+        "Expo",
+        "TypeScript",
+        "Gemini API",
+        "TanStack Query",
+        "Zustand",
+        "Zod"
+      ],
+      "is_in_progress": true,
+      "is_visible": true,
+      "sort_order": 4,
+      "fallback_gradient": null,
+      "legacy_source_id": null,
+      "created_at": "2026-08-30T14:59:53.401681+00:00",
+      "updated_at": "2026-08-30T14:59:53.401681+00:00"
+    }
+  ],
+  "siteSettings": {
+    "id": 1,
+    "display_name": "Jetsadakorn",
+    "hero_subtitle": "A passionate Computer Science Student exploring the intersection of technology and creativity. Currently focused on web development, UI/UX design, and building meaningful digital experiences.",
+    "bio_paragraph_1": "I'm a Computer Science student with a deep passion for creating elegant solutions to complex problems. My journey in tech started with curiosity about how things work, and has evolved into a commitment to building innovative digital experiences.",
+    "bio_paragraph_2": "When I'm not coding, you can find me exploring new design trends, learning about emerging technologies, or working on personal projects that challenge me to grow. I believe in the power of continuous learning and pushing boundaries.",
+    "current_focus": "Currently focused on full-stack web development and creating user-centric interfaces that are both beautiful and functional.",
+    "contact_heading": "Let's Connect",
+    "contact_description": "Have a project in mind, a question, or just want to say hi? Feel free to reach out!",
+    "contact_links": [
+      {
+        "id": "email-main",
+        "url": "mailto:jetsadakorn.contact@gmail.com",
+        "type": "email",
+        "label": "jetsadakorn.contact@gmail.com",
+        "value": "jetsadakorn.contact@gmail.com",
+        "isVisible": true
+      },
+      {
+        "id": "152059a5-9934-4ea1-a4b7-44b42d3357ed",
+        "url": "mailto:7sadakonr@gmail.com",
+        "type": "email",
+        "label": "7sadakonr@gmail.com",
+        "value": "7sadakonr@gmail.com",
+        "isVisible": true
+      },
+      {
+        "id": "github-main",
+        "url": "https://github.com/7sadakonr",
+        "type": "github",
+        "label": "GitHub",
+        "value": "7sadakonr",
+        "isVisible": true
+      },
+      {
+        "id": "67a5ed6b-6936-4b4b-b73b-c56ab13ea490",
+        "url": "https://www.linkedin.com/in/jetsadakorn-muangwichit-251a47427",
+        "type": "linkedin",
+        "label": "LinkedIn",
+        "value": "https://www.linkedin.com/in/jetsadakorn-muangwichit-251a47427/",
+        "isVisible": true
+      }
+    ],
+    "resume_en_url": "https://hyshjbnpbotzytrznmky.supabase.co/storage/v1/object/public/resume-files/en/9fca9ed3-a3dd-4050-8b66-0d4e509ef425.pdf",
+    "resume_en_storage_path": "en/9fca9ed3-a3dd-4050-8b66-0d4e509ef425.pdf",
+    "resume_th_url": "https://hyshjbnpbotzytrznmky.supabase.co/storage/v1/object/public/resume-files/th/2461a894-1075-4965-903e-2cc70fdc9be9.pdf",
+    "resume_th_storage_path": "th/2461a894-1075-4965-903e-2cc70fdc9be9.pdf",
+    "updated_at": "2026-09-26T09:45:46.496866+00:00"
+  }
+}

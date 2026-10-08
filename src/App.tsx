@@ -15,6 +15,7 @@ import { getRouteForSection } from './features/navigation/navigation.config'
 import { publishSectionChange } from './features/navigation/navigationEvents'
 import { isNavigationInProgress } from './features/navigation/navigationState'
 import { Seo } from './components/Seo/Seo'
+import { getSnapshotSiteSettings } from './features/content/contentSnapshot'
 import { scheduleBelowFoldHydration } from './components/LazySection/sectionLoader'
 import { initAnalytics } from './lib/analytics/tracker'
 
@@ -42,7 +43,7 @@ function PortfolioApp() {
   }, [isInteractive])
 
   useEffect(() => {
-    if (!isInteractive) return
+    if (!isInteractive || getSnapshotSiteSettings()) return
 
     void import('./features/siteSettings/api/siteSettingsRepository')
       .then(({ loadSiteSettings }) => loadSiteSettings())

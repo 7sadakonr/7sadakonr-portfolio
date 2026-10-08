@@ -1,42 +1,15 @@
 import { supabase } from '../../../lib/supabase'
 import { PROJECTS } from '../data/projects'
-import { mapLegacyProjects, mapProjectRecord } from '../data/projectMapper'
+import { mapLegacyProjects } from '../data/projectMapper'
+import { isProjectRecord, normalizeProjectRecords } from '../data/projectRecords'
+import { getSnapshotProjects } from '../../content/contentSnapshot'
 import { setProjectCatalog } from '../data/projectCatalogStore'
 import type { ProjectDraft, ProjectRecord, PublicProjectItem } from '../types'
 import { createUuid } from '../../../utils/createUuid'
 
+export { normalizeProjectRecords }
+
 type ProjectDataMode = 'local' | 'supabase-fallback' | 'supabase'
-
-const isStringOrNull = (value: unknown): value is string | null => typeof value === 'string' || value === null
-
-const isProjectRecord = (value: unknown): value is ProjectRecord => {
-  if (!value || typeof value !== 'object') return false
-  const record = value as Record<string, unknown>
-  return typeof record.id === 'string'
-    && typeof record.title === 'string'
-    && typeof record.description === 'string'
-    && isStringOrNull(record.image_url)
-    && isStringOrNull(record.image_storage_path)
-    && isStringOrNull(record.live_url)
-    && isStringOrNull(record.github_url)
-    && Array.isArray(record.tech)
-    && record.tech.every((technology) => typeof technology === 'string')
-    && typeof record.is_in_progress === 'boolean'
-    && typeof record.is_visible === 'boolean'
-    && typeof record.sort_order === 'number'
-    && isStringOrNull(record.fallback_gradient)
-    && (typeof record.legacy_source_id === 'number' || record.legacy_source_id === null)
-    && typeof record.created_at === 'string'
-    && typeof record.updated_at === 'string'
-}
-
-export const normalizeProjectRecords = (records: unknown[]): PublicProjectItem[] => {
-  if (!records.every(isProjectRecord)) throw new Error('Invalid project data')
-
-  return records
-    .map(mapProjectRecord)
-    .sort((left, right) => left.sortOrder - right.sortOrder || left.id.localeCompare(right.id))
-}
 
 const getDataMode = (): ProjectDataMode => {
   const mode = import.meta.env.VITE_PROJECTS_DATA_MODE
@@ -68,8 +41,17 @@ const hasLegacyParity = (projects: PublicProjectItem[]) => {
 }
 
 let publicProjectsPromise: Promise<PublicProjectItem[]> | null = null
+let useSnapshot = true
+
+const getUsableSnapshot = (mode: ProjectDataMode) => {
+  if (!useSnapshot || mode === 'local') return null
+  const projects = getSnapshotProjects()
+  if (projects && mode === 'supabase-fallback' && !hasLegacyParity(projects)) return null
+  return projects
+}
 
 export const invalidatePublicProjects = () => {
+  useSnapshot = false
   publicProjectsPromise = null
   setProjectCatalog(null)
 }
@@ -80,6 +62,8 @@ export const loadPublicProjects = () => {
   publicProjectsPromise = (async () => {
     const mode = getDataMode()
     if (mode === 'local') return mapLegacyProjects(PROJECTS)
+    const snapshotProjects = getUsableSnapshot(mode)
+    if (snapshotProjects) return snapshotProjects
     if (!supabase) {
       if (mode === 'supabase-fallback') return mapLegacyProjects(PROJECTS)
       throw new Error('Supabase is not configured')
