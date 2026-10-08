@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "content:snapshot": "node scripts/generate-content-snapshot.mjs",
+    "prebuild": "npm run content:snapshot",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
