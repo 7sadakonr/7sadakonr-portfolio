@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { invalidatePublicProjects, loadPublicProjects } from '../api/projectRepository'
+import { invalidatePublicProjects, loadPublicProjects, peekPublicProjects } from '../api/projectRepository'
 import { getProjectCatalog } from '../data/projectCatalogStore'
 import type { PublicProjectItem } from '../types'
 
@@ -11,7 +11,7 @@ interface UseProjectsState {
 
 export const useProjects = () => {
   const [state, setState] = useState<UseProjectsState>(() => {
-    const catalog = getProjectCatalog()
+    const catalog = getProjectCatalog() ?? peekPublicProjects()
     return { projects: catalog ?? [], isLoading: !catalog, error: null }
   })
   const [requestVersion, setRequestVersion] = useState(0)

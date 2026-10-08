@@ -50,6 +50,11 @@ const getUsableSnapshot = (mode: ProjectDataMode) => {
   return projects
 }
 
+export const peekPublicProjects = (): PublicProjectItem[] | null => {
+  const mode = getDataMode()
+  return mode === 'local' ? mapLegacyProjects(PROJECTS) : getUsableSnapshot(mode)
+}
+
 export const invalidatePublicProjects = () => {
   useSnapshot = false
   publicProjectsPromise = null

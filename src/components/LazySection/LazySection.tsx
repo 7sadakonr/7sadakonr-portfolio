@@ -1,6 +1,4 @@
 import { Suspense, useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
-import { useSkeletonPresence } from '../../hooks/useDelayedLoading'
-import SectionSkeleton from './SectionSkeleton'
 import {
   isSectionReady,
   isSectionRequested,
@@ -27,24 +25,10 @@ const SectionReady = ({ id, children, onReady }: LazySectionProps & { onReady: (
   return children
 }
 
-const DelayedSectionSkeleton = ({ id, loading, onComplete }: { id: LazySectionId; loading: boolean; onComplete: () => void }) => {
-  const phase = useSkeletonPresence(loading, { delayMs: 120, minVisibleMs: 0, exitMs: 180 })
-  const completedRef = useRef(false)
-
-  useEffect(() => {
-    if (phase !== 'idle' || completedRef.current) return
-    completedRef.current = true
-    onComplete()
-  }, [phase, onComplete])
-
-  return <SectionSkeleton id={id} phase={phase} />
-}
-
 const LazySection = ({ id, children, canLoad = true }: LazySectionProps) => {
   const [shouldRender, setShouldRender] = useState(() => isSectionRequested(id))
   const [isReady, setIsReady] = useState(() => isSectionReady(id))
   const [isContentReady, setIsContentReady] = useState(() => isSectionReady(id))
-  const [isLayoutStable, setIsLayoutStable] = useState(() => isSectionReady(id))
   const [isEffectActive, setIsEffectActive] = useState(false)
   const contentRef = useRef<HTMLDivElement>(null)
 
@@ -63,13 +47,13 @@ const LazySection = ({ id, children, canLoad = true }: LazySectionProps) => {
       if (!entries.some((entry) => entry.isIntersecting)) return
       prefetchSection(id)
       prefetchObserver.disconnect()
-    }, { rootMargin: '0px 0px -64px 0px', threshold: 0 })
+    }, { rootMargin: '0px 0px 1200px 0px', threshold: 0 })
 
     const mountObserver = new IntersectionObserver((entries) => {
       if (!entries.some((entry) => entry.isIntersecting)) return
       void ensureTargetReady(id)
       mountObserver.disconnect()
-    }, { rootMargin: '0px 0px -180px 0px', threshold: 0 })
+    }, { rootMargin: '0px 0px 600px 0px', threshold: 0 })
 
     prefetchObserver.observe(element)
     mountObserver.observe(element)
@@ -139,29 +123,22 @@ const LazySection = ({ id, children, canLoad = true }: LazySectionProps) => {
   const handleContentReady = useCallback(() => {
     setIsContentReady(true)
     setIsReady(true)
-  }, [])
-
-  const handleHandoffComplete = useCallback(() => {
     requestAnimationFrame(() => {
-      setIsLayoutStable(true)
       void import('../SmoothScroll/scrollController').then(({ triggerResize }) => triggerResize())
     })
   }, [])
-
-  const showHandoff = shouldRender && !isLayoutStable
 
   return (
     <section
       id={id}
       className={`lazy-section lazy-section--${id}${isReady ? ' is-ready' : ''}${isEffectActive ? ' is-effect-active' : ''}`}
-      data-loading={!isLayoutStable ? 'true' : undefined}
-      aria-busy={!isLayoutStable ? true : undefined}
+      data-loading={!isContentReady ? 'true' : undefined}
+      aria-busy={!isContentReady ? true : undefined}
     >
       <div className={`lazy-section-handoff${isContentReady ? ' is-content-ready' : ''}`}>
         {shouldRender && <div ref={contentRef} className="lazy-section-handoff-content">
           <Suspense fallback={null}><SectionReady id={id} onReady={handleContentReady}>{children}</SectionReady></Suspense>
         </div>}
-        {showHandoff && <DelayedSectionSkeleton id={id} loading={!isContentReady} onComplete={handleHandoffComplete} />}
       </div>
     </section>
   )
