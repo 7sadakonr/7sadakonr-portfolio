@@ -42,10 +42,12 @@ function PortfolioApp() {
   }, [isInteractive])
 
   useEffect(() => {
+    if (!isInteractive) return
+
     void import('./features/siteSettings/api/siteSettingsRepository')
       .then(({ loadSiteSettings }) => loadSiteSettings())
       .catch(() => { /* defaults remain visible when settings are unavailable */ })
-  }, [])
+  }, [isInteractive])
 
   // Initialize analytics when page is interactive
   useEffect(() => {
