@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { Button, Chip } from '@heroui/react'
 import { useAdminAuth } from '../auth/useAdminAuth'
+import PublishButton from './PublishButton'
 
 const AdminLayout = () => {
   const navigate = useNavigate()
@@ -127,6 +128,7 @@ const AdminLayout = () => {
         </div>
 
         <div className="admin-header-actions flex items-center gap-2.5">
+          <PublishButton />
           <Button
             size="sm"
             variant="outline"
