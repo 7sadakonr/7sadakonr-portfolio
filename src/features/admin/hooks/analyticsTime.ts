@@ -15,12 +15,35 @@ export function rollingHourKeys(from: Date, to: Date): string[] {
 
 export function formatAnalyticsHour(timestamp: string): string {
   return new Date(timestamp).toLocaleTimeString('en-GB', {
+    hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
+  })
+}
+
+/** Legacy RPC rows labelled hours as UTC "HH:00" strings. */
+export function formatUtcHourLabel(timestamp: string): string {
+  return new Date(timestamp).toLocaleTimeString('en-GB', {
     timeZone: 'UTC', hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
   })
 }
 
 export function formatAnalyticsDate(timestamp: string, hourly: boolean): string {
   return hourly ? formatAnalyticsHour(timestamp) : new Date(timestamp).toLocaleDateString('en-US', {
-    timeZone: 'UTC', month: 'short', day: 'numeric',
+    month: 'short', day: 'numeric',
   })
+}
+
+export function getAnalyticsTimeZoneLabel(): string {
+  return new Intl.DateTimeFormat('en-US', { timeZoneName: 'short' })
+    .formatToParts(new Date()).find((part) => part.type === 'timeZoneName')?.value ?? 'local'
+}
+
+export function getAnalyticsTimeZone(): string {
+  return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
+}
+
+/** YYYY-MM-DD of the given instant in the viewer's timezone. */
+export function localDateKey(date: Date): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    year: 'numeric', month: '2-digit', day: '2-digit',
+  }).format(date)
 }
