@@ -1,7 +1,10 @@
 import { act, cleanup, renderHook, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { formatAnalyticsHour, getAnalyticsTimeZoneLabel } from '../src/features/admin/hooks/analyticsTime'
 
 const { rpc } = vi.hoisted(() => ({ rpc: vi.fn() }))
+
+const expectedPeakLabel = `${formatAnalyticsHour('2026-09-10T23:00:00.000Z')} - ${formatAnalyticsHour('2026-09-11T00:00:00.000Z')} ${getAnalyticsTimeZoneLabel()}`
 
 rpc.mockImplementation((name: string) => {
   if (name === 'analytics_overview') {
@@ -84,7 +87,7 @@ describe('useAnalytics', () => {
     expect(result.current.overview?.visitors_today).toBe(5)
     expect(result.current.overview?.visitors_yesterday).toBe(7)
     expect(result.current.overview?.visitors_prev).toBeNull()
-    expect(result.current.trafficInsights.peakTimeLabel).toBe('23:00 - 00:00 UTC')
+    expect(result.current.trafficInsights.peakTimeLabel).toBe(expectedPeakLabel)
     const visitorDates = result.current.timeseries.map((point) => point.date)
     act(() => result.current.setMetric('project_opens'))
     expect(result.current.timeseries.map((point) => point.date)).toEqual(visitorDates)
@@ -139,7 +142,7 @@ describe('useAnalytics', () => {
     await waitFor(() => expect(result.current.timeseries).toHaveLength(24))
     expect(result.current.timeseries.at(-1)?.count).toBe(2)
     expect(result.current.timeseries.find((point) => point.date === '2026-09-10T23:00:00.000Z')?.count).toBe(4)
-    expect(result.current.trafficInsights.peakTimeLabel).toBe('23:00 - 00:00 UTC')
+    expect(result.current.trafficInsights.peakTimeLabel).toBe(expectedPeakLabel)
     rpc.mockImplementation(originalRpc)
   })
 })

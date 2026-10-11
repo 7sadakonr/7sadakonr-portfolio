@@ -9,7 +9,7 @@ import {
 } from 'recharts'
 import { Tabs } from '@heroui/react'
 import type { DateRangeDays, TimeSeriesMetric, TimeSeriesPoint, TrafficInsights } from '../../hooks/useAnalytics'
-import { formatAnalyticsDate } from '../../hooks/analyticsTime'
+import { formatAnalyticsDate, getAnalyticsTimeZoneLabel } from '../../hooks/analyticsTime'
 
 interface InteractionChartProps {
   data: TimeSeriesPoint[]
@@ -101,7 +101,7 @@ const InteractionChart = ({
             )}
           </div>
           <p className="analytics-section-subtitle">
-            {subtitle}{days === 1 ? ' · UTC' : ''}
+            {subtitle}{days === 1 ? ` · ${getAnalyticsTimeZoneLabel()}` : ''}
           </p>
         </div>
 

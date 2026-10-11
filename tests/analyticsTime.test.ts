@@ -1,11 +1,17 @@
 import { describe, expect, it } from 'vitest'
-import { formatAnalyticsDate, hourBucket, rollingHourKeys } from '../src/features/admin/hooks/analyticsTime'
+import { formatAnalyticsDate, formatUtcHourLabel, hourBucket, localDateKey, rollingHourKeys } from '../src/features/admin/hooks/analyticsTime'
 
-describe('analytics UTC time buckets', () => {
+describe('analytics time buckets', () => {
   it('normalizes offsets before creating bucket identity and visible chart labels', () => {
     expect(hourBucket('2026-09-11T06:45:00+07:00')).toBe('2026-09-10T23:00:00.000Z')
-    expect(formatAnalyticsDate('2026-09-11T06:45:00+07:00', true)).toBe('23:45')
-    expect(formatAnalyticsDate('2026-09-11T06:45:00+07:00', false)).toBe('Sep 10')
+    expect(formatUtcHourLabel('2026-09-11T06:45:00+07:00')).toBe('23:45')
+  })
+
+  it('formats chart labels and day keys in the viewer timezone', () => {
+    const instant = new Date('2026-09-11T06:45:00+07:00')
+    const pad = (value: number) => String(value).padStart(2, '0')
+    expect(formatAnalyticsDate(instant.toISOString(), true)).toBe(`${pad(instant.getHours())}:${pad(instant.getMinutes())}`)
+    expect(localDateKey(instant)).toBe(`${instant.getFullYear()}-${pad(instant.getMonth() + 1)}-${pad(instant.getDate())}`)
   })
 
   it('creates 24 chronological buckets across a year boundary', () => {

@@ -82,7 +82,7 @@ const OverviewCards = ({
     {
       title: 'Visitors Today',
       value: todayAvailable ? data!.visitors_today! : 'Unavailable',
-      description: 'Visitors since midnight (UTC)',
+      description: 'Visitors since midnight (UTC, from Vercel)',
       badge: todayAvailable ? (
         <span className="analytics-kpi-badge-live-content">
           <span className="analytics-live-pulse-dot" />

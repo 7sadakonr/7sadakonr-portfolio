@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { supabase } from '../../../lib/supabase'
-import { formatAnalyticsHour, hourBucket, rollingHourKeys } from './analyticsTime'
+import { formatAnalyticsHour, formatUtcHourLabel, getAnalyticsTimeZone, getAnalyticsTimeZoneLabel, hourBucket, localDateKey, rollingHourKeys } from './analyticsTime'
 
 export type DateRangeDays = 1 | 7 | 30
 
@@ -105,6 +105,7 @@ export function useAnalytics(initialDays: DateRangeDays = 1) {
     const fromDate = new Date(toDate.getTime() - days * 24 * 60 * 60 * 1000)
     const p_from = fromDate.toISOString()
     const p_to = toDate.toISOString()
+    const p_tz = getAnalyticsTimeZone()
 
     try {
       const [
@@ -118,7 +119,7 @@ export function useAnalytics(initialDays: DateRangeDays = 1) {
         tsOpensRes,
         tsResumeRes,
       ] = await Promise.all([
-        supabase.rpc('analytics_overview', { p_from, p_to }),
+        supabase.rpc('analytics_overview', { p_from, p_to, p_tz }),
         supabase.rpc('analytics_utm_campaigns', { p_from, p_to }),
         supabase.rpc('analytics_project_performance', { p_from, p_to }),
         supabase.rpc('analytics_top_interactions', { p_from, p_to }),
@@ -126,9 +127,9 @@ export function useAnalytics(initialDays: DateRangeDays = 1) {
         fetch(`/api/vercel-traffic?days=${days}`)
           .then(async (r) => (r.ok ? r.json() : null))
           .catch(() => null),
-        Promise.resolve(supabase.rpc('analytics_timeseries', { p_from, p_to, p_metric: 'interactions' })).catch(() => ({ data: [], error: null })),
-        Promise.resolve(supabase.rpc('analytics_timeseries', { p_from, p_to, p_metric: 'project_opens' })).catch(() => ({ data: [], error: null })),
-        Promise.resolve(supabase.rpc('analytics_timeseries', { p_from, p_to, p_metric: 'resume_downloads' })).catch(() => ({ data: [], error: null })),
+        Promise.resolve(supabase.rpc('analytics_timeseries', { p_from, p_to, p_metric: 'interactions', p_tz })).catch(() => ({ data: [], error: null })),
+        Promise.resolve(supabase.rpc('analytics_timeseries', { p_from, p_to, p_metric: 'project_opens', p_tz })).catch(() => ({ data: [], error: null })),
+        Promise.resolve(supabase.rpc('analytics_timeseries', { p_from, p_to, p_metric: 'resume_downloads', p_tz })).catch(() => ({ data: [], error: null })),
       ])
 
       if (overviewRes.error) throw overviewRes.error
@@ -180,8 +181,11 @@ export function useAnalytics(initialDays: DateRangeDays = 1) {
           }
         }
       }
-      const todayIso = toDate.toISOString().slice(0, 10)
-      const yesterdayIso = new Date(toDate.getTime() - 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
+      // Vercel buckets days in UTC, so its "today" lookups stay UTC-keyed.
+      const utcTodayIso = toDate.toISOString().slice(0, 10)
+      const utcYesterdayIso = new Date(toDate.getTime() - 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
+      // Supabase daily buckets follow the viewer's timezone (p_tz).
+      const todayIso = localDateKey(toDate)
       const dailyVisitors = new Map((vercelTraffic?.dailyTimeSeries ?? []).map((point) => [point.date, point.visitors]))
       const dailyAvailable = vercelVisitorDataAvailable && vercelTraffic?.visitorDailyDataAvailable === true
       setIsVercelSynced(vercelVisitorDataAvailable)
@@ -190,8 +194,8 @@ export function useAnalytics(initialDays: DateRangeDays = 1) {
       const mergedOverview: AnalyticsOverviewData = {
         visitors: vercelVisitors,
         visitors_prev: null,
-        visitors_today: dailyAvailable ? dailyVisitors.get(todayIso) ?? 0 : null,
-        visitors_yesterday: dailyAvailable ? dailyVisitors.get(yesterdayIso) ?? 0 : null,
+        visitors_today: dailyAvailable ? dailyVisitors.get(utcTodayIso) ?? 0 : null,
+        visitors_yesterday: dailyAvailable ? dailyVisitors.get(utcYesterdayIso) ?? 0 : null,
         active_now: 0,
         page_views: rawPageViews,
         interactions: rawInteractions,
@@ -213,21 +217,18 @@ export function useAnalytics(initialDays: DateRangeDays = 1) {
       if (isHourly) {
         dateKeys.push(...rollingHourKeys(fromDate, toDate))
       } else {
-        const curDate = new Date(fromDate)
-        const toDateFloor = new Date(toDate)
-        while (curDate <= toDateFloor) {
-          dateKeys.push(curDate.toISOString().slice(0, 10))
-          curDate.setUTCDate(curDate.getUTCDate() + 1)
+        const localDays = new Set<string>()
+        for (let time = fromDate.getTime(); time <= toDate.getTime(); time += 24 * 60 * 60 * 1000) {
+          localDays.add(localDateKey(new Date(time)))
         }
-        if (!dateKeys.includes(todayIso)) {
-          dateKeys.push(todayIso)
-        }
+        localDays.add(todayIso)
+        dateKeys.push(...localDays)
       }
 
       // Helper to match hourly point from RPC
       const matchHourlyCount = (arr: TimeSeriesPoint[], key: string): number => {
         const exact = arr.find((point) => hourBucket(point.date) === key)
-        const legacy = arr.filter((point) => point.date === formatAnalyticsHour(key))
+        const legacy = arr.filter((point) => point.date === formatUtcHourLabel(key))
         const found = exact ?? (legacy.length === 1 ? legacy[0] : undefined)
         return found ? toSafeNum(found.count, 0) : 0
       }
@@ -422,7 +423,7 @@ export function useAnalytics(initialDays: DateRangeDays = 1) {
     let peakTimeLabel = peakPt.date || '-'
     if (days === 1) {
       const next = new Date(new Date(peakTimeLabel).getTime() + 60 * 60 * 1000).toISOString()
-      peakTimeLabel = `${formatAnalyticsHour(peakTimeLabel)} - ${formatAnalyticsHour(next)} UTC`
+      peakTimeLabel = `${formatAnalyticsHour(peakTimeLabel)} - ${formatAnalyticsHour(next)} ${getAnalyticsTimeZoneLabel()}`
     }
 
     let busiestPeriodLabel = '-'
@@ -434,7 +435,7 @@ export function useAnalytics(initialDays: DateRangeDays = 1) {
         { name: 'Night (00:00 - 06:00)', total: 0 },
       ]
       for (const pt of currentSeries) {
-        const h = new Date(pt.date).getUTCHours()
+        const h = new Date(pt.date).getHours()
         if (!isNaN(h)) {
           if (h >= 6 && h < 12 && periods[0]) periods[0].total += pt.count
           else if (h >= 12 && h < 18 && periods[1]) periods[1].total += pt.count
