@@ -211,7 +211,12 @@ export function useAnalytics(initialDays: DateRangeDays = 1) {
       setOverview(mergedOverview)
 
       // 2. Build Date Axis: Hourly for 1-day view (24h), Daily for multi-day views (7d, 30d)
-      const isHourly = days === 1
+      // The aggregate model (analytics_daily) only returns daily buckets, so fall back to daily keys
+      // unless the RPC actually returned hourly points.
+      const hasHourlyPoints = [tsInteractionsRes.data, tsOpensRes.data, tsResumeRes.data].some(
+        (rows) => Array.isArray(rows) && rows.some((point: TimeSeriesPoint) => String(point.date || '').length > 10),
+      )
+      const isHourly = days === 1 && hasHourlyPoints
       const dateKeys: string[] = []
 
       if (isHourly) {
