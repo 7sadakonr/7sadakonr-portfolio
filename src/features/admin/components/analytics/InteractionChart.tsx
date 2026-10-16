@@ -69,7 +69,7 @@ const InteractionChart = ({
   insights,
 }: InteractionChartProps) => {
   const chartData = data.map((d) => ({
-    date: formatAnalyticsDate(d.date, days === 1),
+    date: formatAnalyticsDate(d.date, d.date.length > 10),
     count: typeof d.count === 'number' && !isNaN(d.count) && isFinite(d.count) ? d.count : 0,
     rawDate: d.date,
   }))
@@ -82,7 +82,7 @@ const InteractionChart = ({
   const subtitle = metric === 'visitors'
     ? `Vercel visitor data · ${days === 1 ? 'Hourly distribution across the last 24 hours' : `Daily distribution across the last ${days} days`}`
     : days === 1
-      ? 'Hourly engagement distribution across the last 24 hours'
+      ? 'Daily engagement over the last 24 hours'
       : `Daily engagement distribution across the last ${days} days`
 
   return (
