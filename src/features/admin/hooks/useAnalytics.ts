@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { supabase } from '../../../lib/supabase'
-import { formatAnalyticsHour, formatUtcHourLabel, getAnalyticsTimeZone, getAnalyticsTimeZoneLabel, hourBucket, localDateKey, rollingHourKeys } from './analyticsTime'
+import { formatAnalyticsHour, getAnalyticsTimeZone, getAnalyticsTimeZoneLabel, localDateKey, rollingHourKeys } from './analyticsTime'
 
 export type DateRangeDays = 1 | 7 | 30
 
@@ -210,37 +210,20 @@ export function useAnalytics(initialDays: DateRangeDays = 1) {
       }
       setOverview(mergedOverview)
 
-      // 2. Build Date Axis: Hourly for 1-day view (24h), Daily for multi-day views (7d, 30d)
-      // The aggregate model (analytics_daily) only returns daily buckets, so fall back to daily keys
-      // unless the RPC actually returned hourly points.
-      const hasHourlyPoints = [tsInteractionsRes.data, tsOpensRes.data, tsResumeRes.data].some(
-        (rows) => Array.isArray(rows) && rows.some((point: TimeSeriesPoint) => String(point.date || '').length > 10),
-      )
-      const isHourly = days === 1 && hasHourlyPoints
-      const dateKeys: string[] = []
-
-      if (isHourly) {
-        dateKeys.push(...rollingHourKeys(fromDate, toDate))
-      } else {
-        const localDays = new Set<string>()
-        for (let time = fromDate.getTime(); time <= toDate.getTime(); time += 24 * 60 * 60 * 1000) {
-          localDays.add(localDateKey(new Date(time)))
-        }
-        localDays.add(todayIso)
-        dateKeys.push(...localDays)
+      // 2. Build date axes. Vercel visitors are hourly in the 24h view; analytics_daily only has
+      // daily buckets, so the DB-backed series always use local calendar days.
+      const hourKeys = days === 1 ? rollingHourKeys(fromDate, toDate) : []
+      const localDays = new Set<string>()
+      for (let time = fromDate.getTime(); time <= toDate.getTime(); time += 24 * 60 * 60 * 1000) {
+        localDays.add(localDateKey(new Date(time)))
       }
-
-      // Helper to match hourly point from RPC
-      const matchHourlyCount = (arr: TimeSeriesPoint[], key: string): number => {
-        const exact = arr.find((point) => hourBucket(point.date) === key)
-        const legacy = arr.filter((point) => point.date === formatUtcHourLabel(key))
-        const found = exact ?? (legacy.length === 1 ? legacy[0] : undefined)
-        return found ? toSafeNum(found.count, 0) : 0
-      }
+      localDays.add(todayIso)
+      const dateKeys: string[] = [...localDays]
+      const visitorKeys = hourKeys.length > 0 ? hourKeys : dateKeys
 
       // 2.1 Process 'visitors' series
       const processedVisitors: TimeSeriesPoint[] = vercelVisitorDataAvailable
-        ? dateKeys.map((key) => ({
+        ? visitorKeys.map((key) => ({
             date: key,
             count: vercelVisitorsByDate.get(key) ?? 0,
           }))
@@ -249,10 +232,6 @@ export function useAnalytics(initialDays: DateRangeDays = 1) {
       // 2.2 Process 'interactions' series
       const rawInteractionsArray = Array.isArray(tsInteractionsRes.data) ? (tsInteractionsRes.data as TimeSeriesPoint[]) : []
       const processedInteractions: TimeSeriesPoint[] = dateKeys.map((key) => {
-        if (isHourly) {
-          const rpcCount = matchHourlyCount(rawInteractionsArray, key)
-          return { date: key, count: rpcCount }
-        }
         const found = rawInteractionsArray.find((p) => String(p.date || '').slice(0, 10) === key)
         return { date: key, count: found ? toSafeNum(found.count, 0) : 0 }
       })
@@ -260,10 +239,6 @@ export function useAnalytics(initialDays: DateRangeDays = 1) {
       // 2.3 Process 'project_opens' series
       const rawOpensArray = Array.isArray(tsOpensRes.data) ? (tsOpensRes.data as TimeSeriesPoint[]) : []
       const processedOpens: TimeSeriesPoint[] = dateKeys.map((key) => {
-        if (isHourly) {
-          const rpcCount = matchHourlyCount(rawOpensArray, key)
-          return { date: key, count: rpcCount }
-        }
         const found = rawOpensArray.find((p) => String(p.date || '').slice(0, 10) === key)
         return { date: key, count: found ? toSafeNum(found.count, 0) : 0 }
       })
@@ -274,10 +249,6 @@ export function useAnalytics(initialDays: DateRangeDays = 1) {
       // 2.5 Process 'resume_downloads' series
       const rawResumeArray = Array.isArray(tsResumeRes.data) ? (tsResumeRes.data as TimeSeriesPoint[]) : []
       const processedResume: TimeSeriesPoint[] = dateKeys.map((key) => {
-        if (isHourly) {
-          const rpcCount = matchHourlyCount(rawResumeArray, key)
-          return { date: key, count: rpcCount }
-        }
         const found = rawResumeArray.find((p) => String(p.date || '').slice(0, 10) === key)
         return { date: key, count: found ? toSafeNum(found.count, 0) : 0 }
       })
@@ -393,13 +364,14 @@ export function useAnalytics(initialDays: DateRangeDays = 1) {
   // Traffic insights (peak hour/day, averages, busiest time window)
   const trafficInsights = useMemo<TrafficInsights>(() => {
     const currentSeries = timeseriesMap[metric] || []
+    const hourly = days === 1 && metric === 'visitors'
     if (!currentSeries || currentSeries.length === 0) {
       return {
         peakTimeLabel: '-',
         peakCount: 0,
         average: 0,
         busiestPeriodLabel: '-',
-        unitLabel: days === 1 ? 'per hour' : 'per day',
+        unitLabel: hourly ? 'per hour' : 'per day',
       }
     }
 
@@ -410,7 +382,7 @@ export function useAnalytics(initialDays: DateRangeDays = 1) {
         peakCount: 0,
         average: 0,
         busiestPeriodLabel: '-',
-        unitLabel: days === 1 ? 'per hour' : 'per day',
+        unitLabel: hourly ? 'per hour' : 'per day',
       }
     }
 
@@ -426,13 +398,13 @@ export function useAnalytics(initialDays: DateRangeDays = 1) {
     const average = currentSeries.length > 0 ? Math.round((sum / currentSeries.length) * 10) / 10 : 0
 
     let peakTimeLabel = peakPt.date || '-'
-    if (days === 1) {
+    if (hourly) {
       const next = new Date(new Date(peakTimeLabel).getTime() + 60 * 60 * 1000).toISOString()
       peakTimeLabel = `${formatAnalyticsHour(peakTimeLabel)} - ${formatAnalyticsHour(next)} ${getAnalyticsTimeZoneLabel()}`
     }
 
     let busiestPeriodLabel = '-'
-    if (days === 1) {
+    if (hourly) {
       const periods = [
         { name: 'Morning (06:00 - 12:00)', total: 0 },
         { name: 'Afternoon (12:00 - 18:00)', total: 0 },
@@ -460,7 +432,7 @@ export function useAnalytics(initialDays: DateRangeDays = 1) {
       peakCount: peakPt.count,
       average,
       busiestPeriodLabel,
-      unitLabel: days === 1 ? 'per hour' : 'per day',
+      unitLabel: hourly ? 'per hour' : 'per day',
     }
   }, [timeseriesMap, metric, days])
 
