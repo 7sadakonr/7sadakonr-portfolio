@@ -1,13 +1,16 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import AdminLayout from '../src/features/admin/components/AdminLayout'
+import { useUnsavedChanges } from '../src/features/admin/hooks/useUnsavedChanges'
 
 vi.mock('../src/features/admin/auth/useAdminAuth', () => ({
   useAdminAuth: () => ({ logout: vi.fn() }),
 }))
 
 describe('AdminLayout', () => {
+  afterEach(cleanup)
+
   it('opens the mobile admin menu and closes it after choosing a destination', () => {
     render(
       <MemoryRouter initialEntries={['/admin/analytics']}>
@@ -30,5 +33,34 @@ describe('AdminLayout', () => {
     fireEvent.click(menuButton)
     fireEvent.click(screen.getByRole('link', { name: 'Projects' }))
     expect(menuButton.getAttribute('aria-expanded')).toBe('false')
+  })
+
+  it('asks before leaving a page with unsaved changes and lets the admin stay or discard', async () => {
+    const DirtyPage = () => {
+      useUnsavedChanges(true)
+      return <p>Dirty form</p>
+    }
+    render(
+      <MemoryRouter initialEntries={['/admin/profile']}>
+        <Routes>
+          <Route element={<AdminLayout />}>
+            <Route path="/admin/profile" element={<DirtyPage />} />
+            <Route path="/admin/projects" element={<p>Projects page</p>} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    fireEvent.click(screen.getByRole('link', { name: 'Projects' }))
+    expect(await screen.findByText('Leave without saving?')).toBeTruthy()
+    expect(screen.getByText('Dirty form')).toBeTruthy()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Keep editing' }))
+    expect(screen.queryByText('Leave without saving?')).toBeNull()
+    expect(screen.getByText('Dirty form')).toBeTruthy()
+
+    fireEvent.click(screen.getByRole('link', { name: 'Projects' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Discard and leave' }))
+    expect(await screen.findByText('Projects page')).toBeTruthy()
   })
 })

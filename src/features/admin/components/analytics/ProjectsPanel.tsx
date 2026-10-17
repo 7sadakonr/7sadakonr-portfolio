@@ -10,7 +10,7 @@ interface ProjectsPanelProps {
   error?: string | null
 }
 
-export const clickThrough = (row: ProjectRow): number =>
+const clickThrough = (row: ProjectRow): number =>
   row.opens > 0 ? Math.round(((row.github_clicks + row.demo_clicks) / row.opens) * 1000) / 10 : 0
 
 const ProjectsPanel = ({ rows, isLoading, error }: ProjectsPanelProps) => {

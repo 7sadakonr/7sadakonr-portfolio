@@ -1,10 +1,14 @@
 import { FormEvent, useMemo, useState } from 'react'
-import { Alert, Button, Card, Input, Switch, TextArea } from '@heroui/react'
+import { Alert, Button, Input, Switch, TextArea } from '@heroui/react'
 import type { ProjectDraft, ProjectRecord } from '../../projects/types'
 import { validateProjectUrls } from '../../projects/validation/projectValidation'
 import TechTagInput from './TechTagInput'
 import ProjectImageField from './ProjectImageField'
 import { createUuid } from '../../../utils/createUuid'
+import Panel from './ui/Panel'
+import FormActionBar from './ui/FormActionBar'
+import ConfirmDialog from './ui/ConfirmDialog'
+import { useUnsavedChanges } from '../hooks/useUnsavedChanges'
 
 export interface ProjectFormValues extends ProjectDraft {
   newImage: File | null
@@ -36,180 +40,143 @@ const toValues = (project: ProjectRecord | null, sortOrder: number): ProjectForm
   removeCurrentImage: false,
 })
 
+type FieldErrors = Partial<Record<'title' | 'description' | 'liveUrl' | 'githubUrl', string>>
+
+const FieldError = ({ id, message }: { id: string; message?: string }) =>
+  message ? <span id={id} className="ad-field__error" role="alert">{message}</span> : null
+
 const ProjectForm = ({ initialProject, sortOrder, suggestions, onSave, onCancel }: ProjectFormProps) => {
   const [values, setValues] = useState(() => toValues(initialProject, sortOrder))
-  const [error, setError] = useState<string | null>(null)
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
+  const [saveError, setSaveError] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
+  const [isDirty, setIsDirty] = useState(false)
+  const [confirmDiscard, setConfirmDiscard] = useState(false)
+  useUnsavedChanges(isDirty)
   const uniqueSuggestions = useMemo(() => [...new Set([...suggestions, ...values.tech])].sort(), [suggestions, values.tech])
 
-  const set = <K extends keyof ProjectFormValues>(key: K, value: ProjectFormValues[K]) => setValues((current) => ({ ...current, [key]: value }))
+  const set = <K extends keyof ProjectFormValues>(key: K, value: ProjectFormValues[K]) => {
+    setIsDirty(true)
+    setValues((current) => ({ ...current, [key]: value }))
+    if (key in fieldErrors) setFieldErrors((current) => ({ ...current, [key]: undefined }))
+  }
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     const urlErrors = validateProjectUrls(values.liveUrl, values.githubUrl)
-    if (!values.title.trim() || !values.description.trim()) {
-      setError('Title and description are required.')
-      return
+    const errors: FieldErrors = {
+      ...(values.title.trim() ? {} : { title: 'Enter a project title.' }),
+      ...(values.description.trim() ? {} : { description: 'Enter a short description.' }),
+      ...(urlErrors.liveUrl ? { liveUrl: urlErrors.liveUrl } : {}),
+      ...(urlErrors.githubUrl ? { githubUrl: urlErrors.githubUrl } : {}),
     }
-    if (urlErrors.liveUrl || urlErrors.githubUrl) {
-      setError(urlErrors.liveUrl ?? urlErrors.githubUrl ?? null)
-      return
-    }
-    setError(null)
+    setFieldErrors(errors)
+    if (Object.keys(errors).length > 0) return
+    setSaveError(null)
     setIsSaving(true)
     try {
       await onSave(values)
-    } catch (saveError) {
-      setError(saveError instanceof Error ? saveError.message : 'Unable to save project.')
+    } catch (error) {
+      setSaveError(error instanceof Error ? error.message : 'Unable to save project.')
     } finally {
       setIsSaving(false)
     }
   }
 
   return (
-    <Card className="border border-zinc-800 bg-[#16161b] p-0 shadow-2xl max-w-3xl rounded-2xl">
-      <form onSubmit={(event) => void handleSubmit(event)} className="p-6 sm:p-8 flex flex-col gap-6">
-        <div className="flex flex-col gap-1.5 border-b border-zinc-800/80 pb-4">
-          <span className="admin-eyebrow">Project Configuration</span>
-          <h2 className="text-xl font-bold text-white m-0">Project Details</h2>
-          <p className="text-xs text-zinc-400 m-0">
-            Define metadata, media, repository &amp; demo URLs, and technologies for this showcase item.
-          </p>
-        </div>
+    <form onSubmit={(event) => void handleSubmit(event)} className="ad-form-stack" noValidate>
+      {saveError && (
+        <Alert status="danger">
+          <Alert.Indicator />
+          <Alert.Content>
+            <Alert.Title className="text-xs font-bold">Couldn&apos;t save the project</Alert.Title>
+            <Alert.Description className="text-xs">{saveError}</Alert.Description>
+          </Alert.Content>
+        </Alert>
+      )}
 
-        {error && (
-          <Alert status="danger">
-            <Alert.Indicator />
-            <Alert.Content>
-              <Alert.Title className="text-xs font-bold">Validation Error</Alert.Title>
-              <Alert.Description className="text-xs">{error}</Alert.Description>
-            </Alert.Content>
-          </Alert>
-        )}
-
-        <div className="flex flex-col gap-4">
-          <label className="flex flex-col gap-1.5 text-xs font-semibold text-zinc-300">
-            <span>Project Title <span className="text-rose-400">*</span></span>
-            <Input
-              value={values.title}
-              onChange={(event) => set('title', event.target.value)}
-              placeholder="e.g. Real-Time Analytics Platform"
-              required
-              className="w-full border border-zinc-700/80 bg-[#181820] text-zinc-100 placeholder:text-zinc-400 rounded-xl focus:border-violet-500"
-            />
+      <Panel title="Basics" description="What visitors read first on the project card.">
+        <div className="ad-form-stack">
+          <label className="ad-field">
+            <span>Title <span className="ad-required" aria-hidden="true">*</span></span>
+            <Input value={values.title} onChange={(event) => set('title', event.target.value)} placeholder="e.g. Real-time analytics platform" required aria-invalid={Boolean(fieldErrors.title)} aria-describedby="project-title-error" className="w-full" />
+            <FieldError id="project-title-error" message={fieldErrors.title} />
           </label>
-
-          <label className="flex flex-col gap-1.5 text-xs font-semibold text-zinc-300">
-            <span>Description <span className="text-rose-400">*</span></span>
-            <TextArea
-              rows={4}
-              value={values.description}
-              onChange={(event) => set('description', event.target.value)}
-              placeholder="A concise overview of the project, features, challenges, and outcomes…"
-              required
-              className="w-full border border-zinc-700/80 bg-[#181820] text-zinc-100 placeholder:text-zinc-400 rounded-xl focus:border-violet-500 text-sm"
-            />
+          <label className="ad-field">
+            <span>Description <span className="ad-required" aria-hidden="true">*</span></span>
+            <TextArea rows={4} value={values.description} onChange={(event) => set('description', event.target.value)} placeholder="What it does, what you built and what you learned" required aria-invalid={Boolean(fieldErrors.description)} aria-describedby="project-description-error" className="w-full" />
+            <FieldError id="project-description-error" message={fieldErrors.description} />
           </label>
+          <fieldset className="ad-fieldset">
+            <legend>Technologies</legend>
+            <TechTagInput value={values.tech} onChange={(tech) => set('tech', tech)} suggestions={uniqueSuggestions} />
+          </fieldset>
         </div>
+      </Panel>
 
+      <Panel title="Links" description="Optional. Each link gets its own button on the project card.">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <label className="flex flex-col gap-1.5 text-xs font-semibold text-zinc-300">
-            <span>Live Demo URL</span>
-            <Input
-              type="url"
-              value={values.liveUrl}
-              onChange={(event) => set('liveUrl', event.target.value)}
-              placeholder="https://example.com"
-              className="w-full border border-zinc-700/80 bg-[#181820] text-zinc-100 placeholder:text-zinc-400 rounded-xl focus:border-violet-500"
-            />
+          <label className="ad-field">
+            <span>Live demo URL</span>
+            <Input type="url" value={values.liveUrl} onChange={(event) => set('liveUrl', event.target.value)} placeholder="https://example.com" aria-invalid={Boolean(fieldErrors.liveUrl)} aria-describedby="project-live-error" className="w-full" />
+            <FieldError id="project-live-error" message={fieldErrors.liveUrl} />
           </label>
-
-          <label className="flex flex-col gap-1.5 text-xs font-semibold text-zinc-300">
-            <span>GitHub Repository URL</span>
-            <Input
-              type="url"
-              value={values.githubUrl}
-              onChange={(event) => set('githubUrl', event.target.value)}
-              placeholder="https://github.com/..."
-              className="w-full border border-zinc-700/80 bg-[#181820] text-zinc-100 placeholder:text-zinc-400 rounded-xl focus:border-violet-500"
-            />
+          <label className="ad-field">
+            <span>GitHub repository URL</span>
+            <Input type="url" value={values.githubUrl} onChange={(event) => set('githubUrl', event.target.value)} placeholder="https://github.com/…" aria-invalid={Boolean(fieldErrors.githubUrl)} aria-describedby="project-github-error" className="w-full" />
+            <FieldError id="project-github-error" message={fieldErrors.githubUrl} />
           </label>
         </div>
+      </Panel>
 
-        <fieldset className="border border-zinc-800/80 rounded-xl p-4 flex flex-col gap-2 bg-[#121216]">
-          <legend className="text-xs font-bold text-zinc-300 px-2 uppercase tracking-wider">Technologies &amp; Tags</legend>
-          <TechTagInput value={values.tech} onChange={(tech) => set('tech', tech)} suggestions={uniqueSuggestions} />
-        </fieldset>
+      <Panel title="Cover image" description="Shown on the project card. A gradient is used when there is no image.">
+        <ProjectImageField
+          currentUrl={values.imageUrl}
+          onChange={(newImage, removeCurrentImage) => {
+            setIsDirty(true)
+            setValues((current) => ({ ...current, newImage, removeCurrentImage }))
+          }}
+        />
+      </Panel>
 
-        <fieldset className="border border-zinc-800/80 rounded-xl p-4 flex flex-col gap-2 bg-[#121216]">
-          <legend className="text-xs font-bold text-zinc-300 px-2 uppercase tracking-wider">Cover Media</legend>
-          <ProjectImageField
-            currentUrl={values.imageUrl}
-            onChange={(newImage, removeCurrentImage) => setValues((current) => ({ ...current, newImage, removeCurrentImage }))}
-          />
-        </fieldset>
-
-        {/* HeroUI Switches for Status & Visibility */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-xl border border-zinc-800/80 bg-[#121216]">
-          <div className="flex items-center justify-between gap-3 p-2">
-            <div className="flex flex-col gap-0.5">
-              <span className="text-xs font-bold text-zinc-200">Show on Portfolio</span>
-              <span className="text-[11px] text-zinc-400">Make this project public and visible to visitors</span>
+      <Panel title="Visibility">
+        <div className="ad-list">
+          <div className="ad-row">
+            <div className="ad-row__main">
+              <p className="ad-row__title" style={{ marginBottom: 2 }}>Show on portfolio</p>
+              <p className="ad-row__meta">Hidden projects stay saved but visitors cannot see them.</p>
             </div>
-            <Switch
-              isSelected={values.isVisible}
-              onChange={(checked) => set('isVisible', checked)}
-              size="sm"
-              aria-label="Show on Portfolio"
-            >
-              <Switch.Content className="cursor-pointer">
-                <Switch.Control>
-                  <Switch.Thumb />
-                </Switch.Control>
-              </Switch.Content>
+            <Switch isSelected={values.isVisible} onChange={(checked) => set('isVisible', checked)} size="sm" aria-label="Show on portfolio">
+              <Switch.Content className="cursor-pointer"><Switch.Control><Switch.Thumb /></Switch.Control></Switch.Content>
             </Switch>
           </div>
-
-          <div className="flex items-center justify-between gap-3 p-2 border-t sm:border-t-0 sm:border-l border-zinc-800/80 pt-3 sm:pt-0 sm:pl-4">
-            <div className="flex flex-col gap-0.5">
-              <span className="text-xs font-bold text-zinc-200">In Development</span>
-              <span className="text-[11px] text-zinc-400">Display "In Progress" badge on the card</span>
+          <div className="ad-row">
+            <div className="ad-row__main">
+              <p className="ad-row__title" style={{ marginBottom: 2 }}>In development</p>
+              <p className="ad-row__meta">Adds an &quot;In progress&quot; badge to the card.</p>
             </div>
-            <Switch
-              isSelected={values.isInProgress}
-              onChange={(checked) => set('isInProgress', checked)}
-              size="sm"
-              aria-label="Currently in development"
-            >
-              <Switch.Content className="cursor-pointer">
-                <Switch.Control>
-                  <Switch.Thumb />
-                </Switch.Control>
-              </Switch.Content>
+            <Switch isSelected={values.isInProgress} onChange={(checked) => set('isInProgress', checked)} size="sm" aria-label="In development">
+              <Switch.Content className="cursor-pointer"><Switch.Control><Switch.Thumb /></Switch.Control></Switch.Content>
             </Switch>
           </div>
         </div>
+      </Panel>
 
-        <div className="admin-form-actions flex items-center justify-end gap-3 pt-2">
-          <Button
-            type="button"
-            variant="outline"
-            className="text-xs font-semibold cursor-pointer px-4 border-zinc-700 hover:bg-zinc-800"
-            onClick={onCancel}
-          >
-            Cancel
-          </Button>
-          <Button
-            type="submit"
-            variant="primary"
-            isDisabled={isSaving}
-            className="admin-button text-xs font-bold cursor-pointer px-6"
-          >
-            {isSaving ? 'Saving…' : 'Save Project'}
-          </Button>
-        </div>
-      </form>
-    </Card>
+      <FormActionBar isDirty={isDirty || !initialProject} isSaving={isSaving} saveLabel={initialProject ? 'Save project' : 'Create project'}>
+        <Button type="button" variant="outline" isDisabled={isSaving} onClick={() => (isDirty ? setConfirmDiscard(true) : onCancel())}>Cancel</Button>
+      </FormActionBar>
+
+      <ConfirmDialog
+        isOpen={confirmDiscard}
+        tone="default"
+        title="Discard your changes?"
+        description="The edits you made to this project will be lost."
+        confirmLabel="Discard changes"
+        cancelLabel="Keep editing"
+        onCancel={() => setConfirmDiscard(false)}
+        onConfirm={onCancel}
+      />
+    </form>
   )
 }
 

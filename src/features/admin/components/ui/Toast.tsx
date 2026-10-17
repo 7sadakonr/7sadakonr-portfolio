@@ -1,27 +1,12 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
-
-export type ToastTone = 'success' | 'error' | 'info'
+import { ToastContext, type ToastApi, type ToastTone } from './toastContext'
 
 interface ToastItem {
   id: number
   tone: ToastTone
   title: string
   message?: string
-}
-
-interface ToastApi {
-  success: (title: string, message?: string) => void
-  error: (title: string, message?: string) => void
-  info: (title: string, message?: string) => void
-}
-
-const ToastContext = createContext<ToastApi | null>(null)
-
-export function useToast(): ToastApi {
-  const api = useContext(ToastContext)
-  if (!api) throw new Error('useToast must be used inside <ToastProvider>')
-  return api
 }
 
 const LIFETIME_MS: Record<ToastTone, number> = { success: 4000, info: 4000, error: 8000 }

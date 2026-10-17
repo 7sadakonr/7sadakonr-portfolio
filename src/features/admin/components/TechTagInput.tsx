@@ -62,7 +62,7 @@ const TechTagInput = ({ value, onChange, suggestions }: TechTagInputProps) => {
         onKeyDown={handleKeyDown}
         onBlur={() => add(pending)}
         placeholder="Type a technology and press Enter (e.g. React, TypeScript, Go)"
-        className="w-full text-xs border border-zinc-700/80 bg-[#181820] text-zinc-100 placeholder:text-zinc-400 rounded-xl focus:border-violet-500"
+        className="w-full text-xs border border-zinc-700/80 bg-[var(--field-background)] text-zinc-100 placeholder:text-zinc-400 rounded-xl focus:border-violet-500"
       />
       <datalist id="tech-suggestions">
         {suggestions.map((item) => (
