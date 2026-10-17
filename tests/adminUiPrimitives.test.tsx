@@ -8,6 +8,8 @@ import { getWindow } from '../src/features/admin/hooks/analyticsTime'
 import { ToastProvider } from '../src/features/admin/components/ui/Toast'
 import { useToast } from '../src/features/admin/components/ui/toastContext'
 
+afterEach(cleanup)
+
 interface Row { name: string; hits: number }
 const rows: Row[] = [{ name: 'Alpha', hits: 3 }, { name: 'Beta', hits: 10 }]
 const columns: Column<Row>[] = [
@@ -24,6 +26,17 @@ describe('DataTable', () => {
     fireEvent.click(within(table).getByRole('button', { name: /Hits/, hidden: true }))
     expect(names()).toEqual(['Alpha3', 'Beta10'])
     expect(screen.getByRole('list', { name: 'Things', hidden: true }).children).toHaveLength(2)
+  })
+
+  it('collapses long tables behind a Show all toggle', () => {
+    const many = Array.from({ length: 5 }, (_, index) => ({ name: `Row ${index}`, hits: index }))
+    render(<DataTable caption="Many" columns={columns} rows={many} getRowKey={(row) => row.name} initialRows={2} />)
+    const rowsShown = () => within(screen.getByRole('table', { hidden: true })).getAllByRole('row', { hidden: true }).length - 1
+    expect(rowsShown()).toBe(2)
+    fireEvent.click(screen.getByRole('button', { name: 'Show all 5' }))
+    expect(rowsShown()).toBe(5)
+    fireEvent.click(screen.getByRole('button', { name: 'Show fewer' }))
+    expect(rowsShown()).toBe(2)
   })
 
   it('activates a row from the keyboard-reachable first-cell button', () => {

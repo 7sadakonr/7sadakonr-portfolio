@@ -38,7 +38,7 @@ const HourLog = ({ entries, isLoading, error }: HourLogProps) => (
     error={error}
     empty={entries.length === 0 ? { title: 'No project or resume activity in the last 24 hours', description: 'Each project open and resume download shows up here under the hour it happened.' } : null}
   >
-    <DataTable caption="Activity by hour" columns={columns} rows={entries} getRowKey={(entry) => entry.key} />
+    <DataTable caption="Activity by hour" columns={columns} rows={entries} getRowKey={(entry) => entry.key} initialRows={12} />
   </Panel>
 )
 

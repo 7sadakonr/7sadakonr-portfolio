@@ -15,6 +15,7 @@ interface VercelRow {
   timestamp?: string | number
   time?: string | number
   referrer?: string
+  referrerHostname?: string
   country?: string
   pageViews?: number
   visitors?: number
@@ -192,7 +193,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       getJson(query(window.prevStart, window.prevEnd)),
       getJson(query(window.start, window.end, { by: 'hour' })),
       getJson(query(window.prevStart, window.prevEnd, { by: 'hour' })),
-      getJson(query(window.start, window.end, { by: 'referrer', limit: '8' })),
+      getJson(query(window.start, window.end, { by: 'referrerHostname', limit: '10' })),
       getJson(query(window.start, window.end, { by: 'country', limit: '10' })),
     ])
 
@@ -213,11 +214,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     const current = totalVisitors(countNow) ?? sumOf(series)
     const previous = totalVisitors(countPrev) ?? sumOf(previousSeries)
 
-    const named = (raw: unknown, field: 'referrer' | 'country', fallback: string) =>
+    const named = (raw: unknown, field: 'referrer' | 'country', source: 'referrerHostname' | 'country', fallback: string) =>
       (rowsOf(raw) ?? [])
         .filter((row): row is VercelRow => Boolean(row))
         .map((row) => ({
-          [field]: row[field] || row.key || fallback,
+          [field]: row[source] || row.key || fallback,
           count: num(row.visitors ?? row.count ?? row.total ?? row.pageViews),
         }))
 
@@ -229,8 +230,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       series: series ?? [],
       previousSeries: previousSeries ?? [],
       seriesAvailable: series !== null,
-      topReferrers: named(referrers, 'referrer', '(Direct / None)'),
-      topCountries: named(countries, 'country', 'Unknown'),
+      topReferrers: named(referrers, 'referrer', 'referrerHostname', '(Direct / none)'),
+      topCountries: named(countries, 'country', 'country', 'Unknown'),
     })
   } catch (err) {
     console.error('[Vercel Traffic API] Failed querying Vercel Web Analytics:', err)
