@@ -321,6 +321,16 @@ create table if not exists public.analytics_daily (
   )
 );
 
+-- Upgrade path: the table may already exist from an earlier run without the hour column.
+alter table public.analytics_daily
+  add column if not exists hour smallint not null default 0 check (hour between 0 and 23);
+alter table public.analytics_daily
+  alter column date set default (timezone('Asia/Bangkok', now()))::date;
+alter table public.analytics_daily drop constraint if exists analytics_daily_dimensions_key;
+alter table public.analytics_daily add constraint analytics_daily_dimensions_key unique (
+  date, hour, metric, country, referrer_host, utm_source, utm_medium, utm_campaign, page, project_slug
+);
+
 create index if not exists analytics_daily_date_idx on public.analytics_daily (date);
 create index if not exists analytics_daily_date_hour_idx on public.analytics_daily (date, hour);
 create index if not exists analytics_daily_metric_idx on public.analytics_daily (metric);
