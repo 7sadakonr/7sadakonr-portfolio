@@ -43,7 +43,7 @@ const toValues = (project: ProjectRecord | null, sortOrder: number): ProjectForm
 type FieldErrors = Partial<Record<'title' | 'description' | 'liveUrl' | 'githubUrl', string>>
 
 const FieldError = ({ id, message }: { id: string; message?: string }) =>
-  message ? <span id={id} className="ad-field__error" role="alert">{message}</span> : null
+  message ? <span id={id} className="adm-field__error" role="alert">{message}</span> : null
 
 const ProjectForm = ({ initialProject, sortOrder, suggestions, onSave, onCancel }: ProjectFormProps) => {
   const [values, setValues] = useState(() => toValues(initialProject, sortOrder))
@@ -84,7 +84,7 @@ const ProjectForm = ({ initialProject, sortOrder, suggestions, onSave, onCancel 
   }
 
   return (
-    <form onSubmit={(event) => void handleSubmit(event)} className="ad-form-stack" noValidate>
+    <form onSubmit={(event) => void handleSubmit(event)} className="adm-form-stack" noValidate>
       {saveError && (
         <Alert status="danger">
           <Alert.Indicator />
@@ -96,18 +96,18 @@ const ProjectForm = ({ initialProject, sortOrder, suggestions, onSave, onCancel 
       )}
 
       <Panel title="Basics" description="What visitors read first on the project card.">
-        <div className="ad-form-stack">
-          <label className="ad-field">
-            <span>Title <span className="ad-required" aria-hidden="true">*</span></span>
+        <div className="adm-form-stack">
+          <label className="adm-field">
+            <span>Title <span className="adm-required" aria-hidden="true">*</span></span>
             <Input value={values.title} onChange={(event) => set('title', event.target.value)} placeholder="e.g. Real-time analytics platform" required aria-invalid={Boolean(fieldErrors.title)} aria-describedby="project-title-error" className="w-full" />
             <FieldError id="project-title-error" message={fieldErrors.title} />
           </label>
-          <label className="ad-field">
-            <span>Description <span className="ad-required" aria-hidden="true">*</span></span>
+          <label className="adm-field">
+            <span>Description <span className="adm-required" aria-hidden="true">*</span></span>
             <TextArea rows={4} value={values.description} onChange={(event) => set('description', event.target.value)} placeholder="What it does, what you built and what you learned" required aria-invalid={Boolean(fieldErrors.description)} aria-describedby="project-description-error" className="w-full" />
             <FieldError id="project-description-error" message={fieldErrors.description} />
           </label>
-          <fieldset className="ad-fieldset">
+          <fieldset className="adm-fieldset">
             <legend>Technologies</legend>
             <TechTagInput value={values.tech} onChange={(tech) => set('tech', tech)} suggestions={uniqueSuggestions} />
           </fieldset>
@@ -116,12 +116,12 @@ const ProjectForm = ({ initialProject, sortOrder, suggestions, onSave, onCancel 
 
       <Panel title="Links" description="Optional. Each link gets its own button on the project card.">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <label className="ad-field">
+          <label className="adm-field">
             <span>Live demo URL</span>
             <Input type="url" value={values.liveUrl} onChange={(event) => set('liveUrl', event.target.value)} placeholder="https://example.com" aria-invalid={Boolean(fieldErrors.liveUrl)} aria-describedby="project-live-error" className="w-full" />
             <FieldError id="project-live-error" message={fieldErrors.liveUrl} />
           </label>
-          <label className="ad-field">
+          <label className="adm-field">
             <span>GitHub repository URL</span>
             <Input type="url" value={values.githubUrl} onChange={(event) => set('githubUrl', event.target.value)} placeholder="https://github.com/…" aria-invalid={Boolean(fieldErrors.githubUrl)} aria-describedby="project-github-error" className="w-full" />
             <FieldError id="project-github-error" message={fieldErrors.githubUrl} />
@@ -140,20 +140,20 @@ const ProjectForm = ({ initialProject, sortOrder, suggestions, onSave, onCancel 
       </Panel>
 
       <Panel title="Visibility">
-        <div className="ad-list">
-          <div className="ad-row">
-            <div className="ad-row__main">
-              <p className="ad-row__title" style={{ marginBottom: 2 }}>Show on portfolio</p>
-              <p className="ad-row__meta">Hidden projects stay saved but visitors cannot see them.</p>
+        <div className="adm-list">
+          <div className="adm-row">
+            <div className="adm-row__main">
+              <p className="adm-row__title" style={{ marginBottom: 2 }}>Show on portfolio</p>
+              <p className="adm-row__meta">Hidden projects stay saved but visitors cannot see them.</p>
             </div>
             <Switch isSelected={values.isVisible} onChange={(checked) => set('isVisible', checked)} size="sm" aria-label="Show on portfolio">
               <Switch.Content className="cursor-pointer"><Switch.Control><Switch.Thumb /></Switch.Control></Switch.Content>
             </Switch>
           </div>
-          <div className="ad-row">
-            <div className="ad-row__main">
-              <p className="ad-row__title" style={{ marginBottom: 2 }}>In development</p>
-              <p className="ad-row__meta">Adds an &quot;In progress&quot; badge to the card.</p>
+          <div className="adm-row">
+            <div className="adm-row__main">
+              <p className="adm-row__title" style={{ marginBottom: 2 }}>In development</p>
+              <p className="adm-row__meta">Adds an &quot;In progress&quot; badge to the card.</p>
             </div>
             <Switch isSelected={values.isInProgress} onChange={(checked) => set('isInProgress', checked)} size="sm" aria-label="In development">
               <Switch.Content className="cursor-pointer"><Switch.Control><Switch.Thumb /></Switch.Control></Switch.Content>

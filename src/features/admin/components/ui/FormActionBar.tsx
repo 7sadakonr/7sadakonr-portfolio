@@ -13,11 +13,11 @@ interface FormActionBarProps {
 
 // Sticky footer for edit forms: shows whether there is anything to save and holds the single save button.
 const FormActionBar = ({ isDirty, isSaving, saveLabel, children, onSave }: FormActionBarProps) => (
-  <div className="ad-action-bar" role="group" aria-label="Form actions">
-    <p className={`ad-action-bar__status${isDirty ? ' is-dirty' : ''}`} role="status">
+  <div className="adm-action-bar" role="group" aria-label="Form actions">
+    <p className={`adm-action-bar__status${isDirty ? ' is-dirty' : ''}`} role="status">
       {isSaving ? 'Saving…' : isDirty ? 'You have unsaved changes' : 'All changes saved'}
     </p>
-    <div className="ad-action-bar__buttons">
+    <div className="adm-action-bar__buttons">
       {children}
       <Button
         type={onSave ? 'button' : 'submit'}
