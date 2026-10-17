@@ -28,12 +28,17 @@ describe('admin mobile responsive rules', () => {
     expect(tablet).toMatch(/\.admin-row-actions\s*\{[^}]*width:\s*100%/)
   })
 
-  it('switches between table and cards at the same md (768px) breakpoint as the nav menu', () => {
+  it('switches between table and cards in CSS at the same 768px breakpoint as the nav menu', () => {
+    const css = readFileSync(resolve(process.cwd(), 'src/features/admin/admin-ui.css'), 'utf8')
     const table = readFileSync(resolve(process.cwd(), 'src/features/admin/components/ui/DataTable.tsx'), 'utf8')
     const layout = readFileSync(resolve(process.cwd(), 'src/features/admin/components/AdminLayout.tsx'), 'utf8')
+    const small = getLastMediaBlock(css, 'max-width: 767px')
 
-    expect(table).toMatch(/adm-table-wrap hidden md:block/)
-    expect(table).toMatch(/adm-card-list md:hidden/)
+    // Plain CSS, not Tailwind utilities: unlayered component CSS would override a layered `md:hidden`.
+    expect(css).toMatch(/\.adm-card-list\s*\{[^}]*display:\s*none/)
+    expect(small).toMatch(/\.adm-table-wrap\s*\{[^}]*display:\s*none/)
+    expect(small).toMatch(/\.adm-card-list\s*\{[^}]*display:\s*grid/)
+    expect(table).not.toMatch(/md:(hidden|block)/)
     expect(layout).toMatch(/admin-menu-toggle md:hidden/)
   })
 })

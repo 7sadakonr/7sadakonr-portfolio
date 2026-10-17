@@ -130,7 +130,14 @@
 .adm-table td { padding: 12px; border-bottom: 1px solid var(--admin-border-subtle); color: var(--admin-text); vertical-align: middle; }
 .adm-table tbody tr:last-child td { border-bottom: 0; }
 .adm-table tbody tr.is-interactive:hover { background: var(--admin-surface-hover); }
-.adm-table .is-right { text-align: right; }
+.adm-table .is-right { text-align: right; white-space: nowrap; width: 1%; padding-left: 28px; }
+.adm-table td:first-child, .adm-table th:first-child { padding-left: 4px; }
+.adm-table td { max-width: 36ch; }
+.adm-show-more {
+  display: block; width: 100%; margin-top: 12px; padding: 9px 12px; border: 1px dashed var(--admin-border); border-radius: 10px;
+  background: transparent; color: var(--admin-muted); font: 600 13px/1 "Outfit", sans-serif; cursor: pointer;
+}
+.adm-show-more:hover { color: var(--admin-text); border-color: #3f3f4e; background: rgba(255, 255, 255, 0.03); }
 .adm-table__sort {
   display: inline-flex; align-items: center; gap: 4px;
   padding: 0; border: 0; background: transparent; color: inherit; font: inherit; cursor: pointer;
@@ -143,12 +150,16 @@
 .adm-table__row-action:hover { color: var(--admin-accent-hover); }
 
 /* Tables (mobile cards) */
-.adm-card-list { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.adm-card-list { display: none; gap: 10px; margin: 0; padding: 0; list-style: none; }
+@media (max-width: 767px) {
+  .adm-table-wrap { display: none; }
+  .adm-card-list { display: grid; }
+}
 .adm-card-list__item { border: 1px solid var(--admin-border); border-radius: 12px; background: var(--admin-surface-muted); }
 .adm-card-list__button { display: block; width: 100%; padding: 14px; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
 .adm-card-list__item > :not(button) { padding: 14px; }
 .adm-card-list__title { font-weight: 600; margin-bottom: 10px; }
-.adm-card-list__fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 12px; margin: 0; }
+.adm-card-list__fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px 16px; margin: 0; }
 .adm-card-list__field { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .adm-card-list__field dt { font-size: 11px; color: var(--admin-muted); }
 .adm-card-list__field dd { margin: 0; font-size: 14px; }
@@ -161,6 +172,8 @@
 .adm-bar__fill { display: block; height: 100%; border-radius: inherit; background: var(--admin-chart-1); }
 .adm-bar-cell { display: inline-flex; align-items: center; justify-content: flex-end; gap: 10px; width: 100%; }
 .adm-bar-cell .adm-bar { width: 80px; flex: none; }
+.adm-card-list .adm-bar-cell { justify-content: flex-start; }
+.adm-card-list .adm-bar-cell .adm-bar { display: none; }
 @media (max-width: 480px) { .adm-rank__item { grid-template-columns: minmax(0, 1fr) auto; } .adm-rank__item .adm-bar { grid-column: 1 / -1; order: 3; } }
 
 /* Empty + skeleton */

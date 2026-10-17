@@ -19,10 +19,13 @@ interface DataTableProps<T> {
   onRowActivate?: (row: T) => void
   rowActionLabel?: (row: T) => string
   defaultSort?: { key: string; direction: 'asc' | 'desc' }
+  /** Rows shown before a "Show all" toggle appears. Omit to always show every row. */
+  initialRows?: number
 }
 
-function DataTable<T>({ caption, columns, rows, getRowKey, onRowActivate, rowActionLabel, defaultSort }: DataTableProps<T>) {
+function DataTable<T>({ caption, columns, rows, getRowKey, onRowActivate, rowActionLabel, defaultSort, initialRows }: DataTableProps<T>) {
   const [sort, setSort] = useState(defaultSort ?? null)
+  const [expanded, setExpanded] = useState(false)
 
   const sorted = useMemo(() => {
     const column = sort ? columns.find((item) => item.key === sort.key) : undefined
@@ -36,6 +39,9 @@ function DataTable<T>({ caption, columns, rows, getRowKey, onRowActivate, rowAct
     })
   }, [rows, columns, sort])
 
+  const collapsible = initialRows !== undefined && sorted.length > initialRows
+  const visible = collapsible && !expanded ? sorted.slice(0, initialRows) : sorted
+
   const toggleSort = (key: string) =>
     setSort((current) => (current?.key === key ? { key, direction: current.direction === 'desc' ? 'asc' : 'desc' } : { key, direction: 'desc' }))
 
@@ -43,7 +49,7 @@ function DataTable<T>({ caption, columns, rows, getRowKey, onRowActivate, rowAct
 
   return (
     <>
-      <div className="adm-table-wrap hidden md:block">
+      <div className="adm-table-wrap">
         <table className="adm-table">
           <caption className="sr-only">{caption}</caption>
           <thead>
@@ -69,7 +75,7 @@ function DataTable<T>({ caption, columns, rows, getRowKey, onRowActivate, rowAct
             </tr>
           </thead>
           <tbody>
-            {sorted.map((row) => (
+            {visible.map((row) => (
               <tr key={getRowKey(row)} className={onRowActivate ? 'is-interactive' : undefined}>
                 {columns.map((column, index) => (
                   <td key={column.key} className={column.align === 'right' ? 'is-right' : undefined}>
@@ -86,8 +92,8 @@ function DataTable<T>({ caption, columns, rows, getRowKey, onRowActivate, rowAct
         </table>
       </div>
 
-      <ul className="adm-card-list md:hidden" aria-label={caption}>
-        {sorted.map((row) => {
+      <ul className="adm-card-list" aria-label={caption}>
+        {visible.map((row) => {
           const content = (
             <>
               <div className="adm-card-list__title">{primary?.render(row)}</div>
@@ -110,6 +116,12 @@ function DataTable<T>({ caption, columns, rows, getRowKey, onRowActivate, rowAct
           )
         })}
       </ul>
+
+      {collapsible && (
+        <button type="button" className="adm-show-more" aria-expanded={expanded} onClick={() => setExpanded((open) => !open)}>
+          {expanded ? 'Show fewer' : `Show all ${sorted.length}`}
+        </button>
+      )}
     </>
   )
 }

@@ -104,7 +104,8 @@ describe('GET /api/vercel-traffic', () => {
       const url = new URL(String(input))
       const by = url.searchParams.get('by')
       const payload = by === 'hour' ? { data: [] }
-        : by ? { data: [{ referrer: 'github.com', visitors: 3 }] }
+        : by === 'referrerHostname' ? { data: [{ referrerHostname: 'google.com', visitors: 3 }, { referrerHostname: '', visitors: 7 }] }
+          : by ? { data: [{ country: 'TH', visitors: 4 }] }
           : { visitors: Number(url.searchParams.get('since')) < Date.now() - 8 * 24 * 3600 * 1000 ? 5 : 9 }
       return { ok: true, json: async () => payload } as Response
     }))
@@ -113,5 +114,7 @@ describe('GET /api/vercel-traffic', () => {
     expect(body).toMatchObject({ configured: true, range: '7d', granularity: 'day', seriesAvailable: true })
     expect(body?.visitors).toEqual({ current: 9, previous: 5 })
     expect(body?.series).toHaveLength(7)
+    expect(body?.topReferrers).toEqual([{ referrer: 'google.com', count: 3 }, { referrer: '(Direct / none)', count: 7 }])
+    expect(body?.topCountries).toEqual([{ country: 'TH', count: 4 }])
   })
 })

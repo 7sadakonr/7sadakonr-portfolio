@@ -47,6 +47,7 @@ const CampaignsPanel = ({ rows, isLoading, error }: CampaignsPanelProps) => (
       rows={rows}
       getRowKey={(row) => `${row.source}|${row.campaign}`}
       defaultSort={{ key: 'visits', direction: 'desc' }}
+      initialRows={8}
     />
   </Panel>
 )

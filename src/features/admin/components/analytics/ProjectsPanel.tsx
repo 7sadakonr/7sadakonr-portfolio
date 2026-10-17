@@ -58,6 +58,7 @@ const ProjectsPanel = ({ rows, isLoading, error }: ProjectsPanelProps) => {
           onRowActivate={setSelected}
           rowActionLabel={(row) => `Open details for ${row.title || row.slug}`}
           defaultSort={{ key: 'opens', direction: 'desc' }}
+          initialRows={8}
         />
       </Panel>
       <ProjectDrawer project={selected} onClose={() => setSelected(null)} />
