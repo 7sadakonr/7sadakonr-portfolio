@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import { AdminAuthProvider } from './auth/AdminAuthProvider'
 import ProtectedAdminRoute from './auth/ProtectedAdminRoute'
 import AdminLayout from './components/AdminLayout'
+import { ToastProvider } from './components/ui/Toast'
 import AdminLoginPage from './pages/AdminLoginPage'
 import AdminProjectFormPage from './pages/AdminProjectFormPage'
 import AdminProjectsPage from './pages/AdminProjectsPage'
@@ -15,6 +16,7 @@ const AdminAnalyticsPage = lazy(() => import('./pages/AdminAnalyticsPage'))
 
 const AdminRoutes = () => (
   <AdminAuthProvider>
+    <ToastProvider>
     <Routes>
       <Route path="login" element={<AdminLoginPage />} />
       <Route element={<ProtectedAdminRoute />}>
@@ -23,7 +25,7 @@ const AdminRoutes = () => (
           <Route
             path="analytics"
             element={
-              <Suspense fallback={<main className="admin-loading">Loading analytics…</main>}>
+              <Suspense fallback={<main className="admin-loading" role="status">Loading analytics…</main>}>
                 <AdminAnalyticsPage />
               </Suspense>
             }
@@ -38,6 +40,7 @@ const AdminRoutes = () => (
       </Route>
       <Route path="*" element={<Navigate to="/admin/analytics" replace />} />
     </Routes>
+    </ToastProvider>
   </AdminAuthProvider>
 )
 

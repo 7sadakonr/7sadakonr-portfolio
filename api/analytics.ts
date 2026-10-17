@@ -5,6 +5,8 @@ const ALLOWED_EVENTS = new Set([
   'page_view',
   'project_open',
   'resume_download',
+  'github_click',
+  'demo_click',
 ])
 
 const MAX_BATCH_SIZE = 20

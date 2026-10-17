@@ -45,6 +45,17 @@ describe('Privacy-First Analytics Tracker', () => {
     expect(allKeys.filter((k) => k !== 'portfolio_admin_opt_out')).toHaveLength(0)
   })
 
+  it('sends outbound github_click and demo_click events with the project slug', () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true })
+    global.fetch = fetchMock
+
+    trackEvent('github_click', { project_slug: 'p1' })
+    trackEvent('demo_click', { project_slug: 'p1' })
+
+    const names = fetchMock.mock.calls.flatMap((call) => JSON.parse(call[1].body as string).events.map((e: { event_name: string }) => e.event_name))
+    expect(names).toEqual(['github_click', 'demo_click'])
+  })
+
   it('accepts only allowed aggregate events and rejects removed event types', () => {
     const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }))
     global.fetch = fetchMock

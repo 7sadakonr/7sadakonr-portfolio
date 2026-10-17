@@ -1,164 +1,83 @@
+import { useEffect, useState } from 'react'
+import { Button } from '@heroui/react'
 import { useAnalytics } from '../hooks/useAnalytics'
-import { Alert, Button } from '@heroui/react'
-import DateRangeSelector from '../components/analytics/DateRangeSelector'
-import OverviewCards from '../components/analytics/OverviewCards'
-import InteractionChart from '../components/analytics/InteractionChart'
-import UtmTable from '../components/analytics/UtmTable'
-import TopCountriesTable from '../components/analytics/TopCountriesTable'
-import ProjectPerformanceTable from '../components/analytics/ProjectPerformanceTable'
-import TopInteractions from '../components/analytics/TopInteractions'
+import { ANALYTICS_TIME_ZONE_LABEL, formatRelativeTime } from '../hooks/analyticsTime'
+import PageHeader from '../components/ui/PageHeader'
+import RangeSelector from '../components/analytics/RangeSelector'
+import KpiRow from '../components/analytics/KpiRow'
+import TrafficChart from '../components/analytics/TrafficChart'
+import ProjectsPanel from '../components/analytics/ProjectsPanel'
+import ReferrersPanel from '../components/analytics/ReferrersPanel'
+import CampaignsPanel from '../components/analytics/CampaignsPanel'
+import CountriesPanel from '../components/analytics/CountriesPanel'
+
+// Re-renders the "Updated … ago" label without refetching.
+const useNow = (intervalMs: number) => {
+  const [now, setNow] = useState(() => new Date())
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), intervalMs)
+    return () => clearInterval(timer)
+  }, [intervalMs])
+  return now
+}
 
 const AdminAnalyticsPage = () => {
   const {
-    days,
-    setDays,
-    metric,
-    setMetric,
-    isLoading,
-    error,
-    overview,
-    timeseries,
-    trafficInsights,
-    lastUpdated,
-    utmCampaigns,
-    projectPerformance,
-    topInteractions,
-    topCountries,
-    isVercelSynced,
-    isVisitorDataAvailable,
-    refetch,
+    range, setRange, window, isLoading, isRefreshing, lastUpdated, errors, overview,
+    timeseries, previousTimeseries, traffic, trafficStatus, campaigns, projects, refetch,
   } = useAnalytics()
-
-  const metricTotal = overview
-    ? {
-        visitors: overview.visitors,
-        interactions: overview.interactions,
-        project_opens: overview.project_opens,
-        external_clicks: overview.external_clicks,
-        resume_downloads: overview.resume_downloads,
-      }[metric]
-    : undefined
+  const now = useNow(15_000)
 
   return (
-    <div className="admin-page analytics-page">
-      {/* Page Header */}
-      <header className="analytics-header">
-        <div>
-          <div className="analytics-eyebrow-row">
-            <span className="admin-eyebrow">Aggregate &amp; Privacy-First Analytics</span>
-            <div className="analytics-live-status-pill" title={`Auto-refreshes every 15 seconds. Last updated: ${lastUpdated.toLocaleTimeString()}`}>
-              <span className="analytics-live-pulse-dot" />
-              <span>Live Sync</span>
-            </div>
-            {isVercelSynced && (
-              <span className="analytics-sync-indicator" title="Vercel Web Analytics is actively merged into all overview cards and the activity graph">
-                <span className="analytics-sync-dot"></span>
-                Unified with Vercel Web Analytics
-              </span>
-            )}
-          </div>
-          <h1 className="analytics-page-title">Portfolio Analytics</h1>
-          <p className="analytics-page-description">
-            Privacy-first audience &amp; engagement: aggregate traffic, project interest, resume downloads, and referral distribution without persistent visitor tracking.
-          </p>
-        </div>
+    <div className="admin-page ad-analytics">
+      <PageHeader
+        eyebrow="Analytics"
+        title="Audience & engagement"
+        description={`How people find and use your portfolio. All times are in ${ANALYTICS_TIME_ZONE_LABEL}.`}
+        actions={
+          <>
+            <RangeSelector value={range} onChange={setRange} />
+            <Button size="sm" variant="outline" isPending={isRefreshing} onClick={() => void refetch()} aria-label="Refresh analytics">
+              Refresh
+            </Button>
+          </>
+        }
+      />
 
-        <div className="analytics-header-controls">
-          <DateRangeSelector days={days} onChange={setDays} />
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            className="analytics-action-refresh text-xs cursor-pointer px-3.5 border border-zinc-700 bg-[#1c1c24] hover:bg-zinc-800 hover:text-white text-zinc-200 rounded-xl transition-all"
-            onClick={() => void refetch()}
-            isDisabled={isLoading}
-            aria-label="Refresh analytics data"
-          >
-            <svg
-              className={`analytics-refresh-icon ${isLoading ? 'spinning' : ''}`}
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <polyline points="23 4 23 10 17 10" />
-              <polyline points="1 20 1 14 7 14" />
-              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
-            </svg>
-            <span>{isLoading ? 'Updating…' : 'Refresh'}</span>
-          </Button>
-        </div>
-      </header>
+      <p className="ad-updated" role="status">
+        {lastUpdated ? `Updated ${formatRelativeTime(lastUpdated, now)}` : 'Loading…'}
+        {isRefreshing && ' · refreshing'}
+      </p>
 
-      {error && (
-        <div className="mb-6">
-          <Alert status="danger">
-            <Alert.Indicator />
-            <Alert.Content className="flex-1 flex items-center justify-between gap-3">
-              <div>
-                <Alert.Title className="text-xs font-bold">Analytics Data Unavailable</Alert.Title>
-                <Alert.Description className="text-xs">{error}</Alert.Description>
-              </div>
-              <Button size="sm" variant="outline" className="text-xs shrink-0" onClick={() => void refetch()}>
-                Retry
-              </Button>
-            </Alert.Content>
-          </Alert>
-        </div>
-      )}
+      <KpiRow
+        range={range}
+        overview={overview}
+        timeseries={timeseries}
+        traffic={traffic}
+        trafficStatus={trafficStatus}
+        isLoading={isLoading}
+        overviewFailed={Boolean(errors.overview)}
+      />
+      {errors.overview && <p className="ad-inline-error" role="alert">Couldn&apos;t load totals: {errors.overview}</p>}
 
-      {/* 1. Key Performance Cards */}
-      <section className="analytics-block" aria-label="Key behavioral metrics">
-        <OverviewCards
-          data={overview}
-          days={days}
-          isLoading={isLoading}
-          isVisitorDataAvailable={isVisitorDataAvailable}
-          activeMetric={metric}
-          onSelectMetric={setMetric}
-        />
-      </section>
+      <TrafficChart
+        window={window}
+        timeseries={timeseries}
+        previousTimeseries={previousTimeseries}
+        traffic={traffic}
+        trafficStatus={trafficStatus}
+        isLoading={isLoading}
+        error={errors.timeseries}
+      />
 
-      {/* 2. Interactive Activity Chart */}
-      <section className="analytics-block" aria-label="Activity timeline">
-        <InteractionChart
-          data={timeseries}
-          metric={metric}
-          onMetricChange={setMetric}
-          isLoading={isLoading}
-          isVisitorDataAvailable={isVisitorDataAvailable}
-          metricTotal={metricTotal}
-          days={days}
-          insights={trafficInsights}
-        />
-      </section>
+      <ProjectsPanel rows={projects} isLoading={isLoading} error={errors.projects} />
 
-      {/* 3. Grid: UTM Attribution & Top Countries */}
-      <div className="analytics-grid-row">
-        <section className="analytics-block" aria-label="Campaign performance">
-          <UtmTable data={utmCampaigns} isLoading={isLoading} />
-        </section>
-
-        <section className="analytics-block" aria-label="Geographic distribution">
-          <TopCountriesTable data={topCountries} isLoading={isLoading} />
-        </section>
+      <div className="ad-two-col">
+        <ReferrersPanel traffic={traffic} status={trafficStatus} isLoading={isLoading} />
+        <CountriesPanel traffic={traffic} status={trafficStatus} isLoading={isLoading} />
       </div>
 
-      {/* 4. Grid: Project Performance & Top Interactions */}
-      <div className="analytics-grid-row">
-        <section className="analytics-block" aria-label="Project engagement">
-          <ProjectPerformanceTable data={projectPerformance} isLoading={isLoading} />
-        </section>
-
-        <section className="analytics-block" aria-label="Top interactions">
-          <TopInteractions data={topInteractions} isLoading={isLoading} />
-        </section>
-      </div>
+      <CampaignsPanel rows={campaigns} isLoading={isLoading} error={errors.campaigns} />
     </div>
   )
 }

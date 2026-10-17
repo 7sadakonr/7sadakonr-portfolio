@@ -1,62 +1,117 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import handler, { normalizeVisitorSeries } from '../api/vercel-traffic'
 
-describe('normalizeVisitorSeries', () => {
-  it('normalizes hourly visitor rows and returns no entries for an empty daily series', () => {
-    expect(normalizeVisitorSeries([{ key: '2026-09-11T06:00:00.000Z', visitors: 2 }], 'hour')).toEqual([
-      { date: '2026-09-11T06:00:00.000Z', visitors: 2 },
-    ])
-    expect(normalizeVisitorSeries([], 'day')).toEqual([])
+const getUser = vi.fn()
+const maybeSingle = vi.fn()
+
+vi.mock('@supabase/supabase-js', () => ({
+  createClient: () => ({
+    auth: { getUser },
+    from: () => ({ select: () => ({ eq: () => ({ maybeSingle }) }) }),
+  }),
+}))
+
+import handler, { bangkokKey, bucketKeys, bucketVisitors, getWindow } from '../api/vercel-traffic'
+
+const run = async (request: Partial<VercelRequest>) => {
+  const result = { status: 0, body: undefined as Record<string, unknown> | undefined }
+  const response = {
+    setHeader: vi.fn(),
+    status(code: number) { result.status = code; return this },
+    json(body: Record<string, unknown>) { result.body = body; return this },
+  } as unknown as VercelResponse
+  await handler({ method: 'GET', headers: { authorization: 'Bearer t' }, query: {}, ...request } as VercelRequest, response)
+  return result
+}
+
+describe('Bangkok windows', () => {
+  it('keys hours and days in GMT+7', () => {
+    const utc = Date.parse('2026-10-16T18:30:00Z') // 01:30 on the 17th in Bangkok
+    expect(bangkokKey(utc, 'hour')).toBe('2026-10-17T01:00')
+    expect(bangkokKey(utc, 'day')).toBe('2026-10-17')
   })
 
-  it('keeps the same hour on distinct dates separate and orders cross-midnight buckets', () => {
-    expect(normalizeVisitorSeries([
-      { timestamp: '2026-09-11T00:30:00Z', visitors: 3 },
-      { timestamp: '2026-09-10T23:00:00Z', visitors: 2 },
-      { timestamp: '2026-09-10T00:00:00Z', visitors: 8 },
-    ], 'hour')).toEqual([
-      { date: '2026-09-10T00:00:00.000Z', visitors: 8 },
-      { date: '2026-09-10T23:00:00.000Z', visitors: 2 },
-      { date: '2026-09-11T00:00:00.000Z', visitors: 3 },
-    ])
+  it('24h window covers 24 hourly buckets ending in the current hour', () => {
+    const now = Date.parse('2026-10-16T18:30:00Z')
+    const window = getWindow('24h', now)
+    const keys = bucketKeys(window.start, window.end, window.granularity)
+    expect(keys).toHaveLength(24)
+    expect(keys.at(-1)).toBe('2026-10-17T01:00')
+    expect(keys[0]).toBe('2026-10-16T02:00')
+    expect(window.prevEnd).toBe(window.start - 1)
+  })
+
+  it('7d window starts at Bangkok midnight, including today', () => {
+    const now = Date.parse('2026-10-16T18:30:00Z')
+    const window = getWindow('7d', now)
+    const keys = bucketKeys(window.start, window.end, window.granularity)
+    expect(keys).toHaveLength(7)
+    expect(keys[0]).toBe('2026-10-11')
+    expect(keys.at(-1)).toBe('2026-10-17')
+    expect(window.prevStart).toBe(window.start - 7 * 24 * 3600 * 1000)
   })
 })
 
-describe('Vercel visitor availability', () => {
-  afterEach(() => { vi.restoreAllMocks(); vi.unstubAllEnvs() })
+describe('bucketVisitors', () => {
+  const start = Date.parse('2026-10-15T17:00:00Z') // 2026-10-16 00:00 Bangkok
+  const end = Date.parse('2026-10-17T02:00:00Z')
 
-  it.each([
-    [{ unexpected: 'schema' }, false],
-    [{ data: [{ unexpected: 'row' }] }, false],
-    [[], true],
-    [{ data: [] }, true],
-  ])('validates the successful series payload %j', async (series, available) => {
-    vi.stubEnv('VERCEL_TOKEN', 'test-token')
-    vi.stubEnv('VERCEL_PROJECT_ID', 'test-project')
-    vi.stubEnv('VERCEL_TEAM_ID', 'team_test')
-    const requests: URL[] = []
-    vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
+  it('re-bins UTC hourly rows into Bangkok days, so 17:00Z lands on the next local day', () => {
+    const rows = [
+      { timestamp: '2026-10-15T20:00:00Z', visitors: 2 }, // 16th 03:00 BKK
+      { timestamp: '2026-10-16T16:00:00Z', visitors: 3 }, // 16th 23:00 BKK
+      { timestamp: '2026-10-16T17:00:00Z', visitors: 4 }, // 17th 00:00 BKK
+    ]
+    expect(bucketVisitors(rows, start, end, 'day')).toEqual([
+      { key: '2026-10-16', visitors: 5 },
+      { key: '2026-10-17', visitors: 4 },
+    ])
+  })
+
+  it('returns zero-filled buckets for an empty payload and null for an unknown schema', () => {
+    expect(bucketVisitors({ data: [] }, start, end, 'day')?.every((p) => p.visitors === 0)).toBe(true)
+    expect(bucketVisitors({ unexpected: 'schema' }, start, end, 'day')).toBeNull()
+    expect(bucketVisitors({ data: [{ unexpected: 'row' }] }, start, end, 'day')).toBeNull()
+  })
+})
+
+describe('GET /api/vercel-traffic', () => {
+  beforeEach(() => {
+    vi.stubEnv('SUPABASE_URL', 'https://example.supabase.co')
+    vi.stubEnv('SUPABASE_PUBLISHABLE_KEY', 'publishable')
+    vi.stubEnv('VERCEL_TOKEN', 'vt')
+    vi.stubEnv('VERCEL_PROJECT_ID', 'proj')
+    vi.stubEnv('VERCEL_TEAM_ID', 'team_x')
+    getUser.mockResolvedValue({ data: { user: { id: 'u1' } }, error: null })
+    maybeSingle.mockResolvedValue({ data: { user_id: 'u1' }, error: null })
+  })
+  afterEach(() => { vi.unstubAllEnvs(); vi.unstubAllGlobals(); vi.clearAllMocks() })
+
+  it('requires an admin and never calls Vercel otherwise', async () => {
+    const fetchMock = vi.fn()
+    vi.stubGlobal('fetch', fetchMock)
+    expect((await run({ headers: {} })).status).toBe(401)
+    getUser.mockResolvedValueOnce({ data: { user: null }, error: new Error('bad') })
+    expect((await run({})).status).toBe(401)
+    maybeSingle.mockResolvedValueOnce({ data: null, error: null })
+    expect((await run({})).status).toBe(403)
+    expect((await run({ method: 'POST' })).status).toBe(405)
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it('returns totals, previous-period totals and a zero-filled series', async () => {
+    vi.stubGlobal('fetch', vi.fn(async (input: string) => {
       const url = new URL(String(input))
-      requests.push(url)
-      const payload = url.searchParams.get('by') === 'hour' ? series
-        : url.pathname.endsWith('/count') ? { visitors: 9, pageViews: 12 }
-          : url.searchParams.get('by') === 'day'
-            ? { data: [{ date: '2026-09-11', visitors: 5, pageViews: 8 }] } : []
+      const by = url.searchParams.get('by')
+      const payload = by === 'hour' ? { data: [] }
+        : by ? { data: [{ referrer: 'github.com', visitors: 3 }] }
+          : { visitors: Number(url.searchParams.get('since')) < Date.now() - 8 * 24 * 3600 * 1000 ? 5 : 9 }
       return { ok: true, json: async () => payload } as Response
-    })
-    let body: Record<string, unknown> = {}
-    const response = {
-      setHeader: () => {},
-      status: () => response,
-      json: (value: Record<string, unknown>) => { body = value },
-    }
-    await handler({ method: 'GET', query: { days: '1' } } as unknown as VercelRequest, response as unknown as VercelResponse)
-    expect(body.visitorDataAvailable).toBe(available)
-    expect(body.visitorTimeSeries).toEqual([])
-    expect(body.visitorDailyDataAvailable).toBe(true)
-    expect(body.dailyTimeSeries).toEqual([{ date: '2026-09-11', visitors: 5, pageviews: 8 }])
-    expect(requests.some((url) => url.searchParams.get('by') === 'hour')).toBe(true)
-    expect(requests.some((url) => url.searchParams.get('by') === 'day')).toBe(true)
+    }))
+    const { status, body } = await run({ query: { range: '7d' } })
+    expect(status).toBe(200)
+    expect(body).toMatchObject({ configured: true, range: '7d', granularity: 'day', seriesAvailable: true })
+    expect(body?.visitors).toEqual({ current: 9, previous: 5 })
+    expect(body?.series).toHaveLength(7)
   })
 })

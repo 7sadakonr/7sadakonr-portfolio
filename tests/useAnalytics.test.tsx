@@ -1,148 +1,91 @@
-import { act, cleanup, renderHook, waitFor } from '@testing-library/react'
+import { cleanup, renderHook, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { formatAnalyticsHour, getAnalyticsTimeZoneLabel } from '../src/features/admin/hooks/analyticsTime'
 
-const { rpc } = vi.hoisted(() => ({ rpc: vi.fn() }))
-
-const expectedPeakLabel = `${formatAnalyticsHour('2026-09-10T23:00:00.000Z')} - ${formatAnalyticsHour('2026-09-11T00:00:00.000Z')} ${getAnalyticsTimeZoneLabel()}`
-
-rpc.mockImplementation((name: string) => {
-  if (name === 'analytics_overview') {
-    return Promise.resolve({
-      data: {
-        visitors: 99,
-        visitors_prev: 0,
-        visitors_today: 99,
-        visitors_yesterday: 0,
-        active_now: 0,
-        interactions: 0,
-        interactions_prev: 0,
-        interactions_today: 0,
-        interactions_yesterday: 0,
-        project_opens: 0,
-        external_clicks: 0,
-        resume_downloads: 0,
-        sessions: 99,
-        avg_session_events: 0,
-      },
-      error: null,
-    })
-  }
-
-  return Promise.resolve({ data: [], error: null })
-})
+const { rpc, getSession } = vi.hoisted(() => ({ rpc: vi.fn(), getSession: vi.fn() }))
 
 vi.mock('../src/lib/supabase', () => ({
-  supabase: { rpc },
+  supabase: { rpc, auth: { getSession } },
 }))
 
 import { useAnalytics } from '../src/features/admin/hooks/useAnalytics'
 
-const vercelResponse = (payload: Record<string, unknown>) =>
-  Promise.resolve({ ok: true, json: () => Promise.resolve(payload) } as Response)
+const totals = (n: number) => ({ page_views: n, project_opens: n, resume_downloads: n, github_clicks: n, demo_clicks: n })
+
+const respond = (overrides: Record<string, unknown> = {}) =>
+  rpc.mockImplementation((name: string) => {
+    if (name in overrides) return Promise.resolve(overrides[name])
+    if (name === 'analytics_overview') return Promise.resolve({ data: { current: totals(4), previous: totals(2) }, error: null })
+    return Promise.resolve({ data: [], error: null })
+  })
+
+const vercel = (body: Record<string, unknown>, ok = true) =>
+  vi.spyOn(globalThis, 'fetch').mockResolvedValue({ ok, status: ok ? 200 : 500, json: async () => body } as Response)
 
 describe('useAnalytics', () => {
   beforeEach(() => {
     vi.useFakeTimers({ toFake: ['Date'] })
-    vi.setSystemTime(new Date('2026-09-11T01:30:00Z'))
+    vi.setSystemTime(new Date('2026-10-16T18:30:00Z')) // 01:30 on 17 Oct in Bangkok
+    getSession.mockResolvedValue({ data: { session: { access_token: 'jwt' } } })
+    respond()
   })
   afterEach(() => {
     cleanup()
     vi.useRealTimers()
     vi.restoreAllMocks()
+    rpc.mockReset()
   })
 
-  it('uses the Vercel hourly visitor series instead of Supabase visitor data', async () => {
-    vi.spyOn(globalThis, 'fetch').mockImplementation(() => vercelResponse({
-      configured: true,
-      totalVisitors: 12,
-      visitorDataAvailable: true,
-      visitorDailyDataAvailable: true,
-      dailyTimeSeries: [
-        { date: '2026-09-10', visitors: 7 },
-        { date: '2026-09-11', visitors: 5 },
-      ],
-      visitorTimeSeries: [
-        { date: '2026-09-10T01:00:00.000Z', visitors: 90 },
-        { date: '2026-09-10T23:00:00.000Z', visitors: 4 },
-        { date: '2026-09-11T01:00:00.000Z', visitors: 2 },
-      ],
-    }))
-
-    const { result } = renderHook(() => useAnalytics())
-
-    await act(async () => {
-      result.current.setDays(1)
-    })
-
-    await waitFor(() => {
-      expect(result.current.overview?.visitors).toBe(12)
-      expect(result.current.timeseries).toHaveLength(24)
-    })
-
-    expect(result.current.timeseries[0]?.date).toBe('2026-09-10T02:00:00.000Z')
-    expect(result.current.timeseries.at(-1)?.date).toBe('2026-09-11T01:00:00.000Z')
-    expect(result.current.timeseries.find((point) => point.date === '2026-09-10T23:00:00.000Z')?.count).toBe(4)
-    expect(result.current.timeseries.at(-1)?.count).toBe(2)
-    expect(result.current.overview?.visitors_today).toBe(5)
-    expect(result.current.overview?.visitors_yesterday).toBe(7)
-    expect(result.current.overview?.visitors_prev).toBeNull()
-    expect(result.current.trafficInsights.peakTimeLabel).toBe(expectedPeakLabel)
-    const visitorDates = result.current.timeseries.map((point) => point.date)
-    act(() => result.current.setMetric('project_opens'))
-    expect(result.current.timeseries.map((point) => point.date)).toEqual(visitorDates)
-  })
-
-  it('keeps an empty Vercel visitor series empty when Supabase reports visitors', async () => {
-    vi.spyOn(globalThis, 'fetch').mockImplementation(() => vercelResponse({
-      configured: true,
-      totalVisitors: 3,
-      visitorDataAvailable: true,
-      visitorTimeSeries: [],
-    }))
-
-    const { result } = renderHook(() => useAnalytics())
-
-    await waitFor(() => {
-      expect(result.current.overview?.visitors).toBe(3)
-      expect(result.current.isLoading).toBe(false)
-    })
-
-    expect(result.current.timeseries).not.toHaveLength(0)
-    expect(result.current.timeseries.every((point) => point.count === 0)).toBe(true)
-  })
-
-  it('exposes unavailable visitor metrics without replacing engagement data', async () => {
-    vi.spyOn(globalThis, 'fetch').mockImplementation(() => vercelResponse({ configured: false }))
-    const { result } = renderHook(() => useAnalytics())
+  it('asks every RPC for the same Bangkok-aligned window, plus the previous period for totals', async () => {
+    vercel({ configured: false })
+    const { result } = renderHook(() => useAnalytics('7d'))
     await waitFor(() => expect(result.current.isLoading).toBe(false))
-    expect(result.current.isVisitorDataAvailable).toBe(false)
-    expect(result.current.overview?.visitors_today).toBeNull()
-    expect(result.current.overview?.visitors_yesterday).toBeNull()
-    expect(result.current.overview?.visitors_prev).toBeNull()
-    expect(result.current.overview?.sessions).toBe(99)
-    expect(result.current.timeseries).toEqual([])
+
+    const overviewArgs = rpc.mock.calls.find(([name]) => name === 'analytics_overview')![1]
+    expect(overviewArgs.p_from).toBe('2026-10-10T17:00:00.000Z') // 11 Oct 00:00 Bangkok
+    expect(overviewArgs.p_prev_to).toBe('2026-10-10T16:59:59.999Z')
+    const series = rpc.mock.calls.filter(([name]) => name === 'analytics_timeseries')
+    expect(series.map(([, args]) => args.p_granularity)).toEqual(['day', 'day'])
+    expect(result.current.overview.current.page_views).toBe(4)
+    expect(result.current.overview.previous.page_views).toBe(2)
   })
 
-  it('matches timestamped engagement and unambiguous legacy UTC hours on the visitor axis', async () => {
-    const originalRpc = rpc.getMockImplementation()!
-    rpc.mockImplementation((name: string, params?: { p_metric?: string }) => {
-      if (name === 'analytics_timeseries' && params?.p_metric === 'project_opens') {
-        return Promise.resolve({ data: [
-          { date: '2026-09-10T01:00:00Z', count: 99 },
-          { date: '2026-09-11T01:00:00+00:00', count: 2 },
-          { date: '23:00', count: 4 },
-        ], error: null })
-      }
-      return originalRpc(name)
+  it('uses hourly granularity for the 24h range', async () => {
+    vercel({ configured: false })
+    const { result } = renderHook(() => useAnalytics('24h'))
+    await waitFor(() => expect(result.current.isLoading).toBe(false))
+    expect(rpc.mock.calls.find(([name]) => name === 'analytics_timeseries')![1].p_granularity).toBe('hour')
+  })
+
+  it('sends the admin access token to the Vercel traffic endpoint and exposes the visitors', async () => {
+    const fetchSpy = vercel({
+      configured: true, visitors: { current: 12, previous: 6 }, seriesAvailable: true,
+      series: [{ key: '2026-10-17', visitors: 12 }], previousSeries: [], topReferrers: [{ referrer: 'github.com', count: 3 }], topCountries: [],
     })
-    vi.spyOn(globalThis, 'fetch').mockImplementation(() => vercelResponse({ configured: false }))
-    const { result } = renderHook(() => useAnalytics())
-    await act(async () => { result.current.setDays(1); result.current.setMetric('project_opens') })
-    await waitFor(() => expect(result.current.timeseries).toHaveLength(24))
-    expect(result.current.timeseries.at(-1)?.count).toBe(2)
-    expect(result.current.timeseries.find((point) => point.date === '2026-09-10T23:00:00.000Z')?.count).toBe(4)
-    expect(result.current.trafficInsights.peakTimeLabel).toBe(expectedPeakLabel)
-    rpc.mockImplementation(originalRpc)
+    const { result } = renderHook(() => useAnalytics('7d'))
+    await waitFor(() => expect(result.current.trafficStatus).toBe('ok'))
+
+    expect(fetchSpy).toHaveBeenCalledWith('/api/vercel-traffic?range=7d', { headers: { Authorization: 'Bearer jwt' } })
+    expect(result.current.traffic?.visitors).toEqual({ current: 12, previous: 6 })
+    expect(result.current.traffic?.topReferrers).toEqual([{ referrer: 'github.com', count: 3 }])
+  })
+
+  it('keeps other sections working when one source fails', async () => {
+    respond({ analytics_project_performance: { data: null, error: { message: 'boom' } } })
+    vercel({}, false)
+    const { result } = renderHook(() => useAnalytics('7d'))
+    await waitFor(() => expect(result.current.isLoading).toBe(false))
+
+    expect(result.current.errors.projects).toBe('boom')
+    expect(result.current.errors.traffic).toBeTruthy()
+    expect(result.current.trafficStatus).toBe('error')
+    expect(result.current.errors.overview).toBeUndefined()
+    expect(result.current.overview.current.page_views).toBe(4)
+  })
+
+  it('marks Vercel as not connected instead of failing the page', async () => {
+    vercel({ configured: false, message: 'missing env' })
+    const { result } = renderHook(() => useAnalytics('7d'))
+    await waitFor(() => expect(result.current.trafficStatus).toBe('unconfigured'))
+    expect(result.current.errors.traffic).toBeUndefined()
   })
 })

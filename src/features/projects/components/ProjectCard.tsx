@@ -24,10 +24,12 @@ const ProjectCard = ({ project, index, projectRef, onMouseProjectEnter }: Projec
 
   const handleLiveClick = (e: React.MouseEvent) => {
     e.stopPropagation()
+    trackEvent('demo_click', { project_slug: project.id })
   }
 
   const handleGithubClick = (e: React.MouseEvent) => {
     e.stopPropagation()
+    trackEvent('github_click', { project_slug: project.id })
   }
 
   return (

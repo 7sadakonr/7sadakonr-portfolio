@@ -1,6 +1,14 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
+import { createClient } from '@supabase/supabase-js'
 
-interface VercelAggregateRow {
+// Visitor traffic from Vercel Web Analytics, for the admin dashboard only.
+// All windows and buckets are Asia/Bangkok (GMT+7, no DST). Responds with zero-filled
+// series keyed 'YYYY-MM-DDTHH:00' (24h view) or 'YYYY-MM-DD' (7d / 30d views), both Bangkok local.
+
+type Range = '24h' | '7d' | '30d'
+export type Granularity = 'hour' | 'day'
+
+interface VercelRow {
   key?: string
   date?: string
   day?: string
@@ -14,58 +22,127 @@ interface VercelAggregateRow {
   total?: number
 }
 
-interface VercelAggregateResponse {
-  data?: VercelAggregateRow[]
-  [key: string]: unknown
+const HOUR_MS = 60 * 60 * 1000
+const DAY_MS = 24 * HOUR_MS
+const BANGKOK_OFFSET_MS = 7 * HOUR_MS
+const RANGE_DAYS: Record<Range, number> = { '24h': 1, '7d': 7, '30d': 30 }
+
+export interface TimeWindow {
+  start: number
+  end: number
+  prevStart: number
+  prevEnd: number
+  granularity: Granularity
 }
 
-export function normalizeVisitorSeries(
-  rows: VercelAggregateRow[],
-  granularity: 'hour' | 'day',
-): Array<{ date: string; visitors: number }> {
-  const visitorsByDate = new Map<string, number>()
-
-  for (const row of rows) {
-    if (!row || typeof row !== 'object') continue
-    const dateValue = row.key ?? row.date ?? row.day ?? row.timestamp ?? row.time
-    if (dateValue === undefined || dateValue === null) continue
-
-    const date = new Date(dateValue)
-    if (isNaN(date.getTime())) continue
-
-    const visitors = row.visitors
-    if (typeof visitors !== 'number' || !Number.isFinite(visitors) || visitors < 0) continue
-
-    const normalizedDate = granularity === 'hour'
-      ? `${date.toISOString().slice(0, 13)}:00:00.000Z`
-      : date.toISOString().slice(0, 10)
-    visitorsByDate.set(normalizedDate, (visitorsByDate.get(normalizedDate) ?? 0) + visitors)
+// Bangkok-aligned current window and the equally long window right before it.
+export function getWindow(range: Range, now: number): TimeWindow {
+  if (range === '24h') {
+    const start = Math.floor(now / HOUR_MS) * HOUR_MS - 23 * HOUR_MS
+    return { start, end: now, prevStart: start - 24 * HOUR_MS, prevEnd: start - 1, granularity: 'hour' }
   }
-
-  return Array.from(visitorsByDate, ([date, visitors]) => ({ date, visitors }))
-    .sort((a, b) => a.date.localeCompare(b.date))
+  const days = RANGE_DAYS[range]
+  const startOfToday = Math.floor((now + BANGKOK_OFFSET_MS) / DAY_MS) * DAY_MS - BANGKOK_OFFSET_MS
+  const start = startOfToday - (days - 1) * DAY_MS
+  return { start, end: now, prevStart: start - days * DAY_MS, prevEnd: start - 1, granularity: 'day' }
 }
 
-function parseVisitorSeries(raw: unknown, granularity: 'hour' | 'day') {
-  const rows = Array.isArray(raw) ? raw
-    : raw && typeof raw === 'object' && Array.isArray((raw as VercelAggregateResponse).data)
-      ? (raw as VercelAggregateResponse).data! : null
-  if (!rows || rows.some((row) => normalizeVisitorSeries([row], granularity).length !== 1)) return null
-  return normalizeVisitorSeries(rows, granularity)
+export function bangkokKey(ms: number, granularity: Granularity): string {
+  const iso = new Date(ms + BANGKOK_OFFSET_MS).toISOString()
+  return granularity === 'hour' ? `${iso.slice(0, 13)}:00` : iso.slice(0, 10)
+}
+
+// Every bucket key in [start, end], oldest first.
+export function bucketKeys(start: number, end: number, granularity: Granularity): string[] {
+  const step = granularity === 'hour' ? HOUR_MS : DAY_MS
+  const keys: string[] = []
+  for (let t = start; t <= end; t += step) keys.push(bangkokKey(t, granularity))
+  return keys
+}
+
+function rowsOf(raw: unknown): VercelRow[] | null {
+  if (Array.isArray(raw)) return raw as VercelRow[]
+  if (raw && typeof raw === 'object' && Array.isArray((raw as { data?: unknown }).data)) {
+    return (raw as { data: VercelRow[] }).data
+  }
+  return null
+}
+
+// Re-bins Vercel hourly rows into Bangkok buckets; null when the payload has an unknown shape.
+export function bucketVisitors(
+  raw: unknown,
+  start: number,
+  end: number,
+  granularity: Granularity,
+): Array<{ key: string; visitors: number }> | null {
+  const rows = rowsOf(raw)
+  if (!rows) return null
+  const totals = new Map(bucketKeys(start, end, granularity).map((key) => [key, 0]))
+  for (const row of rows) {
+    const value = row?.key ?? row?.date ?? row?.day ?? row?.timestamp ?? row?.time
+    const visitors = row?.visitors
+    const time = value === undefined || value === null ? NaN : new Date(value).getTime()
+    if (!Number.isFinite(time) || typeof visitors !== 'number' || !Number.isFinite(visitors) || visitors < 0) return null
+    const key = bangkokKey(time, granularity)
+    if (totals.has(key)) totals.set(key, (totals.get(key) ?? 0) + visitors)
+  }
+  return Array.from(totals, ([key, visitors]) => ({ key, visitors }))
+}
+
+const num = (value: unknown): number => {
+  const parsed = typeof value === 'string' ? parseFloat(value) : value
+  return typeof parsed === 'number' && Number.isFinite(parsed) ? parsed : 0
+}
+
+function totalVisitors(raw: unknown): number | null {
+  if (!raw || typeof raw !== 'object') return null
+  const record = raw as Record<string, unknown>
+  const inner = record.data && typeof record.data === 'object' && !Array.isArray(record.data)
+    ? (record.data as Record<string, unknown>) : record
+  const visitors = num(inner.visitors ?? inner.uniqueVisitors ?? inner.unique_visitors)
+  return visitors > 0 ? visitors : num(inner.pageviews ?? inner.pageViews ?? inner.total ?? inner.count ?? inner.value)
+}
+
+type AdminCheck = 'ok' | 'unconfigured' | 'unauthorized' | 'forbidden'
+
+async function verifyAdmin(token: string): Promise<AdminCheck> {
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
+  const supabaseKey = process.env.SUPABASE_PUBLISHABLE_KEY || process.env.VITE_SUPABASE_PUBLISHABLE_KEY
+  if (!supabaseUrl || !supabaseKey) return 'unconfigured'
+
+  const client = createClient(supabaseUrl, supabaseKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+    global: { headers: { Authorization: `Bearer ${token}` } },
+  })
+  const { data, error } = await client.auth.getUser(token)
+  if (error || !data.user) return 'unauthorized'
+  const { data: membership, error: membershipError } = await client
+    .from('portfolio_admins').select('user_id').eq('user_id', data.user.id).maybeSingle()
+  return membershipError || !membership ? 'forbidden' : 'ok'
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   res.setHeader('X-Content-Type-Options', 'nosniff')
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
-
-  if (req.method === 'OPTIONS') {
-    res.status(204).end()
-    return
-  }
+  res.setHeader('Cache-Control', 'no-store')
 
   if (req.method !== 'GET') {
     res.status(405).json({ error: 'Method not allowed' })
+    return
+  }
+
+  const authorization = req.headers?.authorization ?? ''
+  const token = authorization.startsWith('Bearer ') ? authorization.slice(7).trim() : ''
+  if (!token) {
+    res.status(401).json({ error: 'Unauthorized' })
+    return
+  }
+  const admin = await verifyAdmin(token)
+  if (admin === 'unconfigured') {
+    res.status(503).json({ error: 'Admin verification is not configured' })
+    return
+  }
+  if (admin !== 'ok') {
+    res.status(admin === 'forbidden' ? 403 : 401).json({ error: admin === 'forbidden' ? 'Forbidden' : 'Unauthorized' })
     return
   }
 
@@ -81,245 +158,82 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     return
   }
 
-  // Auto-detect teamId if project is owned by a team and teamId was not explicitly set
+  const requested = String(req.query?.range ?? '7d')
+  const range: Range = requested === '24h' || requested === '30d' ? requested : '7d'
+  const window = getWindow(range, Date.now())
+  const headers = { Authorization: `Bearer ${vercelToken}`, 'Content-Type': 'application/json' }
+
+  // Auto-detect teamId if the project is owned by a team and it was not set explicitly.
   if (!teamId) {
     try {
-      const projRes = await fetch(`https://api.vercel.com/v9/projects/${encodeURIComponent(projectId)}`, {
-        headers: { Authorization: `Bearer ${vercelToken}` },
-      })
+      const projRes = await fetch(`https://api.vercel.com/v9/projects/${encodeURIComponent(projectId)}`, { headers })
       if (projRes.ok) {
-        const projData = (await projRes.json()) as { accountId?: string }
-        if (projData?.accountId && projData.accountId.startsWith('team_')) {
-          teamId = projData.accountId
-        }
+        const project = (await projRes.json()) as { accountId?: string }
+        if (project?.accountId?.startsWith('team_')) teamId = project.accountId
       }
     } catch {
-      // Continue without auto-detected teamId
+      // Continue without an auto-detected team.
     }
   }
 
-  // Determine query range (default 30 days, or requested days)
-  const daysParam = req.query.days ? parseInt(String(req.query.days), 10) : 30
-  const days = isNaN(daysParam) || daysParam <= 0 ? 30 : daysParam
-  const until = Date.now()
-  const since = until - days * 24 * 60 * 60 * 1000
-
-  const baseParams = new URLSearchParams({
-    projectId,
-    since: String(since),
-    until: String(until),
-  })
-
-  if (teamId) {
-    baseParams.set('teamId', teamId)
+  const query = (from: number, to: number, extra: Record<string, string> = {}) => {
+    const params = new URLSearchParams({ projectId, since: String(from), until: String(to), ...extra })
+    if (teamId) params.set('teamId', teamId)
+    return `https://api.vercel.com/v1/query/web-analytics/visits/${extra.by || extra.limit ? 'aggregate' : 'count'}?${params.toString()}`
   }
-
-  const headers = {
-    Authorization: `Bearer ${vercelToken}`,
-    'Content-Type': 'application/json',
+  const getJson = async (url: string): Promise<unknown> => {
+    const response = await fetch(url, { headers }).catch(() => null)
+    return response?.ok ? response.json().catch(() => null) : null
   }
 
   try {
-    // 1. Fetch total count of visits
-    const countUrl = `https://api.vercel.com/v1/query/web-analytics/visits/count?${baseParams.toString()}`
-    const countPromise = fetch(countUrl, { headers })
-
-    // Fallback/parallel query to aggregate daily totals in case count returns different schema
-    const aggTotalsParams = new URLSearchParams(baseParams)
-    aggTotalsParams.set('by', 'day')
-    const aggTotalsUrl = `https://api.vercel.com/v1/query/web-analytics/visits/aggregate?${aggTotalsParams.toString()}`
-    const aggTotalsPromise = fetch(aggTotalsUrl, { headers })
-
-    // Dedicated visitor series; hourly for a one-day range and daily otherwise.
-    const seriesParams = new URLSearchParams(baseParams)
-    const seriesGranularity = days === 1 ? 'hour' : 'day'
-    seriesParams.set('by', seriesGranularity)
-    const seriesUrl = `https://api.vercel.com/v1/query/web-analytics/visits/aggregate?${seriesParams.toString()}`
-    const seriesPromise = fetch(seriesUrl, { headers })
-
-    // 2. Fetch top referrers
-    const referrersParams = new URLSearchParams(baseParams)
-    referrersParams.set('by', 'referrer')
-    referrersParams.set('limit', '8')
-    const referrersUrl = `https://api.vercel.com/v1/query/web-analytics/visits/aggregate?${referrersParams.toString()}`
-    const referrersPromise = fetch(referrersUrl, { headers })
-
-    // 3. Fetch top countries
-    const countriesParams = new URLSearchParams(baseParams)
-    countriesParams.set('by', 'country')
-    countriesParams.set('limit', '6')
-    const countriesUrl = `https://api.vercel.com/v1/query/web-analytics/visits/aggregate?${countriesParams.toString()}`
-    const countriesPromise = fetch(countriesUrl, { headers })
-
-    const [countRes, aggTotalsRes, seriesRes, refRes, countryRes] = await Promise.all([
-      countPromise,
-      aggTotalsPromise,
-      seriesPromise,
-      referrersPromise,
-      countriesPromise,
+    const [countNow, countPrev, hourlyNow, hourlyPrev, referrers, countries] = await Promise.all([
+      getJson(query(window.start, window.end)),
+      getJson(query(window.prevStart, window.prevEnd)),
+      getJson(query(window.start, window.end, { by: 'hour' })),
+      getJson(query(window.prevStart, window.prevEnd, { by: 'hour' })),
+      getJson(query(window.start, window.end, { by: 'referrer', limit: '8' })),
+      getJson(query(window.start, window.end, { by: 'country', limit: '10' })),
     ])
 
-    // If both count and aggregate failed due to authentication or permissions
-    if (!countRes.ok && !aggTotalsRes.ok) {
-      const errText = await (countRes.status !== 404 ? countRes.text() : aggTotalsRes.text()).catch(() => '')
-      console.warn(`[Vercel Traffic API] Failed querying Vercel Web Analytics: status ${countRes.status}`, errText)
+    if (countNow === null && hourlyNow === null) {
       res.status(200).json({
         configured: false,
-        status: countRes.status,
-        message: `Vercel Web Analytics API returned ${countRes.status}. Make sure VERCEL_TOKEN and VERCEL_PROJECT_ID are valid.`,
+        message: 'Vercel Web Analytics did not respond. Check VERCEL_TOKEN and VERCEL_PROJECT_ID.',
       })
       return
     }
 
-    const countData = countRes.ok ? await countRes.json().catch(() => null) : null
-    const aggTotalsRaw = aggTotalsRes.ok ? await aggTotalsRes.json().catch(() => null) : null
-    const seriesRaw = seriesRes.ok ? await seriesRes.json().catch(() => null) : null
-    const refDataRaw = refRes.ok ? await refRes.json().catch(() => null) : null
-    const countryDataRaw = countryRes.ok ? await countryRes.json().catch(() => null) : null
+    const series = bucketVisitors(hourlyNow, window.start, window.end, window.granularity)
+    const previousSeries = bucketVisitors(hourlyPrev, window.prevStart, window.prevEnd, window.granularity)
+    const sumOf = (points: Array<{ visitors: number }> | null) =>
+      points ? points.reduce((sum, point) => sum + point.visitors, 0) : null
 
-    let totalPageviews = 0
-    let totalVisitors = 0
+    // Unique visitors cannot be summed from buckets; prefer the dedicated count, fall back to the bucket sum.
+    const current = totalVisitors(countNow) ?? sumOf(series)
+    const previous = totalVisitors(countPrev) ?? sumOf(previousSeries)
 
-    const parseNum = (val: unknown): number => {
-      if (typeof val === 'number') return isNaN(val) ? 0 : val
-      if (typeof val === 'string') {
-        const p = parseFloat(val)
-        return isNaN(p) ? 0 : p
-      }
-      return 0
-    }
-
-    const extractMetricsFromObj = (obj: unknown): { pv: number; v: number } => {
-      if (!obj || typeof obj !== 'object') return { pv: 0, v: 0 }
-      const rec = obj as Record<string, unknown>
-      const inner = rec.data && typeof rec.data === 'object' && !Array.isArray(rec.data)
-        ? (rec.data as Record<string, unknown>)
-        : rec
-
-      const pv = parseNum(inner.pageviews ?? inner.pageViews ?? inner.total ?? inner.count ?? inner.value)
-      const v = parseNum(inner.visitors ?? inner.uniqueVisitors ?? inner.unique_visitors)
-      return { pv, v: v > 0 ? v : pv }
-    }
-
-    const countMetrics = extractMetricsFromObj(countData)
-    totalPageviews = countMetrics.pv
-    totalVisitors = countMetrics.v
-
-    const normalizeDate = (val: unknown): string => {
-      if (!val) return ''
-      if (typeof val === 'number' || /^\d{10,13}$/.test(String(val))) {
-        const ms = Number(val) < 1e11 ? Number(val) * 1000 : Number(val)
-        return new Date(ms).toISOString().slice(0, 10)
-      }
-      const str = String(val)
-      if (/^\d{4}-\d{2}-\d{2}/.test(str)) {
-        return str.slice(0, 10)
-      }
-      try {
-        const d = new Date(str)
-        if (!isNaN(d.getTime())) return d.toISOString().slice(0, 10)
-      } catch {
-        // fallback
-      }
-      return str.slice(0, 10)
-    }
-
-    // Process daily breakdown from aggregate
-    const dailyMap = new Map<string, { pageviews: number; visitors: number }>()
-    let aggPageviews = 0
-    let aggVisitors = 0
-
-    if (aggTotalsRaw && typeof aggTotalsRaw === 'object') {
-      const rows: unknown[] = Array.isArray(aggTotalsRaw)
-        ? (aggTotalsRaw as unknown[])
-        : Array.isArray((aggTotalsRaw as Record<string, unknown>).data)
-          ? ((aggTotalsRaw as Record<string, unknown>).data as unknown[])
-          : []
-
-      for (const row of rows) {
-        if (!row || typeof row !== 'object') continue
-        const r = row as Record<string, unknown>
-        const dateVal = normalizeDate(r.date ?? r.key ?? r.day ?? r.timestamp ?? r.time)
-        const m = extractMetricsFromObj(row)
-        aggPageviews += m.pv
-        aggVisitors += m.v
-        if (dateVal) {
-          const prev = dailyMap.get(dateVal) || { pageviews: 0, visitors: 0 }
-          dailyMap.set(dateVal, {
-            pageviews: prev.pageviews + m.pv,
-            visitors: prev.visitors + m.v,
-          })
-        }
-      }
-    }
-
-    const dailyTimeSeries = Array.from(dailyMap.entries()).map(([date, counts]) => ({
-      date,
-      pageviews: counts.pageviews,
-      visitors: counts.visitors,
-    }))
-
-    // Always take the most complete total
-    if (totalPageviews === 0 || aggPageviews > totalPageviews) {
-      totalPageviews = aggPageviews
-    }
-    if (totalVisitors === 0 || aggVisitors > totalVisitors) {
-      totalVisitors = aggVisitors
-    }
-
-    const visitorTimeSeries = parseVisitorSeries(seriesRaw, seriesGranularity)
-    const visitorDailySeries = parseVisitorSeries(aggTotalsRaw, 'day')
-
-    // Process referrers
-    const topReferrers: Array<{ referrer: string; count: number }> = []
-    const refRows: VercelAggregateRow[] = Array.isArray(refDataRaw)
-      ? (refDataRaw as VercelAggregateRow[])
-      : Array.isArray((refDataRaw as VercelAggregateResponse)?.data)
-        ? ((refDataRaw as VercelAggregateResponse).data ?? [])
-        : []
-
-    for (const r of refRows) {
-      if (!r) continue
-      const name = r.referrer || r.key || '(Direct / None)'
-      const val = r.pageViews ?? r.visitors ?? r.count ?? r.total ?? 0
-      topReferrers.push({ referrer: name, count: val })
-    }
-
-    // Process countries
-    const topCountries: Array<{ country: string; count: number }> = []
-    const countryRows: VercelAggregateRow[] = Array.isArray(countryDataRaw)
-      ? (countryDataRaw as VercelAggregateRow[])
-      : Array.isArray((countryDataRaw as VercelAggregateResponse)?.data)
-        ? ((countryDataRaw as VercelAggregateResponse).data ?? [])
-        : []
-
-    for (const c of countryRows) {
-      if (!c) continue
-      const name = c.country || c.key || 'Unknown'
-      const val = c.pageViews ?? c.visitors ?? c.count ?? c.total ?? 0
-      topCountries.push({ country: name, count: val })
-    }
+    const named = (raw: unknown, field: 'referrer' | 'country', fallback: string) =>
+      (rowsOf(raw) ?? [])
+        .filter((row): row is VercelRow => Boolean(row))
+        .map((row) => ({
+          [field]: row[field] || row.key || fallback,
+          count: num(row.visitors ?? row.count ?? row.total ?? row.pageViews),
+        }))
 
     res.status(200).json({
       configured: true,
-      totalPageviews,
-      totalVisitors,
-      topReferrers,
-      topCountries,
-      dailyTimeSeries: visitorDailySeries?.map((point) => ({
-        ...point,
-        pageviews: dailyTimeSeries.find((daily) => daily.date === point.date)?.pageviews ?? 0,
-      })) ?? [],
-      visitorDailyDataAvailable: visitorDailySeries !== null,
-      visitorTimeSeries: visitorTimeSeries ?? [],
-      visitorDataAvailable: visitorTimeSeries !== null,
-      periodDays: days,
+      range,
+      granularity: window.granularity,
+      visitors: { current, previous },
+      series: series ?? [],
+      previousSeries: previousSeries ?? [],
+      seriesAvailable: series !== null,
+      topReferrers: named(referrers, 'referrer', '(Direct / None)'),
+      topCountries: named(countries, 'country', 'Unknown'),
     })
   } catch (err) {
     console.error('[Vercel Traffic API] Failed querying Vercel Web Analytics:', err)
-    res.status(500).json({
-      configured: true,
-      error: 'Failed to communicate with Vercel Web Analytics API',
-    })
+    res.status(500).json({ configured: true, error: 'Failed to communicate with Vercel Web Analytics API' })
   }
 }

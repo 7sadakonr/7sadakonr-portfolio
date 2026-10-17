@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
-import { Button, Chip } from '@heroui/react'
+import { Button } from '@heroui/react'
 import { useAdminAuth } from '../auth/useAdminAuth'
 import PublishButton from './PublishButton'
 
@@ -116,18 +116,17 @@ const AdminLayout = () => {
             <span className="text-zinc-500 font-normal">/</span>
             <span className="text-violet-400 font-bold">Admin</span>
           </button>
-          <Chip
-            size="sm"
-            variant="soft"
-            color="success"
-            className="hidden sm:inline-flex items-center gap-1.5 px-2 py-0.5 text-[11px] font-semibold"
-          >
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse mr-1" aria-hidden="true" />
-            Live System
-          </Chip>
         </div>
 
         <div className="admin-header-actions flex items-center gap-2.5">
+          <a
+            href="/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="admin-view-site hidden md:inline-flex"
+          >
+            View site <span aria-hidden="true">↗</span>
+          </a>
           <PublishButton />
           <Button
             size="sm"
@@ -145,7 +144,7 @@ const AdminLayout = () => {
 
           <button
             ref={menuToggleRef}
-            className="admin-menu-toggle sm:hidden"
+            className="admin-menu-toggle md:hidden"
             type="button"
             aria-expanded={isMenuOpen}
             aria-controls="admin-navigation"

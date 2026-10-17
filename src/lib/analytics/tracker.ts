@@ -1,5 +1,5 @@
 export interface EventPayload {
-  event_name: 'page_view' | 'project_open' | 'resume_download'
+  event_name: 'page_view' | 'project_open' | 'resume_download' | 'github_click' | 'demo_click'
   page?: string
   project_slug?: string
   referrer_host?: string
@@ -27,12 +27,16 @@ const ALLOWED_EVENTS = new Set([
   'page_view',
   'project_open',
   'resume_download',
+  'github_click',
+  'demo_click',
 ])
 
 const IMMEDIATE_EVENTS = new Set([
   'page_view',
   'project_open',
   'resume_download',
+  'github_click',
+  'demo_click',
 ])
 
 let eventQueue: QueuedEvent[] = []
@@ -146,7 +150,7 @@ function scheduleFlush(): void {
 
 /**
  * Public function to enqueue aggregate events.
- * Accepts only allowed aggregate metrics: 'page_view', 'project_open', 'resume_download'.
+ * Accepts only allowed aggregate metrics: 'page_view', 'project_open', 'resume_download', 'github_click', 'demo_click'.
  */
 export function trackEvent(name: string, payload: Partial<EventPayload> = {}): void {
   if (isAdminOptOut()) return

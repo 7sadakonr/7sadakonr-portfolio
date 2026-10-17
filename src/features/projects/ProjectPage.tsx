@@ -37,6 +37,11 @@ const ProjectSection = () => {
     }
   }
 
+  const handleSidebarOutboundClick = (event: 'demo_click' | 'github_click') => (index: number) => {
+    const project = projects[index]
+    if (project) trackEvent(event, { project_slug: project.id })
+  }
+
   return (
     <div className="project-page-wrapper landing-section">
       <div className="project-content">
@@ -102,6 +107,8 @@ const ProjectSection = () => {
                     items={sidebarItems}
                     activeIndex={activeProjectIndex}
                     onItemClick={handleSidebarItemClick}
+                    onLiveClick={handleSidebarOutboundClick('demo_click')}
+                    onGithubClick={handleSidebarOutboundClick('github_click')}
                   />
                 )}
               </div>
