@@ -23,17 +23,17 @@ const ReferrersPanel = ({ traffic, status, isLoading }: ReferrersPanelProps) => 
         ? { title: status === 'unconfigured' ? 'Vercel Web Analytics is not connected' : 'Referrer data is unavailable' }
         : rows.length === 0 ? { title: 'No referrers yet', description: 'Direct visits and links from other sites will be listed here.' } : null}
     >
-      <ul className="ad-rank">
+      <ul className="adm-rank">
         {rows.map((row) => {
           const info = getUtmSourceInfo(null, null, row.referrer)
           return (
-            <li key={row.referrer} className="ad-rank__item">
-              <span className="ad-rank__label">
+            <li key={row.referrer} className="adm-rank__item">
+              <span className="adm-rank__label">
                 <ChannelIcon channel={info.theme.key} className="w-4 h-4 shrink-0" />
-                <span className="ad-truncate">{row.referrer}</span>
+                <span className="adm-truncate">{row.referrer}</span>
               </span>
-              <span className="ad-bar" aria-hidden="true"><span className="ad-bar__fill" style={{ width: `${(row.count / max) * 100}%` }} /></span>
-              <span className="ad-num">{row.count.toLocaleString()}</span>
+              <span className="adm-bar" aria-hidden="true"><span className="adm-bar__fill" style={{ width: `${(row.count / max) * 100}%` }} /></span>
+              <span className="adm-num">{row.count.toLocaleString()}</span>
             </li>
           )
         })}

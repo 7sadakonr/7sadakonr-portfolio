@@ -27,7 +27,7 @@ const KpiRow = ({ range, overview, timeseries, traffic, trafficStatus, isLoading
     : trafficStatus === 'error' ? 'Unavailable' : 'Unavailable'
 
   return (
-    <div className="ad-kpi-grid">
+    <div className="adm-kpi-grid">
       <StatCard
         label="Visitors"
         value={trafficStatus === 'ok' ? traffic?.visitors.current ?? null : null}

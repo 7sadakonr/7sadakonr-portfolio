@@ -6,7 +6,7 @@ interface RangeSelectorProps {
 }
 
 const RangeSelector = ({ value, onChange }: RangeSelectorProps) => (
-  <div className="ad-segmented" role="radiogroup" aria-label="Date range">
+  <div className="adm-segmented" role="radiogroup" aria-label="Date range">
     {RANGE_OPTIONS.map((option) => (
       <button
         key={option.key}
@@ -14,7 +14,7 @@ const RangeSelector = ({ value, onChange }: RangeSelectorProps) => (
         role="radio"
         aria-checked={value === option.key}
         aria-label={option.long}
-        className={`ad-segmented__option${value === option.key ? ' is-active' : ''}`}
+        className={`adm-segmented__option${value === option.key ? ' is-active' : ''}`}
         onClick={() => onChange(option.key)}
       >
         {option.label}

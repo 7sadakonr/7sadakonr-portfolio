@@ -22,7 +22,7 @@ const ProjectsPanel = ({ rows, isLoading, error }: ProjectsPanelProps) => {
       key: 'title',
       header: 'Project',
       sortValue: (row) => (row.title || row.slug).toLowerCase(),
-      render: (row) => <span className="ad-cell-strong">{row.title || row.slug}</span>,
+      render: (row) => <span className="adm-cell-strong">{row.title || row.slug}</span>,
     },
     {
       key: 'opens',
@@ -30,15 +30,15 @@ const ProjectsPanel = ({ rows, isLoading, error }: ProjectsPanelProps) => {
       align: 'right',
       sortValue: (row) => row.opens,
       render: (row) => (
-        <span className="ad-bar-cell">
-          <span className="ad-bar" aria-hidden="true"><span className="ad-bar__fill" style={{ width: `${(row.opens / maxOpens) * 100}%` }} /></span>
-          <span className="ad-num">{row.opens.toLocaleString()}</span>
+        <span className="adm-bar-cell">
+          <span className="adm-bar" aria-hidden="true"><span className="adm-bar__fill" style={{ width: `${(row.opens / maxOpens) * 100}%` }} /></span>
+          <span className="adm-num">{row.opens.toLocaleString()}</span>
         </span>
       ),
     },
-    { key: 'github', header: 'GitHub clicks', align: 'right', sortValue: (row) => row.github_clicks, render: (row) => <span className="ad-num">{row.github_clicks.toLocaleString()}</span> },
-    { key: 'demo', header: 'Demo clicks', align: 'right', sortValue: (row) => row.demo_clicks, render: (row) => <span className="ad-num">{row.demo_clicks.toLocaleString()}</span> },
-    { key: 'ctr', header: 'Click-through', align: 'right', sortValue: clickThrough, render: (row) => <span className="ad-num">{clickThrough(row)}%</span> },
+    { key: 'github', header: 'GitHub clicks', align: 'right', sortValue: (row) => row.github_clicks, render: (row) => <span className="adm-num">{row.github_clicks.toLocaleString()}</span> },
+    { key: 'demo', header: 'Demo clicks', align: 'right', sortValue: (row) => row.demo_clicks, render: (row) => <span className="adm-num">{row.demo_clicks.toLocaleString()}</span> },
+    { key: 'ctr', header: 'Click-through', align: 'right', sortValue: clickThrough, render: (row) => <span className="adm-num">{clickThrough(row)}%</span> },
   ]
 
   return (

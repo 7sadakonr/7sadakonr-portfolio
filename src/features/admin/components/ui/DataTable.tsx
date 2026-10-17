@@ -43,8 +43,8 @@ function DataTable<T>({ caption, columns, rows, getRowKey, onRowActivate, rowAct
 
   return (
     <>
-      <div className="ad-table-wrap hidden md:block">
-        <table className="ad-table">
+      <div className="adm-table-wrap hidden md:block">
+        <table className="adm-table">
           <caption className="sr-only">{caption}</caption>
           <thead>
             <tr>
@@ -58,9 +58,9 @@ function DataTable<T>({ caption, columns, rows, getRowKey, onRowActivate, rowAct
                     aria-sort={active ? (sort?.direction === 'asc' ? 'ascending' : 'descending') : undefined}
                   >
                     {column.sortValue ? (
-                      <button type="button" className="ad-table__sort" onClick={() => toggleSort(column.key)}>
+                      <button type="button" className="adm-table__sort" onClick={() => toggleSort(column.key)}>
                         {column.header}
-                        <span aria-hidden="true" className="ad-table__sort-icon">{active ? (sort?.direction === 'asc' ? '↑' : '↓') : ''}</span>
+                        <span aria-hidden="true" className="adm-table__sort-icon">{active ? (sort?.direction === 'asc' ? '↑' : '↓') : ''}</span>
                       </button>
                     ) : column.header}
                   </th>
@@ -74,7 +74,7 @@ function DataTable<T>({ caption, columns, rows, getRowKey, onRowActivate, rowAct
                 {columns.map((column, index) => (
                   <td key={column.key} className={column.align === 'right' ? 'is-right' : undefined}>
                     {onRowActivate && index === 0 ? (
-                      <button type="button" className="ad-table__row-action" onClick={() => onRowActivate(row)} aria-label={rowActionLabel?.(row)}>
+                      <button type="button" className="adm-table__row-action" onClick={() => onRowActivate(row)} aria-label={rowActionLabel?.(row)}>
                         {column.render(row)}
                       </button>
                     ) : column.render(row)}
@@ -86,14 +86,14 @@ function DataTable<T>({ caption, columns, rows, getRowKey, onRowActivate, rowAct
         </table>
       </div>
 
-      <ul className="ad-card-list md:hidden" aria-label={caption}>
+      <ul className="adm-card-list md:hidden" aria-label={caption}>
         {sorted.map((row) => {
           const content = (
             <>
-              <div className="ad-card-list__title">{primary?.render(row)}</div>
-              <dl className="ad-card-list__fields">
+              <div className="adm-card-list__title">{primary?.render(row)}</div>
+              <dl className="adm-card-list__fields">
                 {rest.map((column) => (
-                  <div key={column.key} className="ad-card-list__field">
+                  <div key={column.key} className="adm-card-list__field">
                     {column.mobileLabel !== false && <dt>{column.header}</dt>}
                     <dd>{column.render(row)}</dd>
                   </div>
@@ -102,9 +102,9 @@ function DataTable<T>({ caption, columns, rows, getRowKey, onRowActivate, rowAct
             </>
           )
           return (
-            <li key={getRowKey(row)} className="ad-card-list__item">
+            <li key={getRowKey(row)} className="adm-card-list__item">
               {onRowActivate ? (
-                <button type="button" className="ad-card-list__button" onClick={() => onRowActivate(row)} aria-label={rowActionLabel?.(row)}>{content}</button>
+                <button type="button" className="adm-card-list__button" onClick={() => onRowActivate(row)} aria-label={rowActionLabel?.(row)}>{content}</button>
               ) : content}
             </li>
           )

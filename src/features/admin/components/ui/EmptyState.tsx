@@ -8,9 +8,9 @@ interface EmptyStateProps {
 }
 
 const EmptyState = ({ title, description, action, compact = false }: EmptyStateProps) => (
-  <div className={`ad-empty${compact ? ' ad-empty--compact' : ''}`}>
-    <p className="ad-empty__title">{title}</p>
-    {description && <p className="ad-empty__text">{description}</p>}
+  <div className={`adm-empty${compact ? ' adm-empty--compact' : ''}`}>
+    <p className="adm-empty__title">{title}</p>
+    {description && <p className="adm-empty__text">{description}</p>}
     {action}
   </div>
 )
