@@ -29,7 +29,7 @@ const AdminAnalyticsPage = () => {
   const now = useNow(15_000)
 
   return (
-    <div className="admin-page ad-analytics">
+    <div className="admin-page adm-analytics">
       <PageHeader
         eyebrow="Analytics"
         title="Audience & engagement"
@@ -44,7 +44,7 @@ const AdminAnalyticsPage = () => {
         }
       />
 
-      <p className="ad-updated" role="status">
+      <p className="adm-updated" role="status">
         {lastUpdated ? `Updated ${formatRelativeTime(lastUpdated, now)}` : 'Loading…'}
         {isRefreshing && ' · refreshing'}
       </p>
@@ -58,7 +58,7 @@ const AdminAnalyticsPage = () => {
         isLoading={isLoading}
         overviewFailed={Boolean(errors.overview)}
       />
-      {errors.overview && <p className="ad-inline-error" role="alert">Couldn&apos;t load totals: {errors.overview}</p>}
+      {errors.overview && <p className="adm-inline-error" role="alert">Couldn&apos;t load totals: {errors.overview}</p>}
 
       <TrafficChart
         window={window}
@@ -72,7 +72,7 @@ const AdminAnalyticsPage = () => {
 
       <ProjectsPanel rows={projects} isLoading={isLoading} error={errors.projects} />
 
-      <div className="ad-two-col">
+      <div className="adm-two-col">
         <ReferrersPanel traffic={traffic} status={trafficStatus} isLoading={isLoading} />
         <CountriesPanel traffic={traffic} status={trafficStatus} isLoading={isLoading} />
       </div>

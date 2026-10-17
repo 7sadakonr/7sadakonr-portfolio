@@ -8,13 +8,13 @@ interface PageHeaderProps {
 }
 
 const PageHeader = ({ eyebrow, title, description, actions }: PageHeaderProps) => (
-  <header className="ad-page-header">
-    <div className="ad-page-header__text">
+  <header className="adm-page-header">
+    <div className="adm-page-header__text">
       {eyebrow && <p className="admin-eyebrow">{eyebrow}</p>}
-      <h1 className="ad-page-title">{title}</h1>
-      {description && <p className="ad-page-description">{description}</p>}
+      <h1 className="adm-page-title">{title}</h1>
+      {description && <p className="adm-page-description">{description}</p>}
     </div>
-    {actions && <div className="ad-page-header__actions">{actions}</div>}
+    {actions && <div className="adm-page-header__actions">{actions}</div>}
   </header>
 )
 

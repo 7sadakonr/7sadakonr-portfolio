@@ -32,8 +32,8 @@ describe('admin mobile responsive rules', () => {
     const table = readFileSync(resolve(process.cwd(), 'src/features/admin/components/ui/DataTable.tsx'), 'utf8')
     const layout = readFileSync(resolve(process.cwd(), 'src/features/admin/components/AdminLayout.tsx'), 'utf8')
 
-    expect(table).toMatch(/ad-table-wrap hidden md:block/)
-    expect(table).toMatch(/ad-card-list md:hidden/)
+    expect(table).toMatch(/adm-table-wrap hidden md:block/)
+    expect(table).toMatch(/adm-card-list md:hidden/)
     expect(layout).toMatch(/admin-menu-toggle md:hidden/)
   })
 })

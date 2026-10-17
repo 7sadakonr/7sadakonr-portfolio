@@ -50,14 +50,14 @@ const TrafficChart = ({ window, timeseries, previousTimeseries, traffic, traffic
     : null
 
   const tabs = (
-    <div className="ad-segmented ad-segmented--small" role="tablist" aria-label="Chart metric">
+    <div className="adm-segmented adm-segmented--small" role="tablist" aria-label="Chart metric">
       {TABS.map((tab) => (
         <button
           key={tab.key}
           type="button"
           role="tab"
           aria-selected={metric === tab.key}
-          className={`ad-segmented__option${metric === tab.key ? ' is-active' : ''}`}
+          className={`adm-segmented__option${metric === tab.key ? ' is-active' : ''}`}
           onClick={() => setMetric(tab.key)}
         >
           {tab.label}
@@ -90,9 +90,9 @@ const TrafficChart = ({ window, timeseries, previousTimeseries, traffic, traffic
       isLoading={isLoading}
       error={error}
       empty={body ?? null}
-      bodyClassName="ad-chart"
+      bodyClassName="adm-chart"
     >
-      <div className="ad-chart__canvas" role="img" aria-label={`${metric === 'engagement' ? 'Engagement' : label} per ${unit}. ${summaryText ?? ''}`}>
+      <div className="adm-chart__canvas" role="img" aria-label={`${metric === 'engagement' ? 'Engagement' : label} per ${unit}. ${summaryText ?? ''}`}>
         <ResponsiveContainer width="100%" height="100%">
           {metric === 'engagement' ? (
             <BarChart data={rows} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>

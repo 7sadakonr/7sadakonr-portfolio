@@ -18,20 +18,20 @@ interface PanelProps {
 
 const Panel = ({ title, description, actions, isLoading, error, empty, className = '', bodyClassName = '', children }: PanelProps) => {
   let body: ReactNode = children
-  if (isLoading) body = <div className="ad-skeleton ad-skeleton--block" role="status" aria-label={`Loading ${title}`} />
+  if (isLoading) body = <div className="adm-skeleton adm-skeleton--block" role="status" aria-label={`Loading ${title}`} />
   else if (error) body = <EmptyState compact title={`Couldn't load ${title.toLowerCase()}`} description={error} />
   else if (empty) body = <EmptyState compact title={empty.title} description={empty.description} />
 
   return (
-    <section className={`ad-panel ${className}`.trim()} aria-label={title}>
-      <header className="ad-panel__header">
+    <section className={`adm-panel ${className}`.trim()} aria-label={title}>
+      <header className="adm-panel__header">
         <div>
-          <h2 className="ad-panel__title">{title}</h2>
-          {description && <p className="ad-panel__description">{description}</p>}
+          <h2 className="adm-panel__title">{title}</h2>
+          {description && <p className="adm-panel__description">{description}</p>}
         </div>
-        {actions && <div className="ad-panel__actions">{actions}</div>}
+        {actions && <div className="adm-panel__actions">{actions}</div>}
       </header>
-      <div className={`ad-panel__body ${bodyClassName}`.trim()}>{body}</div>
+      <div className={`adm-panel__body ${bodyClassName}`.trim()}>{body}</div>
     </section>
   )
 }
