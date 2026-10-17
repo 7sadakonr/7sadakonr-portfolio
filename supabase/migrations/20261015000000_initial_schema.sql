@@ -305,8 +305,9 @@ drop function if exists public.analytics_funnel(timestamptz, timestamptz);
 
 create table if not exists public.analytics_daily (
   id bigint generated always as identity primary key,
-  date date not null default current_date,
-  metric text not null, -- 'page_view', 'project_open', 'resume_download'
+  date date not null default (timezone('Asia/Bangkok', now()))::date, -- Asia/Bangkok (GMT+7) day
+  hour smallint not null default 0 check (hour between 0 and 23),     -- Asia/Bangkok hour of day
+  metric text not null, -- 'page_view', 'project_open', 'resume_download', 'github_click', 'demo_click'
   country text not null default '',
   referrer_host text not null default '',
   utm_source text not null default '',
@@ -316,15 +317,17 @@ create table if not exists public.analytics_daily (
   project_slug text not null default '',
   count int not null default 1,
   constraint analytics_daily_dimensions_key unique (
-    date, metric, country, referrer_host, utm_source, utm_medium, utm_campaign, page, project_slug
+    date, hour, metric, country, referrer_host, utm_source, utm_medium, utm_campaign, page, project_slug
   )
 );
 
 create index if not exists analytics_daily_date_idx on public.analytics_daily (date);
+create index if not exists analytics_daily_date_hour_idx on public.analytics_daily (date, hour);
 create index if not exists analytics_daily_metric_idx on public.analytics_daily (metric);
 create index if not exists analytics_daily_project_slug_idx on public.analytics_daily (project_slug) where project_slug <> '';
 create index if not exists analytics_daily_country_idx on public.analytics_daily (country) where country <> '';
 create index if not exists analytics_daily_referrer_idx on public.analytics_daily (referrer_host) where referrer_host <> '';
+
 
 -- ===================================================================
 -- RLS: Strictly protect analytics_daily
@@ -364,13 +367,16 @@ declare
   v_utm_med text;
   v_utm_camp text;
   v_country text;
+  v_now timestamp := timezone('Asia/Bangkok', now());
+  v_date date := v_now::date;
+  v_hour smallint := extract(hour from v_now)::smallint;
 begin
   v_country := coalesce(upper(left(trim(p_country), 8)), '');
 
   for elem in select * from jsonb_array_elements(p_events)
   loop
     v_metric := coalesce(elem->>'event_name', '');
-    if v_metric in ('page_view', 'project_open', 'resume_download') then
+    if v_metric in ('page_view', 'project_open', 'resume_download', 'github_click', 'demo_click') then
       v_page := coalesce(left(trim(elem->>'page'), 256), '');
       v_project_slug := coalesce(left(trim(elem->>'project_slug'), 128), '');
       v_ref_host := coalesce(lower(left(trim(elem->>'referrer_host'), 128)), '');
@@ -379,11 +385,11 @@ begin
       v_utm_camp := coalesce(left(trim(elem->>'utm_campaign'), 128), '');
 
       insert into public.analytics_daily (
-        date, metric, country, referrer_host, utm_source, utm_medium, utm_campaign, page, project_slug, count
+        date, hour, metric, country, referrer_host, utm_source, utm_medium, utm_campaign, page, project_slug, count
       ) values (
-        current_date, v_metric, v_country, v_ref_host, v_utm_src, v_utm_med, v_utm_camp, v_page, v_project_slug, 1
+        v_date, v_hour, v_metric, v_country, v_ref_host, v_utm_src, v_utm_med, v_utm_camp, v_page, v_project_slug, 1
       )
-      on conflict (date, metric, country, referrer_host, utm_source, utm_medium, utm_campaign, page, project_slug)
+      on conflict (date, hour, metric, country, referrer_host, utm_source, utm_medium, utm_campaign, page, project_slug)
       do update set count = public.analytics_daily.count + 1;
     end if;
   end loop;
@@ -394,12 +400,9 @@ revoke execute on function public.analytics_record_events(jsonb, text) from publ
 grant execute on function public.analytics_record_events(jsonb, text) to service_role;
 
 -- ===================================================================
+-- Dashboard RPCs. Every range is a [p_from, p_to] timestamptz window that is
+-- interpreted in Asia/Bangkok and bucketed by hour (date + hour).
 -- ===================================================================
--- Dashboard RPCs (Security Invoker, restricted to portfolio admins)
--- ===================================================================
-
--- Drop every existing overload of overview/timeseries so the timezone-aware
--- signatures are the only ones (no ambiguous calls). No table data is touched.
 do $drop$
 declare
   fn record;
@@ -409,18 +412,22 @@ begin
     from pg_catalog.pg_proc p
     join pg_catalog.pg_namespace n on n.oid = p.pronamespace
     where n.nspname = 'public'
-      and p.proname in ('analytics_overview', 'analytics_timeseries')
+      and p.proname in (
+        'analytics_overview', 'analytics_timeseries', 'analytics_utm_campaigns',
+        'analytics_project_performance', 'analytics_top_interactions', 'analytics_top_countries'
+      )
   loop
     execute format('drop function %s', fn.signature);
   end loop;
 end
 $drop$;
 
--- 1. Overview stats (today/yesterday follow the viewer's timezone p_tz)
-create or replace function public.analytics_overview(
-  p_from timestamptz default now() - interval '30 days',
-  p_to   timestamptz default now(),
-  p_tz   text default 'UTC'
+-- 1. Overview: current + previous period totals
+create function public.analytics_overview(
+  p_from timestamptz,
+  p_to timestamptz,
+  p_prev_from timestamptz,
+  p_prev_to timestamptz
 )
 returns json
 language plpgsql stable
@@ -428,59 +435,48 @@ security invoker
 set search_path = ''
 as $$
 declare
+  v_from timestamp := date_trunc('hour', timezone('Asia/Bangkok', p_from));
+  v_to timestamp := timezone('Asia/Bangkok', p_to);
+  v_pfrom timestamp := date_trunc('hour', timezone('Asia/Bangkok', p_prev_from));
+  v_pto timestamp := timezone('Asia/Bangkok', p_prev_to);
   v_result json;
-  v_from_date date;
-  v_to_date date;
-  v_prev_from_date date;
-  v_prev_to_date date;
-  v_today date;
-  v_yesterday date;
-  v_period_days int;
 begin
   if not exists (select 1 from public.portfolio_admins where user_id = (select auth.uid())) then
     raise exception 'Admin access required';
   end if;
 
-  if not exists (select 1 from pg_catalog.pg_timezone_names where name = p_tz) then
-    raise exception 'Unknown timezone: %', p_tz;
-  end if;
-
-  v_from_date := (p_from at time zone p_tz)::date;
-  v_to_date := (p_to at time zone p_tz)::date;
-  v_period_days := greatest(1, (v_to_date - v_from_date));
-  v_prev_to_date := v_from_date - 1;
-  v_prev_from_date := v_prev_to_date - v_period_days;
-  v_today := (now() at time zone p_tz)::date;
-  v_yesterday := v_today - 1;
-
+  with rows as (
+    select metric, count, (date::timestamp + make_interval(hours => hour)) as bucket
+    from public.analytics_daily
+    where date between v_pfrom::date and v_to::date
+  )
   select json_build_object(
-    'visitors', 0,
-    'visitors_prev', null,
-    'visitors_today', null,
-    'visitors_yesterday', null,
-    'active_now', 0,
-    'page_views', coalesce((select sum(count) from public.analytics_daily where metric = 'page_view' and date between v_from_date and v_to_date), 0),
-    'interactions', coalesce((select sum(count) from public.analytics_daily where metric in ('project_open', 'resume_download') and date between v_from_date and v_to_date), 0),
-    'interactions_prev', coalesce((select sum(count) from public.analytics_daily where metric in ('project_open', 'resume_download') and date between v_prev_from_date and v_prev_to_date), 0),
-    'interactions_today', coalesce((select sum(count) from public.analytics_daily where metric in ('project_open', 'resume_download') and date = v_today), 0),
-    'interactions_yesterday', coalesce((select sum(count) from public.analytics_daily where metric in ('project_open', 'resume_download') and date = v_yesterday), 0),
-    'project_opens', coalesce((select sum(count) from public.analytics_daily where metric = 'project_open' and date between v_from_date and v_to_date), 0),
-    'external_clicks', 0,
-    'resume_downloads', coalesce((select sum(count) from public.analytics_daily where metric = 'resume_download' and date between v_from_date and v_to_date), 0),
-    'sessions', coalesce((select sum(count) from public.analytics_daily where metric = 'page_view' and date between v_from_date and v_to_date), 0),
-    'avg_session_events', 0
-  ) into v_result;
+    'current', json_build_object(
+      'page_views', coalesce(sum(count) filter (where metric = 'page_view' and bucket between v_from and v_to), 0)::int,
+      'project_opens', coalesce(sum(count) filter (where metric = 'project_open' and bucket between v_from and v_to), 0)::int,
+      'resume_downloads', coalesce(sum(count) filter (where metric = 'resume_download' and bucket between v_from and v_to), 0)::int,
+      'github_clicks', coalesce(sum(count) filter (where metric = 'github_click' and bucket between v_from and v_to), 0)::int,
+      'demo_clicks', coalesce(sum(count) filter (where metric = 'demo_click' and bucket between v_from and v_to), 0)::int
+    ),
+    'previous', json_build_object(
+      'page_views', coalesce(sum(count) filter (where metric = 'page_view' and bucket between v_pfrom and v_pto), 0)::int,
+      'project_opens', coalesce(sum(count) filter (where metric = 'project_open' and bucket between v_pfrom and v_pto), 0)::int,
+      'resume_downloads', coalesce(sum(count) filter (where metric = 'resume_download' and bucket between v_pfrom and v_pto), 0)::int,
+      'github_clicks', coalesce(sum(count) filter (where metric = 'github_click' and bucket between v_pfrom and v_pto), 0)::int,
+      'demo_clicks', coalesce(sum(count) filter (where metric = 'demo_click' and bucket between v_pfrom and v_pto), 0)::int
+    )
+  ) into v_result
+  from rows;
 
   return v_result;
 end;
 $$;
 
--- 2. Activity time series (daily buckets; p_tz picks the local date range)
-create or replace function public.analytics_timeseries(
-  p_from timestamptz default now() - interval '30 days',
-  p_to   timestamptz default now(),
-  p_metric text default 'interactions',
-  p_tz text default 'UTC'
+-- 2. Zero-filled time series; keys are Bangkok local ('YYYY-MM-DD' or 'YYYY-MM-DDTHH:00')
+create function public.analytics_timeseries(
+  p_from timestamptz,
+  p_to timestamptz,
+  p_granularity text default 'day'
 )
 returns json
 language plpgsql stable
@@ -488,48 +484,48 @@ security invoker
 set search_path = ''
 as $$
 declare
+  v_from timestamp := timezone('Asia/Bangkok', p_from);
+  v_to timestamp := timezone('Asia/Bangkok', p_to);
+  v_hourly boolean := p_granularity = 'hour';
   v_result json;
-  v_from_date date;
-  v_to_date date;
 begin
   if not exists (select 1 from public.portfolio_admins where user_id = (select auth.uid())) then
     raise exception 'Admin access required';
   end if;
 
-  if not exists (select 1 from pg_catalog.pg_timezone_names where name = p_tz) then
-    raise exception 'Unknown timezone: %', p_tz;
+  if p_granularity not in ('hour', 'day') then
+    raise exception 'Unknown granularity: %', p_granularity;
   end if;
-
-  v_from_date := (p_from at time zone p_tz)::date;
-  v_to_date := (p_to at time zone p_tz)::date;
 
   select coalesce(json_agg(row_to_json(d) order by d.date), '[]'::json)
   into v_result
   from (
     select
-      series_day::date as date,
-      coalesce(sum(a.count), 0)::int as count
-    from generate_series(v_from_date, v_to_date, '1 day'::interval) as series_day
-    left join public.analytics_daily a on a.date = series_day::date and (
-      case p_metric
-        when 'page_views' then a.metric = 'page_view'
-        when 'project_opens' then a.metric = 'project_open'
-        when 'resume_downloads' then a.metric = 'resume_download'
-        when 'interactions' then a.metric in ('project_open', 'resume_download')
-        else a.metric in ('project_open', 'resume_download')
-      end
-    )
-    group by series_day::date
+      case when v_hourly then to_char(s.bucket, 'YYYY-MM-DD"T"HH24":00"') else to_char(s.bucket, 'YYYY-MM-DD') end as date,
+      coalesce(sum(a.count) filter (where a.metric = 'page_view'), 0)::int as page_views,
+      coalesce(sum(a.count) filter (where a.metric = 'project_open'), 0)::int as project_opens,
+      coalesce(sum(a.count) filter (where a.metric = 'resume_download'), 0)::int as resume_downloads,
+      coalesce(sum(a.count) filter (where a.metric = 'github_click'), 0)::int as github_clicks,
+      coalesce(sum(a.count) filter (where a.metric = 'demo_click'), 0)::int as demo_clicks
+    from generate_series(
+      date_trunc(case when v_hourly then 'hour' else 'day' end, v_from),
+      date_trunc(case when v_hourly then 'hour' else 'day' end, v_to),
+      case when v_hourly then interval '1 hour' else interval '1 day' end
+    ) as s(bucket)
+    left join public.analytics_daily a
+      on a.date between v_from::date and v_to::date
+     and date_trunc(case when v_hourly then 'hour' else 'day' end, a.date::timestamp + make_interval(hours => a.hour)) = s.bucket
+    group by s.bucket
   ) d;
 
   return v_result;
 end;
 $$;
 
--- 3. UTM Campaigns
-create or replace function public.analytics_utm_campaigns(
-  p_from timestamptz default now() - interval '30 days',
-  p_to   timestamptz default now()
+-- 3. UTM campaigns (events recorded with utm_source)
+create function public.analytics_utm_campaigns(
+  p_from timestamptz,
+  p_to timestamptz
 )
 returns json
 language plpgsql stable
@@ -537,6 +533,8 @@ security invoker
 set search_path = ''
 as $$
 declare
+  v_from timestamp := date_trunc('hour', timezone('Asia/Bangkok', p_from));
+  v_to timestamp := timezone('Asia/Bangkok', p_to);
   v_result json;
 begin
   if not exists (select 1 from public.portfolio_admins where user_id = (select auth.uid())) then
@@ -548,15 +546,15 @@ begin
   from (
     select
       utm_source as source,
-      case when utm_campaign = '' then '(direct / none)' else utm_campaign end as campaign,
-      sum(count) filter (where metric = 'page_view')::int as sessions,
-      sum(count)::int as interactions,
-      sum(count) filter (where metric in ('project_open', 'resume_download'))::int as conversions
+      case when utm_campaign = '' then '(none)' else utm_campaign end as campaign,
+      coalesce(sum(count) filter (where metric = 'page_view'), 0)::int as visits,
+      coalesce(sum(count) filter (where metric <> 'page_view'), 0)::int as actions
     from public.analytics_daily
     where utm_source <> ''
-      and date between p_from::date and p_to::date
+      and date between v_from::date and v_to::date
+      and (date::timestamp + make_interval(hours => hour)) between v_from and v_to
     group by utm_source, utm_campaign
-    order by interactions desc
+    order by visits desc, actions desc
     limit 50
   ) c;
 
@@ -564,10 +562,10 @@ begin
 end;
 $$;
 
--- 4. Project performance
-create or replace function public.analytics_project_performance(
-  p_from timestamptz default now() - interval '30 days',
-  p_to   timestamptz default now()
+-- 4. Project performance: opens, outbound clicks
+create function public.analytics_project_performance(
+  p_from timestamptz,
+  p_to timestamptz
 )
 returns json
 language plpgsql stable
@@ -575,27 +573,29 @@ security invoker
 set search_path = ''
 as $$
 declare
+  v_from timestamp := date_trunc('hour', timezone('Asia/Bangkok', p_from));
+  v_to timestamp := timezone('Asia/Bangkok', p_to);
   v_result json;
 begin
   if not exists (select 1 from public.portfolio_admins where user_id = (select auth.uid())) then
     raise exception 'Admin access required';
   end if;
 
-  select coalesce(json_agg(row_to_json(p) order by p.opens desc), '[]'::json)
+  select coalesce(json_agg(row_to_json(p) order by p.opens desc, p.github_clicks + p.demo_clicks desc), '[]'::json)
   into v_result
   from (
     select
       a.project_slug as slug,
       coalesce(pr.title, a.project_slug) as title,
-      sum(a.count)::int as opens,
-      sum(a.count)::int as visitors,
-      0::int as github_clicks,
-      0::int as demo_clicks
+      coalesce(sum(a.count) filter (where a.metric = 'project_open'), 0)::int as opens,
+      coalesce(sum(a.count) filter (where a.metric = 'github_click'), 0)::int as github_clicks,
+      coalesce(sum(a.count) filter (where a.metric = 'demo_click'), 0)::int as demo_clicks
     from public.analytics_daily a
     left join public.projects pr on pr.id::text = a.project_slug
-    where a.metric = 'project_open'
+    where a.metric in ('project_open', 'github_click', 'demo_click')
       and a.project_slug <> ''
-      and a.date between p_from::date and p_to::date
+      and a.date between v_from::date and v_to::date
+      and (a.date::timestamp + make_interval(hours => a.hour)) between v_from and v_to
     group by a.project_slug, pr.title
   ) p;
 
@@ -603,85 +603,7 @@ begin
 end;
 $$;
 
--- 5. Top interactions
-create or replace function public.analytics_top_interactions(
-  p_from timestamptz default now() - interval '30 days',
-  p_to   timestamptz default now()
-)
-returns json
-language plpgsql stable
-security invoker
-set search_path = ''
-as $$
-declare
-  v_result json;
-begin
-  if not exists (select 1 from public.portfolio_admins where user_id = (select auth.uid())) then
-    raise exception 'Admin access required';
-  end if;
-
-  select coalesce(json_agg(row_to_json(t)), '[]'::json)
-  into v_result
-  from (
-    select
-      a.metric as event_name,
-      case
-        when a.metric = 'project_open' and a.project_slug <> '' then 'Open ' || coalesce(pr.title, a.project_slug)
-        when a.metric = 'project_open' then 'Project Opened'
-        when a.metric = 'resume_download' then 'Resume Download'
-        else a.metric
-      end as target_label,
-      nullif(a.project_slug, '') as project_slug,
-      sum(a.count)::int as total
-    from public.analytics_daily a
-    left join public.projects pr on pr.id::text = a.project_slug
-    where a.date between p_from::date and p_to::date
-      and a.metric in ('project_open', 'resume_download')
-    group by a.metric, a.project_slug, pr.title
-    order by total desc
-    limit 20
-  ) t;
-
-  return v_result;
-end;
-$$;
-
--- 6. Top Countries (Geographic breakdown)
-create or replace function public.analytics_top_countries(
-  p_from timestamptz default now() - interval '30 days',
-  p_to   timestamptz default now()
-)
-returns json
-language plpgsql stable
-security invoker
-set search_path = ''
-as $$
-declare
-  v_result json;
-begin
-  if not exists (select 1 from public.portfolio_admins where user_id = (select auth.uid())) then
-    raise exception 'Admin access required';
-  end if;
-
-  select coalesce(json_agg(row_to_json(c)), '[]'::json)
-  into v_result
-  from (
-    select
-      country,
-      sum(count)::int as count
-    from public.analytics_daily
-    where country <> ''
-      and date between p_from::date and p_to::date
-    group by country
-    order by count desc
-    limit 20
-  ) c;
-
-  return v_result;
-end;
-$$;
-
--- 7. Retention cleanup for aggregate daily table (default 365 days)
+-- 5. Retention cleanup (Bangkok date)
 create or replace function public.analytics_cleanup_old_data(
   p_retention_days int default 365
 )
@@ -698,26 +620,21 @@ begin
     raise exception 'Admin access required';
   end if;
 
-  v_cutoff := current_date - p_retention_days;
+  v_cutoff := timezone('Asia/Bangkok', now())::date - p_retention_days;
 
   delete from public.analytics_daily
   where date < v_cutoff;
   get diagnostics v_deleted_rows = row_count;
 
-  return json_build_object(
-    'cutoff_date', v_cutoff,
-    'deleted_rows', v_deleted_rows
-  );
+  return json_build_object('cutoff_date', v_cutoff, 'deleted_rows', v_deleted_rows);
 end;
 $$;
 
--- Permissions on RPCs
-revoke execute on function public.analytics_overview(timestamptz, timestamptz, text) from public, anon;
-grant execute on function public.analytics_overview(timestamptz, timestamptz, text) to authenticated;
+revoke execute on function public.analytics_overview(timestamptz, timestamptz, timestamptz, timestamptz) from public, anon;
+grant execute on function public.analytics_overview(timestamptz, timestamptz, timestamptz, timestamptz) to authenticated;
 
-revoke execute on function public.analytics_timeseries(timestamptz, timestamptz, text, text) from public, anon;
-grant execute on function public.analytics_timeseries(timestamptz, timestamptz, text, text) to authenticated;
-
+revoke execute on function public.analytics_timeseries(timestamptz, timestamptz, text) from public, anon;
+grant execute on function public.analytics_timeseries(timestamptz, timestamptz, text) to authenticated;
 
 revoke execute on function public.analytics_utm_campaigns(timestamptz, timestamptz) from public, anon;
 grant execute on function public.analytics_utm_campaigns(timestamptz, timestamptz) to authenticated;
@@ -725,14 +642,5 @@ grant execute on function public.analytics_utm_campaigns(timestamptz, timestampt
 revoke execute on function public.analytics_project_performance(timestamptz, timestamptz) from public, anon;
 grant execute on function public.analytics_project_performance(timestamptz, timestamptz) to authenticated;
 
-revoke execute on function public.analytics_top_interactions(timestamptz, timestamptz) from public, anon;
-grant execute on function public.analytics_top_interactions(timestamptz, timestamptz) to authenticated;
-
-revoke execute on function public.analytics_top_countries(timestamptz, timestamptz) from public, anon;
-grant execute on function public.analytics_top_countries(timestamptz, timestamptz) to authenticated;
-
 revoke execute on function public.analytics_cleanup_old_data(int) from public, anon;
 grant execute on function public.analytics_cleanup_old_data(int) to authenticated;
-
--- Make PostgREST pick up the new signatures immediately.
-notify pgrst, 'reload schema';
