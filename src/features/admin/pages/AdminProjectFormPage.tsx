@@ -2,7 +2,10 @@ import { useEffect, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import ProjectForm, { type ProjectFormValues } from '../components/ProjectForm'
 import { listAdminProjects, removeProjectImage, saveAdminProject, uploadProjectImage } from '../../projects/api/projectRepository'
-import { Alert, Button, Skeleton } from '@heroui/react'
+import { Button } from '@heroui/react'
+import PageHeader from '../components/ui/PageHeader'
+import PageLoadState from '../components/ui/PageLoadState'
+import EmptyState from '../components/ui/EmptyState'
 import type { ProjectRecord } from '../../projects/types'
 
 const AdminProjectFormPage = () => {
@@ -62,49 +65,18 @@ const AdminProjectFormPage = () => {
     navigate('/admin/projects', { replace: true })
   }
 
-  if (isLoading) {
-    return (
-      <section className="admin-page max-w-3xl">
-        <div className="admin-page-heading mb-6">
-          <span className="admin-eyebrow">Projects</span>
-          <h1 className="text-2xl font-bold text-white">Loading project…</h1>
-        </div>
-        <div className="border border-zinc-800 bg-[#16161b] p-8 rounded-2xl flex flex-col gap-4">
-          <Skeleton className="h-6 w-48 rounded-lg bg-zinc-800" />
-          <Skeleton className="h-32 w-full rounded-lg bg-zinc-800/60" />
-          <Skeleton className="h-10 w-full rounded-lg bg-zinc-800/40" />
-        </div>
-      </section>
-    )
-  }
-
-  if (loadError) {
-    return (
-      <section className="admin-page max-w-3xl">
-        <Alert status="danger">
-          <Alert.Indicator />
-          <Alert.Content className="flex-1 flex items-center justify-between gap-3">
-            <div>
-              <Alert.Title className="text-xs font-bold">Failed to load project</Alert.Title>
-              <Alert.Description className="text-xs">{loadError}</Alert.Description>
-            </div>
-            <Button size="sm" variant="outline" className="text-xs shrink-0" onClick={() => window.location.reload()}>
-              Try again
-            </Button>
-          </Alert.Content>
-        </Alert>
-      </section>
-    )
-  }
+  if (isLoading) return <PageLoadState eyebrow="Projects" title="Project" error={null} />
+  if (loadError) return <PageLoadState eyebrow="Projects" title="Project" error={loadError} onRetry={() => window.location.reload()} />
 
   if (notFound) {
     return (
-      <section className="admin-page max-w-3xl">
-        <div className="admin-empty border border-dashed border-zinc-800 bg-zinc-900/30 p-10 rounded-2xl flex flex-col items-center gap-3 text-center">
-          <p className="text-sm text-zinc-400 m-0">Project not found or may have been deleted.</p>
-          <Button size="sm" variant="primary" className="admin-button text-xs font-bold" onClick={() => navigate('/admin/projects')}>
-            Back to projects
-          </Button>
+      <section className="admin-page ad-narrow">
+        <div className="ad-panel">
+          <EmptyState
+            title="Project not found"
+            description="It may have been deleted."
+            action={<Button size="sm" variant="primary" className="admin-button" onClick={() => navigate('/admin/projects')}>Back to projects</Button>}
+          />
         </div>
       </section>
     )
@@ -113,23 +85,13 @@ const AdminProjectFormPage = () => {
   const sortOrder = isNew ? nextSortOrder : project?.sort_order ?? 0
 
   return (
-    <section className="admin-page max-w-3xl">
-      <div className="admin-page-heading flex items-center justify-between gap-4 mb-6">
-        <div>
-          <span className="admin-eyebrow mb-1">Projects</span>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white m-0">
-            {isNew ? 'New Project' : 'Edit Project'}
-          </h1>
-        </div>
-        <Button
-          size="sm"
-          variant="outline"
-          className="text-xs font-semibold px-3.5 border-zinc-700 hover:bg-zinc-800 hover:text-white"
-          onClick={() => navigate('/admin/projects')}
-        >
-          ← Back to projects
-        </Button>
-      </div>
+    <section className="admin-page ad-narrow">
+      <PageHeader
+        eyebrow="Projects"
+        title={isNew ? 'New project' : 'Edit project'}
+        description={isNew ? 'Add a project to your portfolio.' : project?.title}
+        actions={<Button size="sm" variant="outline" onClick={() => navigate('/admin/projects')}><span aria-hidden="true">←</span> All projects</Button>}
+      />
       <ProjectForm
         initialProject={project}
         sortOrder={sortOrder}

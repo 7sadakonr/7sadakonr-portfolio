@@ -3,6 +3,8 @@ import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '@heroui/react'
 import { useAdminAuth } from '../auth/useAdminAuth'
 import PublishButton from './PublishButton'
+import ConfirmDialog from './ui/ConfirmDialog'
+import { UnsavedChangesContext, useCreateUnsavedChangesApi } from '../hooks/useUnsavedChanges'
 
 const AdminLayout = () => {
   const navigate = useNavigate()
@@ -10,6 +12,15 @@ const AdminLayout = () => {
   const { logout } = useAdminAuth()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const menuToggleRef = useRef<HTMLButtonElement>(null)
+  const unsaved = useCreateUnsavedChangesApi()
+  const [pendingTarget, setPendingTarget] = useState<string | null>(null)
+
+  // Asks before leaving a page that has unsaved edits; returns true when navigation may proceed now.
+  const guard = (target: string): boolean => {
+    if (!unsaved.dirtyRef.current || target === location.pathname) return true
+    setPendingTarget(target)
+    return false
+  }
 
   useEffect(() => {
     setIsMenuOpen(false)
@@ -110,7 +121,7 @@ const AdminLayout = () => {
           <button
             className="admin-brand cursor-pointer flex items-center gap-2"
             type="button"
-            onClick={() => navigate('/admin/analytics')}
+            onClick={() => { if (guard('/admin/analytics')) navigate('/admin/analytics') }}
           >
             <span className="font-extrabold tracking-tight text-white">Portfolio</span>
             <span className="text-zinc-500 font-normal">/</span>
@@ -174,7 +185,10 @@ const AdminLayout = () => {
           <NavLink
             key={item.to}
             to={item.to}
-            onClick={() => setIsMenuOpen(false)}
+            onClick={(event) => {
+              if (!guard(item.to)) event.preventDefault()
+              else setIsMenuOpen(false)
+            }}
             className={({ isActive }) =>
               `admin-nav-link ${
                 isActive
@@ -205,7 +219,25 @@ const AdminLayout = () => {
         </Button>
       </nav>
 
-      <Outlet />
+      <UnsavedChangesContext.Provider value={unsaved}>
+        <Outlet />
+      </UnsavedChangesContext.Provider>
+
+      <ConfirmDialog
+        isOpen={pendingTarget !== null}
+        tone="default"
+        title="Leave without saving?"
+        description="You have unsaved changes on this page. If you leave now they will be lost."
+        confirmLabel="Discard and leave"
+        cancelLabel="Keep editing"
+        onCancel={() => setPendingTarget(null)}
+        onConfirm={() => {
+          const target = pendingTarget
+          setPendingTarget(null)
+          unsaved.dirtyRef.current = false
+          if (target) navigate(target)
+        }}
+      />
     </main>
   )
 }

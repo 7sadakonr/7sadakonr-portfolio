@@ -3,7 +3,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import DataTable, { type Column } from '../src/features/admin/components/ui/DataTable'
 import StatCard from '../src/features/admin/components/ui/StatCard'
 import Panel from '../src/features/admin/components/ui/Panel'
-import { ToastProvider, useToast } from '../src/features/admin/components/ui/Toast'
+import { ToastProvider } from '../src/features/admin/components/ui/Toast'
+import { useToast } from '../src/features/admin/components/ui/toastContext'
 
 interface Row { name: string; hits: number }
 const rows: Row[] = [{ name: 'Alpha', hits: 3 }, { name: 'Beta', hits: 10 }]

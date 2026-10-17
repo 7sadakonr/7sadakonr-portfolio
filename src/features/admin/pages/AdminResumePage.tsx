@@ -1,24 +1,24 @@
-import { useEffect, useRef, useState } from 'react'
-import { Alert, Button, Card, Chip, Skeleton } from '@heroui/react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { Button } from '@heroui/react'
 import { loadSiteSettings, replaceResume } from '../../siteSettings/api/siteSettingsRepository'
 import type { ResumeLanguage, SiteSettings } from '../../siteSettings/types'
+import PageHeader from '../components/ui/PageHeader'
+import PageLoadState from '../components/ui/PageLoadState'
+import { useToast } from '../components/ui/toastContext'
 
 const fileName = (url: string) => {
   const parts = url.split('/')
   return decodeURIComponent(parts[parts.length - 1] ?? 'resume.pdf')
 }
 
-const ResumeRow = ({
-  language,
-  title,
-  settings,
-  onReplace,
-}: {
+interface ResumeRowProps {
   language: ResumeLanguage
   title: string
   settings: SiteSettings
   onReplace: (language: ResumeLanguage, file: File) => Promise<void>
-}) => {
+}
+
+const ResumeRow = ({ language, title, settings, onReplace }: ResumeRowProps) => {
   const inputRef = useRef<HTMLInputElement>(null)
   const [isReplacing, setIsReplacing] = useState(false)
   const url = language === 'en' ? settings.resumeEnUrl : settings.resumeThUrl
@@ -35,159 +35,70 @@ const ResumeRow = ({
   }
 
   return (
-    <Card className="border border-zinc-800 bg-[#16161b] p-5 sm:p-6 shadow-xl rounded-2xl">
-      <article className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex items-start gap-4">
-          <div className="w-12 h-12 rounded-xl bg-red-950/40 border border-red-800/60 flex items-center justify-center text-red-400 font-bold text-xs shrink-0 font-mono shadow-sm">
-            PDF
-          </div>
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <h2 className="text-base font-bold text-white m-0">{title}</h2>
-              <Chip size="sm" variant="soft" color="default" className="text-[10px] uppercase font-mono font-bold">
-                {language}
-              </Chip>
-            </div>
-            <p className="text-xs text-zinc-400 m-0 font-mono break-all">Current: {fileName(url)}</p>
-          </div>
-        </div>
+    <article className="ad-row">
+      <div className="ad-row__main">
+        <h2 className="ad-row__title">
+          {title}
+          <span className="ad-badge">PDF · {language.toUpperCase()}</span>
+        </h2>
+        <p className="ad-row__meta" title={fileName(url)}>Current file: {fileName(url)}</p>
+      </div>
 
-        <div className="flex items-center gap-2.5 w-full sm:w-auto justify-end">
-          <a
-            href={url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs font-semibold px-4 py-2 rounded-lg border border-zinc-700 bg-zinc-850 text-zinc-200 hover:text-white hover:bg-zinc-750 transition-colors"
-          >
-            View
-          </a>
-
-          <input
-            ref={inputRef}
-            className="admin-visually-hidden"
-            type="file"
-            accept="application/pdf,.pdf"
-            onChange={(event) => void select(event.target.files?.[0] ?? null)}
-          />
-
-          <Button
-            type="button"
-            size="sm"
-            variant="primary"
-            isDisabled={isReplacing}
-            className="admin-button text-xs font-bold cursor-pointer px-4"
-            onClick={() => inputRef.current?.click()}
-          >
-            {isReplacing ? 'Replacing…' : 'Replace PDF'}
-          </Button>
-        </div>
-      </article>
-    </Card>
+      <div className="ad-row__actions">
+        <a href={url} target="_blank" rel="noopener noreferrer" className="ad-link-button">
+          View <span aria-hidden="true">↗</span><span className="sr-only"> {title} (opens in a new tab)</span>
+        </a>
+        <input
+          ref={inputRef}
+          className="admin-visually-hidden"
+          type="file"
+          accept="application/pdf,.pdf"
+          tabIndex={-1}
+          aria-label={`Choose a PDF to replace the ${title}`}
+          onChange={(event) => void select(event.target.files?.[0] ?? null)}
+        />
+        <Button type="button" size="sm" variant="primary" className="admin-button" isPending={isReplacing} onClick={() => inputRef.current?.click()}>
+          {isReplacing ? 'Uploading…' : 'Replace PDF'}
+        </Button>
+      </div>
+    </article>
   )
 }
 
 const AdminResumePage = () => {
+  const toast = useToast()
   const [settings, setSettings] = useState<SiteSettings | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [warning, setWarning] = useState<string | null>(null)
-  const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [loadError, setLoadError] = useState<string | null>(null)
 
-  useEffect(() => {
+  const load = useCallback(() => {
+    setLoadError(null)
     void loadSiteSettings().then(
       setSettings,
-      (reason: unknown) => setError(reason instanceof Error ? reason.message : 'Unable to load Resume settings.')
+      (reason: unknown) => setLoadError(reason instanceof Error ? reason.message : 'Unable to load Resume settings.'),
     )
   }, [])
+  useEffect(load, [load])
 
   const replace = async (language: ResumeLanguage, file: File) => {
+    const label = language === 'en' ? 'English' : 'Thai'
     try {
-      setError(null)
-      setWarning(null)
-      setSuccessMessage(null)
       const result = await replaceResume(language, file)
       setSettings(result.settings)
-      setWarning(result.cleanupWarning)
-      setSuccessMessage(`Successfully updated ${language === 'en' ? 'English' : 'Thai'} resume PDF.`)
-      setTimeout(() => setSuccessMessage(null), 4000)
+      toast.success(`${label} resume updated`, 'Visitors get the new file after the next publish.')
+      if (result.cleanupWarning) toast.info('Heads up', result.cleanupWarning)
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : 'Unable to replace Resume.')
+      toast.error(`Couldn't update the ${label} resume`, reason instanceof Error ? reason.message : 'Unable to replace Resume.')
     }
   }
 
-  if (!settings) {
-    return (
-      <section className="admin-page max-w-3xl">
-        <div className="admin-page-heading mb-6">
-          <span className="admin-eyebrow">Resume</span>
-          <h1 className="text-2xl font-bold text-white">{error ? 'Error' : 'Loading Resumes…'}</h1>
-        </div>
-        {error ? (
-          <Alert status="danger">
-            <Alert.Indicator />
-            <Alert.Content>
-              <Alert.Title className="text-xs font-bold">Failed to load</Alert.Title>
-              <Alert.Description className="text-xs">{error}</Alert.Description>
-            </Alert.Content>
-          </Alert>
-        ) : (
-          <div className="border border-zinc-800 bg-[#16161b] p-8 rounded-2xl flex flex-col gap-4">
-            <Skeleton className="h-6 w-40 rounded-lg bg-zinc-800" />
-            <Skeleton className="h-20 w-full rounded-lg bg-zinc-800/60" />
-            <Skeleton className="h-20 w-full rounded-lg bg-zinc-800/60" />
-          </div>
-        )}
-      </section>
-    )
-  }
+  if (!settings) return <PageLoadState eyebrow="Documents" title="Resume" error={loadError} onRetry={load} />
 
   return (
-    <section className="admin-page max-w-3xl">
-      <div className="admin-page-heading flex items-center justify-between gap-4 mb-6">
-        <div>
-          <span className="admin-eyebrow mb-1">Documents</span>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white m-0">Resume Management</h1>
-        </div>
-      </div>
-
-      {error && (
-        <div className="mb-5">
-          <Alert status="danger">
-            <Alert.Indicator />
-            <Alert.Content>
-              <Alert.Title className="text-xs font-bold">Upload Error</Alert.Title>
-              <Alert.Description className="text-xs">{error}</Alert.Description>
-            </Alert.Content>
-          </Alert>
-        </div>
-      )}
-
-      {warning && (
-        <div className="mb-5">
-          <Alert status="warning">
-            <Alert.Indicator />
-            <Alert.Content>
-              <Alert.Title className="text-xs font-bold">Notice</Alert.Title>
-              <Alert.Description className="text-xs">{warning}</Alert.Description>
-            </Alert.Content>
-          </Alert>
-        </div>
-      )}
-
-      {successMessage && (
-        <div className="mb-5">
-          <Alert status="success">
-            <Alert.Indicator />
-            <Alert.Content>
-              <Alert.Title className="text-xs font-bold">Updated</Alert.Title>
-              <Alert.Description className="text-xs">{successMessage}</Alert.Description>
-            </Alert.Content>
-          </Alert>
-        </div>
-      )}
-
-      <div className="flex flex-col gap-4">
-        <ResumeRow language="en" title="English Resume" settings={settings} onReplace={replace} />
-        <ResumeRow language="th" title="Thai Resume" settings={settings} onReplace={replace} />
+    <section className="admin-page ad-narrow">
+      <PageHeader eyebrow="Documents" title="Resume" description="The PDFs visitors download from your site. Replacing a file keeps the same download link." />
+      <div className="ad-list">
+        <ResumeRow language="en" title="English resume" settings={settings} onReplace={replace} />
+        <ResumeRow language="th" title="Thai resume" settings={settings} onReplace={replace} />
       </div>
     </section>
   )
