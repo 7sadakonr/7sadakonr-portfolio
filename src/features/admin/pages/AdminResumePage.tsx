@@ -35,17 +35,17 @@ const ResumeRow = ({ language, title, settings, onReplace }: ResumeRowProps) => 
   }
 
   return (
-    <article className="ad-row">
-      <div className="ad-row__main">
-        <h2 className="ad-row__title">
+    <article className="adm-row">
+      <div className="adm-row__main">
+        <h2 className="adm-row__title">
           {title}
-          <span className="ad-badge">PDF · {language.toUpperCase()}</span>
+          <span className="adm-badge">PDF · {language.toUpperCase()}</span>
         </h2>
-        <p className="ad-row__meta" title={fileName(url)}>Current file: {fileName(url)}</p>
+        <p className="adm-row__meta" title={fileName(url)}>Current file: {fileName(url)}</p>
       </div>
 
-      <div className="ad-row__actions">
-        <a href={url} target="_blank" rel="noopener noreferrer" className="ad-link-button">
+      <div className="adm-row__actions">
+        <a href={url} target="_blank" rel="noopener noreferrer" className="adm-link-button">
           View <span aria-hidden="true">↗</span><span className="sr-only"> {title} (opens in a new tab)</span>
         </a>
         <input
@@ -94,9 +94,9 @@ const AdminResumePage = () => {
   if (!settings) return <PageLoadState eyebrow="Documents" title="Resume" error={loadError} onRetry={load} />
 
   return (
-    <section className="admin-page ad-narrow">
+    <section className="admin-page adm-narrow">
       <PageHeader eyebrow="Documents" title="Resume" description="The PDFs visitors download from your site. Replacing a file keeps the same download link." />
-      <div className="ad-list">
+      <div className="adm-list">
         <ResumeRow language="en" title="English resume" settings={settings} onReplace={replace} />
         <ResumeRow language="th" title="Thai resume" settings={settings} onReplace={replace} />
       </div>

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { supabase } from '../../../lib/supabase'
 import { getWindow, type AnalyticsWindow, type RangeKey } from './analyticsTime'
+import { fetchVercelTraffic, messageOf, parseTraffic, toNumber, toRows, unwrapRpc, type TrafficStatus } from './analyticsFetch'
 
 export interface MetricTotals {
   page_views: number
@@ -48,17 +49,12 @@ export interface ProjectRow {
   demo_clicks: number
 }
 
-export type SectionName = 'overview' | 'timeseries' | 'traffic' | 'campaigns' | 'projects'
+export type { TrafficStatus } from './analyticsFetch'
+export type SectionName = 'overview' | 'timeseries' | 'traffic' | 'campaigns' | 'projects' | 'activity' | 'heatmap'
 export type SectionErrors = Partial<Record<SectionName, string>>
-export type TrafficStatus = 'loading' | 'ok' | 'unconfigured' | 'error'
 
 const EMPTY_TOTALS: MetricTotals = { page_views: 0, project_opens: 0, resume_downloads: 0, github_clicks: 0, demo_clicks: 0 }
 const POLL_MS = 60_000
-
-const toNumber = (value: unknown): number => {
-  const parsed = typeof value === 'string' ? parseFloat(value) : value
-  return typeof parsed === 'number' && Number.isFinite(parsed) ? parsed : 0
-}
 
 const toTotals = (value: unknown): MetricTotals => {
   const record = (value && typeof value === 'object' ? value : {}) as Record<string, unknown>
@@ -70,9 +66,6 @@ const toTotals = (value: unknown): MetricTotals => {
     demo_clicks: toNumber(record.demo_clicks),
   }
 }
-
-const toRows = <T,>(value: unknown): T[] => (Array.isArray(value) ? (value as T[]) : [])
-const messageOf = (error: unknown): string => (error instanceof Error ? error.message : (error as { message?: string } | null)?.message ?? 'Request failed')
 
 export function useAnalytics(initialRange: RangeKey = '7d') {
   const [range, setRange] = useState<RangeKey>(initialRange)
@@ -109,16 +102,7 @@ export function useAnalytics(initialRange: RangeKey = '7d') {
     if (background) setIsRefreshing(true)
     else setIsLoading(true)
 
-    const trafficRequest = (async () => {
-      const { data } = await client.auth.getSession()
-      const accessToken = data.session?.access_token
-      if (!accessToken) throw new Error('Not signed in')
-      const response = await fetch(`/api/vercel-traffic?range=${range}`, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      })
-      if (!response.ok) throw new Error(`Vercel traffic request failed (${response.status})`)
-      return (await response.json()) as Record<string, unknown>
-    })()
+    const trafficRequest = fetchVercelTraffic(client, range)
 
     const [overviewRes, seriesRes, prevSeriesRes, campaignRes, projectRes, trafficRes] = await Promise.allSettled([
       client.rpc('analytics_overview', { ...bounds, p_prev_from: prevBounds.p_from, p_prev_to: prevBounds.p_to }),
@@ -132,11 +116,7 @@ export function useAnalytics(initialRange: RangeKey = '7d') {
     if (id !== requestId.current) return // a newer request (range change) superseded this one
 
     const nextErrors: SectionErrors = {}
-    const rpc = (result: PromiseSettledResult<{ data: unknown; error: unknown }>, section: SectionName): unknown => {
-      if (result.status === 'rejected') { nextErrors[section] = messageOf(result.reason); return null }
-      if (result.value.error) { nextErrors[section] = messageOf(result.value.error); return null }
-      return result.value.data
-    }
+    const rpc = (result: PromiseSettledResult<{ data: unknown; error: unknown }>, section: SectionName) => unwrapRpc(result, section, nextErrors)
 
     const overviewData = rpc(overviewRes, 'overview') as { current?: unknown; previous?: unknown } | null
     const seriesData = rpc(seriesRes, 'timeseries')
@@ -163,21 +143,10 @@ export function useAnalytics(initialRange: RangeKey = '7d') {
     if (trafficRes.status === 'rejected') {
       nextErrors.traffic = messageOf(trafficRes.reason)
       setTrafficStatus('error')
-    } else if (trafficRes.value.configured !== true) {
-      setTraffic(null)
-      setTrafficStatus('unconfigured')
     } else {
-      const body = trafficRes.value
-      const visitors = (body.visitors ?? {}) as { current?: number | null; previous?: number | null }
-      setTraffic({
-        visitors: { current: visitors.current ?? null, previous: visitors.previous ?? null },
-        series: toRows<VisitorPoint>(body.series),
-        previousSeries: toRows<VisitorPoint>(body.previousSeries),
-        seriesAvailable: body.seriesAvailable === true,
-        topReferrers: toRows<{ referrer: string; count: number }>(body.topReferrers),
-        topCountries: toRows<{ country: string; count: number }>(body.topCountries),
-      })
-      setTrafficStatus('ok')
+      const parsed = parseTraffic(trafficRes.value)
+      setTraffic(parsed)
+      setTrafficStatus(parsed ? 'ok' : 'unconfigured')
     }
 
     setErrors(nextErrors)

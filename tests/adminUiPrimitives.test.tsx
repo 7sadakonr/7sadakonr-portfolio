@@ -3,6 +3,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import DataTable, { type Column } from '../src/features/admin/components/ui/DataTable'
 import StatCard from '../src/features/admin/components/ui/StatCard'
 import Panel from '../src/features/admin/components/ui/Panel'
+import ActivityHeatmap from '../src/features/admin/components/activity/ActivityHeatmap'
+import { getWindow } from '../src/features/admin/hooks/analyticsTime'
 import { ToastProvider } from '../src/features/admin/components/ui/Toast'
 import { useToast } from '../src/features/admin/components/ui/toastContext'
 
@@ -78,5 +80,23 @@ describe('ToastProvider', () => {
     fireEvent.click(screen.getByText('go'))
     fireEvent.click(screen.getByLabelText('Dismiss notification'))
     expect(screen.queryByText('Saved')).toBeNull()
+  })
+})
+
+describe('ActivityHeatmap', () => {
+  it('labels every cell with its Bangkok hour and value, and switches metric', () => {
+    const window = getWindow('7d', Date.parse('2026-10-16T18:30:00Z'))
+    render(
+      <ActivityHeatmap
+        window={window}
+        isLoading={false}
+        timeseries={[{ date: '2026-10-17T00:00', page_views: 3, project_opens: 1, resume_downloads: 0, github_clicks: 0, demo_clicks: 0 }]}
+      />,
+    )
+    expect(screen.getByLabelText('Sat 17 Oct, 00:00 — 3 page views')).toBeTruthy()
+    fireEvent.click(screen.getByRole('tab', { name: 'Project opens' }))
+    expect(screen.getByLabelText('Sat 17 Oct, 00:00 — 1 project opens')).toBeTruthy()
+    fireEvent.click(screen.getByRole('tab', { name: 'Resume downloads' }))
+    expect(screen.getByText('No resume downloads in the last 7 days')).toBeTruthy()
   })
 })

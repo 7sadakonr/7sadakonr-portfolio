@@ -115,18 +115,18 @@ const AdminContactPage = () => {
   }
 
   return (
-    <section className="admin-page ad-narrow">
+    <section className="admin-page adm-narrow">
       <PageHeader eyebrow="Contact" title="Contact channels" description="How visitors can reach you. Hidden channels stay saved but are not shown on the site." />
 
-      <form onSubmit={(event) => void persist(event)} className="ad-form-stack">
+      <form onSubmit={(event) => void persist(event)} className="adm-form-stack">
         <Panel title="Section header" description="Heading and invitation shown above your contact methods.">
-          <div className="ad-form-stack">
-            <label className="ad-field">
-              <span>Heading <span className="ad-required" aria-hidden="true">*</span></span>
+          <div className="adm-form-stack">
+            <label className="adm-field">
+              <span>Heading <span className="adm-required" aria-hidden="true">*</span></span>
               <Input value={settings.contactHeading} onChange={(event) => setSettingsField('contactHeading', event.target.value)} placeholder="e.g. Let's build something together" required className="w-full" />
             </label>
-            <label className="ad-field">
-              <span>Description <span className="ad-required" aria-hidden="true">*</span></span>
+            <label className="adm-field">
+              <span>Description <span className="adm-required" aria-hidden="true">*</span></span>
               <TextArea rows={3} value={settings.contactDescription} onChange={(event) => setSettingsField('contactDescription', event.target.value)} placeholder="A short invitation to get in touch" required className="w-full" />
             </label>
           </div>
@@ -138,18 +138,18 @@ const AdminContactPage = () => {
           actions={<Button type="button" size="sm" variant="primary" className="admin-button" onClick={openNew}>Add channel</Button>}
           empty={settings.contactLinks.length === 0 ? { title: 'No channels yet', description: 'Add an email, social profile or website so people can contact you.' } : null}
         >
-          <div className="ad-list">
+          <div className="adm-list">
             {settings.contactLinks.map((contact, index) => (
-              <article className="ad-row" key={contact.id}>
-                <div className="ad-row__main">
-                  <h3 className="ad-row__title">
+              <article className="adm-row" key={contact.id}>
+                <div className="adm-row__main">
+                  <h3 className="adm-row__title">
                     {contact.label}
-                    <span className={`ad-badge${contact.isVisible ? ' ad-badge--success' : ''}`}>{contact.isVisible ? 'Visible' : 'Hidden'}</span>
-                    <span className="ad-badge">{labels[contact.type]}</span>
+                    <span className={`adm-badge${contact.isVisible ? ' adm-badge--success' : ''}`}>{contact.isVisible ? 'Visible' : 'Hidden'}</span>
+                    <span className="adm-badge">{labels[contact.type]}</span>
                   </h3>
-                  <p className="ad-row__meta" title={contact.value}>{contact.value}</p>
+                  <p className="adm-row__meta" title={contact.value}>{contact.value}</p>
                 </div>
-                <div className="ad-row__actions">
+                <div className="adm-row__actions">
                   <Switch isSelected={contact.isVisible} onChange={() => toggleLinkVisibility(contact.id)} size="sm" aria-label={`Show ${contact.label} on the site`}>
                     <Switch.Content className="cursor-pointer"><Switch.Control><Switch.Thumb /></Switch.Control></Switch.Content>
                   </Switch>
@@ -186,11 +186,11 @@ const AdminContactPage = () => {
         <Modal.Root isOpen onOpenChange={(open) => !open && closeModal()}>
           <Modal.Backdrop className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4" />
           <Modal.Container className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <Modal.Dialog className="ad-dialog dark" data-theme="dark" style={{ maxWidth: 520 }}>
-              <form onSubmit={saveContact} className="ad-form-stack">
+            <Modal.Dialog className="adm-dialog dark" data-theme="dark" style={{ maxWidth: 520 }}>
+              <form onSubmit={saveContact} className="adm-form-stack">
                 <Modal.Header>
                   <span className="admin-eyebrow">{editingId ? 'Edit channel' : 'New channel'}</span>
-                  <h3 className="ad-dialog__title" style={{ marginTop: 2 }}>{editingId ? 'Edit contact channel' : 'Add contact channel'}</h3>
+                  <h3 className="adm-dialog__title" style={{ marginTop: 2 }}>{editingId ? 'Edit contact channel' : 'Add contact channel'}</h3>
                 </Modal.Header>
 
                 {modalError && (
@@ -203,9 +203,9 @@ const AdminContactPage = () => {
                   </Alert>
                 )}
 
-                <Modal.Body className="ad-form-stack p-0">
+                <Modal.Body className="adm-form-stack p-0">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <label className="ad-field">
+                    <label className="adm-field">
                       <span>Type</span>
                       <select
                         value={contactDraft.type}
@@ -213,31 +213,31 @@ const AdminContactPage = () => {
                           const type = event.target.value as ContactType
                           setContactDraft({ ...contactDraft, type, label: labels[type] })
                         }}
-                        className="ad-select"
+                        className="adm-select"
                       >
                         {CONTACT_TYPES.map((type) => <option key={type} value={type}>{labels[type]}</option>)}
                       </select>
                     </label>
-                    <label className="ad-field">
-                      <span>Label <span className="ad-required" aria-hidden="true">*</span></span>
+                    <label className="adm-field">
+                      <span>Label <span className="adm-required" aria-hidden="true">*</span></span>
                       <Input value={contactDraft.label} onChange={(event) => setContactDraft({ ...contactDraft, label: event.target.value })} placeholder="e.g. GitHub" required className="w-full" />
                     </label>
                   </div>
 
-                  <label className="ad-field">
-                    <span>Value or URL <span className="ad-required" aria-hidden="true">*</span></span>
+                  <label className="adm-field">
+                    <span>Value or URL <span className="adm-required" aria-hidden="true">*</span></span>
                     <Input value={contactDraft.value} onChange={(event) => setContactDraft({ ...contactDraft, value: event.target.value })} placeholder="https://github.com/handle or me@example.com" required className="w-full" />
                   </label>
 
-                  <div className="ad-row" style={{ padding: '10px 14px' }}>
-                    <span className="ad-field" style={{ flexDirection: 'row' }}>Show on the site</span>
+                  <div className="adm-row" style={{ padding: '10px 14px' }}>
+                    <span className="adm-field" style={{ flexDirection: 'row' }}>Show on the site</span>
                     <Switch isSelected={contactDraft.isVisible} onChange={(checked) => setContactDraft({ ...contactDraft, isVisible: checked })} size="sm" aria-label="Show this channel on the site">
                       <Switch.Content className="cursor-pointer"><Switch.Control><Switch.Thumb /></Switch.Control></Switch.Content>
                     </Switch>
                   </div>
                 </Modal.Body>
 
-                <Modal.Footer className="ad-dialog__footer">
+                <Modal.Footer className="adm-dialog__footer">
                   <Button type="button" variant="outline" onClick={closeModal}>Cancel</Button>
                   <Button type="submit" variant="primary" className="admin-button">{editingId ? 'Save channel' : 'Add channel'}</Button>
                 </Modal.Footer>

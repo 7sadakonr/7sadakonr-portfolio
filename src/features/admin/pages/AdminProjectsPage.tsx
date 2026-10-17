@@ -146,8 +146,8 @@ const AdminProjectsPage = () => {
             />
             {isFiltering && (
               <InputGroup.Suffix className="pr-2.5 flex items-center gap-2">
-                <span className="ad-muted text-xs" role="status">{filteredProjects.length} found</span>
-                <button type="button" onClick={() => setSearchQuery('')} className="ad-icon-button" aria-label="Clear project search">
+                <span className="adm-muted text-xs" role="status">{filteredProjects.length} found</span>
+                <button type="button" onClick={() => setSearchQuery('')} className="adm-icon-button" aria-label="Clear project search">
                   <span aria-hidden="true">✕</span>
                 </button>
               </InputGroup.Suffix>
@@ -163,11 +163,11 @@ const AdminProjectsPage = () => {
           <AdminProjectRowSkeleton />
         </div>
       ) : loadError ? (
-        <div className="ad-panel">
+        <div className="adm-panel">
           <EmptyState title="Couldn't load projects" description={loadError} action={<Button size="sm" variant="outline" onClick={() => void load()}>Try again</Button>} />
         </div>
       ) : projects.length === 0 ? (
-        <div className="ad-panel">
+        <div className="adm-panel">
           <EmptyState
             title="No projects yet"
             description="Add your first project to show your work, tech stack and live demos."
@@ -175,7 +175,7 @@ const AdminProjectsPage = () => {
           />
         </div>
       ) : filteredProjects.length === 0 ? (
-        <div className="ad-panel">
+        <div className="adm-panel">
           <EmptyState title={`No projects match "${searchQuery}"`} action={<Button size="sm" variant="outline" onClick={() => setSearchQuery('')}>Clear search</Button>} />
         </div>
       ) : (
@@ -185,16 +185,16 @@ const AdminProjectsPage = () => {
               {project.image_url ? (
                 <img src={project.image_url} alt="" />
               ) : (
-                <div className="admin-project-image-fallback ad-cover-fallback" style={{ background: project.fallback_gradient ?? undefined }}>No cover</div>
+                <div className="admin-project-image-fallback adm-cover-fallback" style={{ background: project.fallback_gradient ?? undefined }}>No cover</div>
               )}
 
               <div className="admin-project-meta min-w-0">
-                <h2 className="ad-row__title" style={{ marginBottom: 4 }}>
-                  <span className="ad-truncate">{project.title}</span>
-                  {project.is_in_progress && <span className="ad-badge ad-badge--warning">In progress</span>}
-                  <span className={`ad-badge${project.is_visible ? ' ad-badge--success' : ''}`}>{project.is_visible ? 'Visible' : 'Hidden'}</span>
+                <h2 className="adm-row__title" style={{ marginBottom: 4 }}>
+                  <span className="adm-truncate">{project.title}</span>
+                  {project.is_in_progress && <span className="adm-badge adm-badge--warning">In progress</span>}
+                  <span className={`adm-badge${project.is_visible ? ' adm-badge--success' : ''}`}>{project.is_visible ? 'Visible' : 'Hidden'}</span>
                 </h2>
-                <p className="ad-truncate" title={project.tech.join(', ')}>{project.tech.join(' · ') || 'No technologies listed'}</p>
+                <p className="adm-truncate" title={project.tech.join(', ')}>{project.tech.join(' · ') || 'No technologies listed'}</p>
                 <Switch
                   isSelected={project.is_visible}
                   onChange={() => void updateVisibility(project)}

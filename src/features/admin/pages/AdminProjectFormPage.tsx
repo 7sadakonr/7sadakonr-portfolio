@@ -70,8 +70,8 @@ const AdminProjectFormPage = () => {
 
   if (notFound) {
     return (
-      <section className="admin-page ad-narrow">
-        <div className="ad-panel">
+      <section className="admin-page adm-narrow">
+        <div className="adm-panel">
           <EmptyState
             title="Project not found"
             description="It may have been deleted."
@@ -85,7 +85,7 @@ const AdminProjectFormPage = () => {
   const sortOrder = isNew ? nextSortOrder : project?.sort_order ?? 0
 
   return (
-    <section className="admin-page ad-narrow">
+    <section className="admin-page adm-narrow">
       <PageHeader
         eyebrow="Projects"
         title={isNew ? 'New project' : 'Edit project'}

@@ -49,35 +49,35 @@ const AdminProfilePage = () => {
   }
 
   return (
-    <section className="admin-page ad-narrow">
+    <section className="admin-page adm-narrow">
       <PageHeader eyebrow="Profile" title="Profile & bio" description="The name, tagline and story shown on your home and About pages." />
 
-      <form onSubmit={(event) => void save(event)} className="ad-form-stack">
+      <form onSubmit={(event) => void save(event)} className="adm-form-stack">
         <Panel title="Hero" description="Shown at the top of the home page.">
-          <div className="ad-form-stack">
-            <label className="ad-field">
-              <span>Display name <span className="ad-required" aria-hidden="true">*</span></span>
+          <div className="adm-form-stack">
+            <label className="adm-field">
+              <span>Display name <span className="adm-required" aria-hidden="true">*</span></span>
               <Input value={settings.displayName} onChange={(event) => set('displayName', event.target.value)} placeholder="e.g. Alex Doe" required className="w-full" />
             </label>
-            <label className="ad-field">
-              <span>Hero subtitle <span className="ad-required" aria-hidden="true">*</span></span>
+            <label className="adm-field">
+              <span>Hero subtitle <span className="adm-required" aria-hidden="true">*</span></span>
               <TextArea rows={3} value={settings.heroSubtitle} onChange={(event) => set('heroSubtitle', event.target.value)} placeholder="One line that sums up what you do" required className="w-full" />
             </label>
           </div>
         </Panel>
 
         <Panel title="About" description="The story and current focus shown on the About page.">
-          <div className="ad-form-stack">
-            <label className="ad-field">
-              <span>Biography, paragraph 1 <span className="ad-required" aria-hidden="true">*</span></span>
+          <div className="adm-form-stack">
+            <label className="adm-field">
+              <span>Biography, paragraph 1 <span className="adm-required" aria-hidden="true">*</span></span>
               <TextArea rows={4} value={settings.bioParagraph1} onChange={(event) => set('bioParagraph1', event.target.value)} required className="w-full" />
             </label>
-            <label className="ad-field">
-              <span>Biography, paragraph 2 <span className="ad-required" aria-hidden="true">*</span></span>
+            <label className="adm-field">
+              <span>Biography, paragraph 2 <span className="adm-required" aria-hidden="true">*</span></span>
               <TextArea rows={4} value={settings.bioParagraph2} onChange={(event) => set('bioParagraph2', event.target.value)} required className="w-full" />
             </label>
-            <label className="ad-field">
-              <span>Current focus <span className="ad-required" aria-hidden="true">*</span></span>
+            <label className="adm-field">
+              <span>Current focus <span className="adm-required" aria-hidden="true">*</span></span>
               <TextArea rows={3} value={settings.currentFocus} onChange={(event) => set('currentFocus', event.target.value)} placeholder="What you are building or learning right now" required className="w-full" />
             </label>
           </div>

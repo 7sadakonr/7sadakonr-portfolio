@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Area, AreaChart, Bar, BarChart, CartesianGrid, Legend, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { Area, AreaChart, Bar, BarChart, CartesianGrid, Legend, Line, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import Panel from '../ui/Panel'
 import { buildTrendRows, type TrendMetric } from '../../hooks/analyticsSeries'
 import { summarizeSeries, formatBucketLong, type AnalyticsWindow } from '../../hooks/analyticsTime'
@@ -13,6 +13,9 @@ interface TrafficChartProps {
   trafficStatus: TrafficStatus
   isLoading: boolean
   error?: string | null
+  title?: string
+  /** Draws a "Now" marker on the latest bucket (use with hourly windows). */
+  markCurrent?: boolean
 }
 
 const TABS: ReadonlyArray<{ key: TrendMetric; label: string }> = [
@@ -25,7 +28,7 @@ const COLORS = { primary: '#a78bfa', secondary: '#2dd4bf', tertiary: '#fbbf24', 
 
 const formatTick = (value: number) => (value >= 1000 ? `${(value / 1000).toFixed(value % 1000 === 0 ? 0 : 1)}k` : String(value))
 
-const TrafficChart = ({ window, timeseries, previousTimeseries, traffic, trafficStatus, isLoading, error }: TrafficChartProps) => {
+const TrafficChart = ({ window, timeseries, previousTimeseries, traffic, trafficStatus, isLoading, error, title = 'Traffic over time', markCurrent = false }: TrafficChartProps) => {
   const [metric, setMetric] = useState<TrendMetric>('visitors')
   const rows = useMemo(
     () => buildTrendRows(metric, window, timeseries, previousTimeseries, traffic),
@@ -50,14 +53,14 @@ const TrafficChart = ({ window, timeseries, previousTimeseries, traffic, traffic
     : null
 
   const tabs = (
-    <div className="ad-segmented ad-segmented--small" role="tablist" aria-label="Chart metric">
+    <div className="adm-segmented adm-segmented--small" role="tablist" aria-label="Chart metric">
       {TABS.map((tab) => (
         <button
           key={tab.key}
           type="button"
           role="tab"
           aria-selected={metric === tab.key}
-          className={`ad-segmented__option${metric === tab.key ? ' is-active' : ''}`}
+          className={`adm-segmented__option${metric === tab.key ? ' is-active' : ''}`}
           onClick={() => setMetric(tab.key)}
         >
           {tab.label}
@@ -78,21 +81,24 @@ const TrafficChart = ({ window, timeseries, previousTimeseries, traffic, traffic
     body = { title: 'No activity in this period', description: 'Events show up here as soon as people visit the site.' }
   }
 
+  const nowTick = markCurrent ? rows[rows.length - 1]?.tick : undefined
+  const nowMarker = nowTick ? <ReferenceLine x={nowTick} stroke="#8b8997" strokeDasharray="3 3" label={{ value: 'Now', fill: '#8b8997', fontSize: 11, position: 'insideTopRight' }} /> : null
+
   const tooltipStyle = {
     backgroundColor: '#16161b', border: '1px solid #2e2e38', borderRadius: 10, color: '#f5f4f8', fontSize: 12,
   }
 
   return (
     <Panel
-      title="Traffic over time"
+      title={title}
       description={summaryText ?? `Per ${unit}, Bangkok time (GMT+7)`}
       actions={tabs}
       isLoading={isLoading}
       error={error}
       empty={body ?? null}
-      bodyClassName="ad-chart"
+      bodyClassName="adm-chart"
     >
-      <div className="ad-chart__canvas" role="img" aria-label={`${metric === 'engagement' ? 'Engagement' : label} per ${unit}. ${summaryText ?? ''}`}>
+      <div className="adm-chart__canvas" role="img" aria-label={`${metric === 'engagement' ? 'Engagement' : label} per ${unit}. ${summaryText ?? ''}`}>
         <ResponsiveContainer width="100%" height="100%">
           {metric === 'engagement' ? (
             <BarChart data={rows} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
@@ -101,6 +107,7 @@ const TrafficChart = ({ window, timeseries, previousTimeseries, traffic, traffic
               <YAxis stroke={COLORS.axis} fontSize={11} width={40} tickLine={false} axisLine={false} allowDecimals={false} tickFormatter={formatTick} />
               <Tooltip contentStyle={tooltipStyle} labelFormatter={(_, payload) => payload?.[0]?.payload?.long ?? ''} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
               <Legend iconType="circle" wrapperStyle={{ fontSize: 12 }} />
+              {nowMarker}
               <Bar dataKey="opens" name="Project opens" stackId="a" fill={COLORS.primary} />
               <Bar dataKey="resumes" name="Resume downloads" stackId="a" fill={COLORS.secondary} />
               <Bar dataKey="outbound" name="GitHub / Demo clicks" stackId="a" fill={COLORS.tertiary} radius={[3, 3, 0, 0]} />
@@ -118,6 +125,7 @@ const TrafficChart = ({ window, timeseries, previousTimeseries, traffic, traffic
               <YAxis stroke={COLORS.axis} fontSize={11} width={40} tickLine={false} axisLine={false} allowDecimals={false} tickFormatter={formatTick} />
               <Tooltip contentStyle={tooltipStyle} labelFormatter={(_, payload) => payload?.[0]?.payload?.long ?? ''} cursor={{ stroke: '#3f3f4e', strokeDasharray: '4 4' }} />
               <Legend iconType="plainline" wrapperStyle={{ fontSize: 12 }} />
+              {nowMarker}
               <Line type="monotone" dataKey="previous" name="Previous period" stroke={COLORS.previous} strokeDasharray="5 4" strokeWidth={1.5} dot={false} />
               <Area type="monotone" dataKey="value" name={label} stroke={COLORS.primary} strokeWidth={2.25} fill="url(#adTrendFill)" activeDot={{ r: 4 }} />
             </AreaChart>

@@ -44,14 +44,14 @@ export const ToastProvider = ({ children }: { children: ReactNode }) => {
     <ToastContext.Provider value={api}>
       {children}
       {typeof document !== 'undefined' && createPortal(
-        <div className="ad-toasts" role="region" aria-label="Notifications" aria-live="polite">
+        <div className="adm-toasts" role="region" aria-label="Notifications" aria-live="polite">
           {toasts.map((toast) => (
-            <div key={toast.id} className={`ad-toast ad-toast--${toast.tone}`} role={toast.tone === 'error' ? 'alert' : 'status'}>
-              <div className="ad-toast__body">
-                <p className="ad-toast__title">{toast.title}</p>
-                {toast.message && <p className="ad-toast__message">{toast.message}</p>}
+            <div key={toast.id} className={`adm-toast adm-toast--${toast.tone}`} role={toast.tone === 'error' ? 'alert' : 'status'}>
+              <div className="adm-toast__body">
+                <p className="adm-toast__title">{toast.title}</p>
+                {toast.message && <p className="adm-toast__message">{toast.message}</p>}
               </div>
-              <button type="button" className="ad-toast__close" onClick={() => dismiss(toast.id)} aria-label="Dismiss notification">✕</button>
+              <button type="button" className="adm-toast__close" onClick={() => dismiss(toast.id)} aria-label="Dismiss notification">✕</button>
             </div>
           ))}
         </div>,

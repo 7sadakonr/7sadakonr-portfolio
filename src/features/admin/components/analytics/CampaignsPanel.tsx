@@ -26,8 +26,8 @@ const columns: Column<CampaignRow>[] = [
     },
   },
   { key: 'campaign', header: 'Campaign', render: (row) => <code className="analytics-campaign-code">{row.campaign}</code> },
-  { key: 'visits', header: 'Visits', align: 'right', sortValue: (row) => row.visits, render: (row) => <span className="ad-num">{row.visits.toLocaleString()}</span> },
-  { key: 'actions', header: 'Actions', align: 'right', sortValue: (row) => row.actions, render: (row) => <span className="ad-num">{row.actions.toLocaleString()}</span> },
+  { key: 'visits', header: 'Visits', align: 'right', sortValue: (row) => row.visits, render: (row) => <span className="adm-num">{row.visits.toLocaleString()}</span> },
+  { key: 'actions', header: 'Actions', align: 'right', sortValue: (row) => row.actions, render: (row) => <span className="adm-num">{row.actions.toLocaleString()}</span> },
 ]
 
 const CampaignsPanel = ({ rows, isLoading, error }: CampaignsPanelProps) => (
