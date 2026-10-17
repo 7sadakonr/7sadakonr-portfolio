@@ -289,3 +289,21 @@
 .adm-field__error { font-size: 12px; font-weight: 500; color: var(--admin-danger); }
 .adm-fieldset { margin: 0; padding: 0; border: 0; min-width: 0; }
 .adm-fieldset > legend { padding: 0; margin-bottom: 8px; font-size: 13px; font-weight: 600; color: var(--admin-text); }
+
+/* Activity page */
+.adm-section-title { margin: 0 0 12px; font-size: 16px; font-weight: 700; color: var(--admin-text); }
+.adm-chip-list { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+
+.adm-heatmap-scroll { overflow-x: auto; }
+.adm-heatmap { border-collapse: separate; border-spacing: 3px; width: 100%; min-width: 640px; }
+.adm-heatmap__hour { font-size: 10px; font-weight: 500; color: var(--admin-subtle); text-align: left; padding: 0; }
+.adm-heatmap__day { padding-right: 10px; font-size: 12px; font-weight: 500; color: var(--admin-muted); text-align: left; white-space: nowrap; }
+.adm-heatmap__cell { height: 24px; min-width: 18px; border-radius: 4px; }
+.adm-heatmap__cell.is-future { background: transparent; outline: 1px dashed var(--admin-border-subtle); outline-offset: -1px; }
+.adm-heat-0 { background: rgba(255, 255, 255, 0.05); }
+.adm-heat-1 { background: color-mix(in srgb, var(--admin-chart-1) 28%, transparent); }
+.adm-heat-2 { background: color-mix(in srgb, var(--admin-chart-1) 52%, transparent); }
+.adm-heat-3 { background: color-mix(in srgb, var(--admin-chart-1) 76%, transparent); }
+.adm-heat-4 { background: var(--admin-chart-1); }
+.adm-heatmap__legend { display: flex; align-items: center; justify-content: flex-end; gap: 4px; margin-top: 12px; font-size: 11px; color: var(--admin-subtle); }
+.adm-heatmap__swatch { width: 14px; height: 14px; border-radius: 3px; }

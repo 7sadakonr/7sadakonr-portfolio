@@ -13,6 +13,7 @@ import AdminResumePage from './pages/AdminResumePage'
 import './admin.css'
 
 const AdminAnalyticsPage = lazy(() => import('./pages/AdminAnalyticsPage'))
+const AdminActivityPage = lazy(() => import('./pages/AdminActivityPage'))
 
 const AdminRoutes = () => (
   <AdminAuthProvider>
@@ -27,6 +28,14 @@ const AdminRoutes = () => (
             element={
               <Suspense fallback={<main className="admin-loading" role="status">Loading analytics…</main>}>
                 <AdminAnalyticsPage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="activity"
+            element={
+              <Suspense fallback={<main className="admin-loading" role="status">Loading activity…</main>}>
+                <AdminActivityPage />
               </Suspense>
             }
           />

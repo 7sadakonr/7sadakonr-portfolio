@@ -613,7 +613,49 @@ begin
 end;
 $$;
 
--- 5. Retention cleanup (Bangkok date)
+-- 5. Hourly activity feed: which projects were opened / resumes downloaded / links clicked, per Bangkok hour
+create or replace function public.analytics_activity_hourly(
+  p_from timestamptz,
+  p_to timestamptz
+)
+returns json
+language plpgsql stable
+security invoker
+set search_path = ''
+as $$
+declare
+  v_from timestamp := date_trunc('hour', timezone('Asia/Bangkok', p_from));
+  v_to timestamp := timezone('Asia/Bangkok', p_to);
+  v_result json;
+begin
+  if not exists (select 1 from public.portfolio_admins where user_id = (select auth.uid())) then
+    raise exception 'Admin access required';
+  end if;
+
+  select coalesce(json_agg(row_to_json(r) order by r.date desc, r.metric), '[]'::json)
+  into v_result
+  from (
+    select
+      to_char(a.date::timestamp + make_interval(hours => a.hour), 'YYYY-MM-DD"T"HH24":00"') as date,
+      a.metric,
+      a.project_slug,
+      coalesce(pr.title, nullif(a.project_slug, '')) as title,
+      sum(a.count)::int as count
+    from public.analytics_daily a
+    left join public.projects pr on pr.id::text = a.project_slug
+    where a.metric in ('project_open', 'resume_download', 'github_click', 'demo_click')
+      and a.date between v_from::date and v_to::date
+      and (a.date::timestamp + make_interval(hours => a.hour)) between v_from and v_to
+    group by a.date, a.hour, a.metric, a.project_slug, pr.title
+    order by a.date desc, a.hour desc
+    limit 500
+  ) r;
+
+  return v_result;
+end;
+$$;
+
+-- 6. Retention cleanup (Bangkok date)
 create or replace function public.analytics_cleanup_old_data(
   p_retention_days int default 365
 )
@@ -651,6 +693,9 @@ grant execute on function public.analytics_utm_campaigns(timestamptz, timestampt
 
 revoke execute on function public.analytics_project_performance(timestamptz, timestamptz) from public, anon;
 grant execute on function public.analytics_project_performance(timestamptz, timestamptz) to authenticated;
+
+revoke execute on function public.analytics_activity_hourly(timestamptz, timestamptz) from public, anon;
+grant execute on function public.analytics_activity_hourly(timestamptz, timestamptz) to authenticated;
 
 revoke execute on function public.analytics_cleanup_old_data(int) from public, anon;
 grant execute on function public.analytics_cleanup_old_data(int) to authenticated;

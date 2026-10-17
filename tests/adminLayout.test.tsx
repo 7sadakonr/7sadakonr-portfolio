@@ -23,6 +23,7 @@ describe('AdminLayout', () => {
       </MemoryRouter>,
     )
 
+    expect(screen.getByRole('link', { name: 'Activity' }).getAttribute('href')).toBe('/admin/activity')
     const menuButton = screen.getByRole('button', { name: /open admin menu/i })
     expect(menuButton.getAttribute('aria-expanded')).toBe('false')
     fireEvent.click(menuButton)
