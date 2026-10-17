@@ -28,12 +28,12 @@ describe('admin mobile responsive rules', () => {
     expect(tablet).toMatch(/\.admin-row-actions\s*\{[^}]*width:\s*100%/)
   })
 
-  it('uses mobile data cards instead of a horizontally scrollable analytics table', () => {
-    const css = readFileSync(resolve(process.cwd(), 'src/features/admin/admin.css'), 'utf8')
-    const tablet = getLastMediaBlock(css, 'max-width: 768px')
+  it('switches between table and cards at the same md (768px) breakpoint as the nav menu', () => {
+    const table = readFileSync(resolve(process.cwd(), 'src/features/admin/components/ui/DataTable.tsx'), 'utf8')
+    const layout = readFileSync(resolve(process.cwd(), 'src/features/admin/components/AdminLayout.tsx'), 'utf8')
 
-    expect(tablet).toMatch(/\.analytics-table-desktop\s*\{[^}]*display:\s*none/)
-    expect(tablet).toMatch(/\.analytics-mobile-card-list\s*\{[^}]*display:\s*grid/)
-    expect(tablet).toMatch(/\.analytics-table-responsive\s*\{[^}]*overflow:\s*visible/)
+    expect(table).toMatch(/ad-table-wrap hidden md:block/)
+    expect(table).toMatch(/ad-card-list md:hidden/)
+    expect(layout).toMatch(/admin-menu-toggle md:hidden/)
   })
 })
