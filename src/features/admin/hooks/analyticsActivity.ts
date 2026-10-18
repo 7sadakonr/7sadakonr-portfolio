@@ -96,10 +96,6 @@ function buildCells(window: AnalyticsWindow, timeseries: SeriesPoint[], metric: 
   return { cells, max }
 }
 
-// One cell per hour of an hourly window (24h), oldest first.
-export const buildHourCells = (window: AnalyticsWindow, timeseries: SeriesPoint[], metric: HeatmapMetric): HeatCells =>
-  buildCells(window, timeseries, metric, 'hour')
-
 // One cell per day of a daily window (7d / 30d), oldest first.
 export const buildDayCells = (window: AnalyticsWindow, timeseries: SeriesPoint[], metric: HeatmapMetric): HeatCells =>
   buildCells(window, timeseries, metric, 'day')

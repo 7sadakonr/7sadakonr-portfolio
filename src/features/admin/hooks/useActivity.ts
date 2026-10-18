@@ -18,7 +18,7 @@ const toSeries = (value: unknown): SeriesPoint[] =>
   }))
 
 // Hour-by-hour activity: last 24 hours (+ the 24 before, for comparison) for the "this hour" row and log,
-// and a chart (daily for 7d / 30d) over the chosen range. The heatmap reads the same series as the chart.
+// a chart (daily for 7d / 30d) over the chosen range, and a daily last-30-days series for the calendar heatmap.
 export function useActivity() {
   const [range, setRangeState] = useState<RangeKey>('24h')
   const [isLoading, setIsLoading] = useState(true)
@@ -26,6 +26,7 @@ export function useActivity() {
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
   const [errors, setErrors] = useState<SectionErrors>({})
   const [window24, setWindow24] = useState<AnalyticsWindow>(() => getWindow('24h'))
+  const [monthWindow, setMonthWindow] = useState<AnalyticsWindow>(() => getWindow('30d'))
   const [rangeWindow, setRangeWindow] = useState<AnalyticsWindow>(() => getWindow('24h'))
   const [timeseries, setTimeseries] = useState<SeriesPoint[]>([])
   const [previousTimeseries, setPreviousTimeseries] = useState<SeriesPoint[]>([])
@@ -33,6 +34,7 @@ export function useActivity() {
   const [rangePreviousSeries, setRangePreviousSeries] = useState<SeriesPoint[]>([])
   const [activity, setActivity] = useState<ActivityRow[]>([])
   const [traffic, setTraffic] = useState<Traffic | null>(null)
+  const [monthSeries, setMonthSeries] = useState<SeriesPoint[]>([])
   const [rangeTraffic, setRangeTraffic] = useState<Traffic | null>(null)
   const [trafficStatus, setTrafficStatus] = useState<TrafficStatus>('loading')
   const requestId = useRef(0)
@@ -49,16 +51,18 @@ export function useActivity() {
     const day = getWindow('24h')
     const chart = getWindow(selected)
     const wide = selected !== '24h'
+    const month = getWindow('30d')
     const iso = (ms: number) => new Date(ms).toISOString()
     const dayBounds = { p_from: iso(day.start), p_to: iso(day.end) }
     const prevBounds = { p_from: iso(day.prevStart), p_to: iso(day.prevEnd) }
+    const monthBounds = { p_from: iso(month.start), p_to: iso(month.end) }
     const chartBounds = { p_from: iso(chart.start), p_to: iso(chart.end) }
     const chartPrevBounds = { p_from: iso(chart.prevStart), p_to: iso(chart.prevEnd) }
 
     if (background) setIsRefreshing(true)
     else setIsLoading(true)
 
-    const [seriesRes, prevRes, activityRes, trafficRes, chartRes, chartPrevRes, rangeTrafficRes] = await Promise.allSettled([
+    const [seriesRes, prevRes, activityRes, trafficRes, chartRes, chartPrevRes, rangeTrafficRes, monthRes] = await Promise.allSettled([
       client.rpc('analytics_timeseries', { ...dayBounds, p_granularity: 'hour' }),
       client.rpc('analytics_timeseries', { ...prevBounds, p_granularity: 'hour' }),
       client.rpc('analytics_activity_hourly', dayBounds),
@@ -66,6 +70,8 @@ export function useActivity() {
       wide ? client.rpc('analytics_timeseries', { ...chartBounds, p_granularity: 'day' }) : Promise.resolve(null),
       wide ? client.rpc('analytics_timeseries', { ...chartPrevBounds, p_granularity: 'day' }) : Promise.resolve(null),
       wide ? fetchVercelTraffic(client, selected) : Promise.resolve(null),
+      // The 30d chart already holds this series, so only the other ranges need their own copy.
+      selected === '30d' ? Promise.resolve(null) : client.rpc('analytics_timeseries', { ...monthBounds, p_granularity: 'day' }),
     ])
 
     if (id !== requestId.current) return
@@ -79,8 +85,13 @@ export function useActivity() {
 
     setWindow24(day)
     setRangeWindow(chart)
+    setMonthWindow(month)
     if (seriesData !== null) setTimeseries(toSeries(seriesData))
     if (prevData !== null) setPreviousTimeseries(toSeries(prevData))
+    if (selected !== '30d') {
+      const monthData = rpc(monthRes as PromiseSettledResult<{ data: unknown; error: unknown }>, 'heatmap')
+      if (monthData !== null) setMonthSeries(toSeries(monthData))
+    }
     if (wide) {
       const chartData = rpc(chartRes as PromiseSettledResult<{ data: unknown; error: unknown }>, 'timeseries')
       const chartPrevData = rpc(chartPrevRes as PromiseSettledResult<{ data: unknown; error: unknown }>, 'timeseries')
@@ -139,9 +150,10 @@ export function useActivity() {
   const chartSeries = wide ? rangeSeries : timeseries
   const chartPrevious = wide ? rangePreviousSeries : previousTimeseries
   const chartTraffic = wide ? rangeTraffic : traffic
+  const calendarSeries = range === '30d' ? rangeSeries : monthSeries
 
   return useMemo(() => ({
-    range, setRange, window24, chartWindow, isLoading, isRefreshing, lastUpdated, errors,
-    timeseries, previousTimeseries, chartSeries, chartPrevious, chartTraffic, activity, traffic, trafficStatus, refetch,
-  }), [range, setRange, window24, chartWindow, isLoading, isRefreshing, lastUpdated, errors, timeseries, previousTimeseries, chartSeries, chartPrevious, chartTraffic, activity, traffic, trafficStatus, refetch])
+    range, setRange, window24, monthWindow, chartWindow, isLoading, isRefreshing, lastUpdated, errors,
+    timeseries, previousTimeseries, chartSeries, chartPrevious, chartTraffic, calendarSeries, activity, traffic, trafficStatus, refetch,
+  }), [range, setRange, window24, monthWindow, chartWindow, isLoading, isRefreshing, lastUpdated, errors, timeseries, previousTimeseries, chartSeries, chartPrevious, chartTraffic, calendarSeries, activity, traffic, trafficStatus, refetch])
 }

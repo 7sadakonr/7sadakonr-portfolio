@@ -307,34 +307,17 @@
 .adm-section-title { margin: 0 0 12px; font-size: 16px; font-weight: 700; color: var(--admin-text); }
 .adm-chip-list { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
 
-.adm-hm-hours, .adm-hm-strip, .adm-hm-cal { display: grid; gap: 6px; }
-.adm-hm-hours { grid-template-columns: repeat(6, minmax(0, 1fr)); }
-.adm-hm-strip, .adm-hm-cal { grid-template-columns: repeat(7, minmax(0, 1fr)); }
-.adm-hm-cal__weekday { font-size: 11px; font-weight: 500; color: var(--admin-subtle); text-align: center; }
-.adm-hm-pad { aspect-ratio: 1; }
-.adm-hm-cell { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-width: 0; min-height: 44px; padding: 4px 2px; border: 0; border-radius: 8px; color: var(--admin-text); cursor: pointer; }
-.adm-hm-hours .adm-hm-cell, .adm-hm-cal .adm-hm-cell { aspect-ratio: 1; }
-.adm-hm-strip .adm-hm-cell { aspect-ratio: 3 / 4; }
-.adm-hm-cell__caption { font-size: 10px; line-height: 1; color: var(--admin-muted); }
-.adm-hm-cell__value { font-size: 15px; font-weight: 600; line-height: 1; }
-.adm-hm-cell.adm-heat-0 .adm-hm-cell__value { color: var(--admin-subtle); font-weight: 500; }
-.adm-hm-cell.adm-heat-3 .adm-hm-cell__caption, .adm-hm-cell.adm-heat-4 .adm-hm-cell__caption { color: var(--admin-text); }
-.adm-hm-cell.is-current { outline: 1px dashed var(--admin-muted); outline-offset: 1px; }
-.adm-hm-cell.is-selected { outline: 2px solid var(--admin-text); outline-offset: 1px; }
+.adm-hm-month { display: grid; gap: 4px; max-width: 360px; }
+.adm-hm-month__label { font-size: 11px; line-height: 1; color: var(--admin-subtle); white-space: nowrap; overflow: visible; }
+.adm-hm-month__row { display: flex; align-items: center; font-size: 11px; color: var(--admin-subtle); }
+.adm-hm-cell { aspect-ratio: 1; min-width: 0; padding: 0; border: 0; border-radius: 4px; cursor: pointer; }
 .adm-hm-cell:focus-visible { outline: 2px solid var(--admin-focus); outline-offset: 1px; }
+.adm-hm-cell.is-selected { outline: 2px solid var(--admin-text); outline-offset: 1px; }
 .adm-hm-summary { margin: 0 0 14px; font-size: 14px; color: var(--admin-muted); }
 .adm-hm-summary strong { color: var(--admin-text); font-weight: 600; }
 .adm-hm-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 12px; }
 .adm-hm-footer .adm-heatmap__legend { margin-top: 0; }
 .adm-hm-detail { margin: 0; min-height: 18px; font-size: 12px; color: var(--admin-muted); }
-@media (min-width: 768px) {
-  .adm-hm-hours { grid-template-columns: repeat(12, minmax(0, 1fr)); }
-  .adm-hm-cal { max-width: 560px; }
-}
-@media (max-width: 480px) {
-  .adm-hm-hours, .adm-hm-strip, .adm-hm-cal { gap: 4px; }
-  .adm-hm-cell__value { font-size: 13px; }
-}
 .adm-heat-0 { background: rgba(255, 255, 255, 0.05); }
 .adm-heat-1 { background: color-mix(in srgb, var(--admin-chart-1) 28%, transparent); }
 .adm-heat-2 { background: color-mix(in srgb, var(--admin-chart-1) 52%, transparent); }
