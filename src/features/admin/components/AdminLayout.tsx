@@ -12,6 +12,7 @@ const AdminLayout = () => {
   const { logout } = useAdminAuth()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const menuToggleRef = useRef<HTMLButtonElement>(null)
+  const navRef = useRef<HTMLElement>(null)
   const unsaved = useCreateUnsavedChangesApi()
   const [pendingTarget, setPendingTarget] = useState<string | null>(null)
 
@@ -38,6 +39,16 @@ const AdminLayout = () => {
       document.body.removeAttribute('data-theme')
     }
   }, [])
+
+  // The drawer covers the page on mobile: keep the page behind it from scrolling while it is open.
+  useEffect(() => {
+    if (!isMenuOpen) return
+    const root = document.documentElement
+    const previous = root.style.overflow
+    root.style.overflow = 'hidden'
+    navRef.current?.querySelector<HTMLElement>('a')?.focus()
+    return () => { root.style.overflow = previous }
+  }, [isMenuOpen])
 
   useEffect(() => {
     if (!isMenuOpen) return
@@ -189,7 +200,28 @@ const AdminLayout = () => {
         </div>
       </header>
 
-      <nav id="admin-navigation" className={`admin-nav ${isMenuOpen ? 'is-open' : ''}`} aria-label="Admin navigation">
+      <div
+        className={`admin-nav-backdrop${isMenuOpen ? ' is-open' : ''}`}
+        data-testid="admin-nav-backdrop"
+        aria-hidden="true"
+        onClick={() => setIsMenuOpen(false)}
+      />
+
+      <nav ref={navRef} id="admin-navigation" className={`admin-nav ${isMenuOpen ? 'is-open' : ''}`} aria-label="Admin navigation">
+        <div className="admin-nav-drawer-head">
+          <span>Menu</span>
+          <button
+            type="button"
+            className="admin-nav-close"
+            aria-label="Close admin menu"
+            onClick={() => { setIsMenuOpen(false); menuToggleRef.current?.focus() }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
         {navItems.map((item) => (
           <NavLink
             key={item.to}

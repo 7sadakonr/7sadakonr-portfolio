@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildHeatmap, buildHourLog, currentHourStats, heatLevel, type ActivityRow } from '../src/features/admin/hooks/analyticsActivity'
+import { buildHeatmap, buildHourLog, buildWeekdayHeatmap, busiestHours, currentHourStats, heatLevel, type ActivityRow } from '../src/features/admin/hooks/analyticsActivity'
 import { getWindow } from '../src/features/admin/hooks/analyticsTime'
 import type { SeriesPoint } from '../src/features/admin/hooks/useAnalytics'
 
@@ -82,5 +82,33 @@ describe('currentHourStats', () => {
 
   it('has no visitors figure when Vercel data is unavailable', () => {
     expect(currentHourStats(getWindow('24h', NOW), [], [], null).visitors).toBeNull()
+  })
+})
+
+describe('buildWeekdayHeatmap / busiestHours', () => {
+  it('sums the same weekday-hour across weeks, Monday first', () => {
+    // 5 and 12 Oct 2026 are Mondays; 17 Oct is a Saturday.
+    const heatmap = buildWeekdayHeatmap([
+      point('2026-10-05T21:00', { page_views: 3 }),
+      point('2026-10-12T21:00', { page_views: 4 }),
+      point('2026-10-17T01:00', { page_views: 2 }),
+    ], 'page_views')
+
+    expect(heatmap.days.map((day) => day.label)).toEqual(['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'])
+    expect(heatmap.days[0]!.cells[21]!.value).toBe(7)
+    expect(heatmap.days[5]!.cells[1]!.value).toBe(2)
+    expect(heatmap.max).toBe(7)
+  })
+
+  it('ranks hours by total, breaking ties by earlier hour, and drops empty hours', () => {
+    const heatmap = buildWeekdayHeatmap([
+      point('2026-10-05T21:00', { page_views: 3 }),
+      point('2026-10-06T21:00', { page_views: 3 }),
+      point('2026-10-06T09:00', { page_views: 6 }),
+      point('2026-10-07T14:00', { page_views: 1 }),
+    ], 'page_views')
+
+    expect(busiestHours(heatmap, 2)).toEqual([{ hour: 9, value: 6 }, { hour: 21, value: 6 }])
+    expect(busiestHours(buildWeekdayHeatmap([], 'page_views'))).toEqual([])
   })
 })

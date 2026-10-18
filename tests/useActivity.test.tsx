@@ -1,4 +1,4 @@
-import { cleanup, renderHook, waitFor } from '@testing-library/react'
+import { act, cleanup, renderHook, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const { rpc, getSession } = vi.hoisted(() => ({ rpc: vi.fn(), getSession: vi.fn() }))
@@ -48,5 +48,22 @@ describe('useActivity', () => {
     expect(result.current.errors.timeseries).toBe('boom')
     expect(result.current.errors.heatmap).toBe('boom')
     expect(result.current.trafficStatus).toBe('error')
+  })
+
+  it('adds a daily chart series and a 30-day hourly grid for the 30d range', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue({ ok: true, json: async () => ({ configured: false }) } as Response)
+    const { result } = renderHook(() => useActivity())
+    await waitFor(() => expect(result.current.isLoading).toBe(false))
+    rpc.mockClear()
+
+    act(() => result.current.setRange('30d'))
+    await waitFor(() => expect(result.current.range).toBe('30d'))
+    await waitFor(() => expect(rpc.mock.calls.length).toBeGreaterThan(0))
+    await waitFor(() => expect(result.current.isLoading).toBe(false))
+
+    const series = rpc.mock.calls.filter(([name]) => name === 'analytics_timeseries').map(([, args]) => args)
+    expect(series.filter((args) => args.p_granularity === 'day')).toHaveLength(2)
+    expect(series.some((args) => args.p_granularity === 'hour' && args.p_from === '2026-09-17T17:00:00.000Z')).toBe(true)
+    expect(fetchSpy).toHaveBeenCalledWith('/api/vercel-traffic?range=30d', { headers: { Authorization: 'Bearer jwt' } })
   })
 })
