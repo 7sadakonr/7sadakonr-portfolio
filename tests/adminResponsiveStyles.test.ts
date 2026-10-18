@@ -54,9 +54,9 @@ describe('admin mobile responsive rules', () => {
     // The document scrolls; a fixed-height inner scroller left a dead black area below the content.
     expect(shell).not.toMatch(/overflow-y:\s*auto/)
     expect(shell).not.toMatch(/(?<!min-)height:\s*100dvh/)
-    // The heatmap grids shrink to the screen instead of scrolling sideways.
+    // The month heatmap shrinks to the screen instead of scrolling sideways.
     expect(ui).not.toMatch(/min-width:\s*640px/)
     expect(ui).not.toMatch(/adm-gh-heat/)
-    expect(ui).toMatch(/\.adm-hm-cal\b[^{]*\{[^}]*repeat\(7,/)
+    expect(ui).toMatch(/\.adm-hm-cell\s*\{[^}]*aspect-ratio:\s*1/)
   })
 })

@@ -13,30 +13,33 @@ const cellButtons = () => screen.getAllByRole('button').filter((button) => butto
 describe('ActivityHeatmap', () => {
   afterEach(cleanup)
 
-  it('shows one square per hour for 24h and names the busiest hour', () => {
-    render(<ActivityHeatmap window={getWindow('24h', NOW)} range="24h" timeseries={[point('2026-10-16T21:00', 5)]} isLoading={false} />)
-
-    expect(screen.getByText('Busiest hours, last 24 hours')).toBeTruthy()
-    expect(cellButtons()).toHaveLength(24)
-    expect(screen.getByText(/Busiest hour:/).parentElement?.textContent).toContain('Fri 16 Oct, 21:00 — 5 page views')
-  })
-
-  it('shows one labelled square per day for 7d and the exact figure when tapped', () => {
-    render(<ActivityHeatmap window={getWindow('7d', NOW)} range="7d" timeseries={[point('2026-10-15', 5), point('2026-10-14', 2)]} isLoading={false} />)
-
-    expect(cellButtons()).toHaveLength(7)
-    const cell = screen.getByRole('button', { name: 'Thu 15 Oct — 5 page views' })
-    fireEvent.click(cell)
-    expect(cell.getAttribute('aria-pressed')).toBe('true')
-    expect(screen.getByRole('status').textContent).toBe('Thu 15 Oct — 5 page views')
-  })
-
-  it('shows a Monday-first calendar for 30d', () => {
-    render(<ActivityHeatmap window={getWindow('30d', NOW)} range="30d" timeseries={[point('2026-10-12', 4)]} isLoading={false} />)
+  it('draws the last 30 days as plain squares with no numbers, one per day', () => {
+    render(<ActivityHeatmap window={getWindow('30d', NOW)} timeseries={[point('2026-10-12', 4)]} isLoading={false} />)
 
     expect(screen.getByText('Busiest days, last 30 days')).toBeTruthy()
-    expect(cellButtons()).toHaveLength(30)
-    expect(screen.getByText('Mon')).toBeTruthy()
-    expect(screen.getByRole('button', { name: 'Mon 12 Oct — 4 page views' })).toBeTruthy()
+    const cells = cellButtons()
+    expect(cells).toHaveLength(30)
+    expect(cells.every((cell) => cell.textContent === '')).toBe(true)
+  })
+
+  it('places days in week columns and weekday rows like GitHub', () => {
+    render(<ActivityHeatmap window={getWindow('30d', NOW)} timeseries={[point('2026-10-12', 4)]} isLoading={false} />)
+
+    // 18 Sep is a Friday in the first week: column 2 (after the label column), row 6 (Mon is row 2).
+    const first = screen.getByRole('button', { name: /Fri 18 Sep/ })
+    expect(first.style.gridColumn).toContain('2')
+    expect(first.style.gridRow).toContain('6')
+    expect(screen.getByText('Sep')).toBeTruthy()
+    expect(screen.getByText('Oct')).toBeTruthy()
+  })
+
+  it('names the busiest day and shows that day when a square is tapped', () => {
+    render(<ActivityHeatmap window={getWindow('30d', NOW)} timeseries={[point('2026-10-12', 4), point('2026-10-14', 2)]} isLoading={false} />)
+
+    expect(screen.getByText('Busiest day:').parentElement?.textContent).toContain('Mon 12 Oct — 4 page views')
+    const cell = screen.getByRole('button', { name: 'Wed 14 Oct — 2 page views' })
+    fireEvent.click(cell)
+    expect(cell.getAttribute('aria-pressed')).toBe('true')
+    expect(screen.getByRole('status').textContent).toBe('Wed 14 Oct — 2 page views')
   })
 })

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildCalendarWeeks, buildDayCells, buildHourCells, buildHourLog, currentHourStats, heatLevel, peakCell, type ActivityRow } from '../src/features/admin/hooks/analyticsActivity'
+import { buildCalendarWeeks, buildDayCells, buildHourLog, currentHourStats, heatLevel, peakCell, type ActivityRow } from '../src/features/admin/hooks/analyticsActivity'
 import { getWindow } from '../src/features/admin/hooks/analyticsTime'
 import type { SeriesPoint } from '../src/features/admin/hooks/useAnalytics'
 
@@ -65,19 +65,6 @@ describe('currentHourStats', () => {
 })
 
 describe('heat cells', () => {
-  it('builds 24 hourly cells, oldest first, marking the current hour and the max', () => {
-    const window = getWindow('24h', NOW) // 02:00 Bangkok on 16 Oct .. 01:00 on 17 Oct
-    const { cells, max } = buildHourCells(window, [point('2026-10-16T21:00', { page_views: 5 }), point('2026-10-17T01:00', { page_views: 2 })], 'page_views')
-
-    expect(cells).toHaveLength(24)
-    expect(cells[0]!.key).toBe('2026-10-16T02:00')
-    expect(cells[0]!.title).toBe('02')
-    expect(cells[19]!.value).toBe(5)
-    expect(cells[23]!.isCurrent).toBe(true)
-    expect(cells.filter((cell) => cell.isCurrent)).toHaveLength(1)
-    expect(max).toBe(5)
-  })
-
   it('builds one cell per day with weekday titles and zero-filled gaps', () => {
     const { cells, max } = buildDayCells(getWindow('7d', NOW), [point('2026-10-15', { page_views: 4 })], 'page_views')
 

@@ -26,8 +26,9 @@ describe('useActivity', () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false))
 
     const series = rpc.mock.calls.filter(([name]) => name === 'analytics_timeseries').map(([, args]) => args)
-    expect(series).toHaveLength(2)
-    expect(series.every((args) => args.p_granularity === 'hour')).toBe(true)
+    expect(series).toHaveLength(3)
+    expect(series.filter((args) => args.p_granularity === 'hour')).toHaveLength(2)
+    expect(series.filter((args) => args.p_granularity === 'day')).toHaveLength(1) // last 30 days for the calendar
     expect(series[0].p_from).toBe('2026-10-15T19:00:00.000Z') // 24 hourly buckets: 02:00 Bangkok yesterday .. 01:00 today
     expect(rpc.mock.calls.some(([name]) => name === 'analytics_activity_hourly')).toBe(true)
     expect(fetchSpy).toHaveBeenCalledWith('/api/vercel-traffic?range=24h', { headers: { Authorization: 'Bearer jwt' } })
@@ -48,7 +49,7 @@ describe('useActivity', () => {
     expect(result.current.trafficStatus).toBe('error')
   })
 
-  it('adds daily chart series for the 30d range and no extra hourly query', async () => {
+  it('adds daily chart series for the 30d range and reuses them for the calendar', async () => {
     const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue({ ok: true, json: async () => ({ configured: false }) } as Response)
     const { result } = renderHook(() => useActivity())
     await waitFor(() => expect(result.current.isLoading).toBe(false))
