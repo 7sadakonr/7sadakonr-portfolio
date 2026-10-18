@@ -41,4 +41,21 @@ describe('admin mobile responsive rules', () => {
     expect(table).not.toMatch(/md:(hidden|block)/)
     expect(layout).toMatch(/admin-menu-toggle md:hidden/)
   })
+
+  it('turns the mobile nav into a scrollable drawer and keeps one scroll container', () => {
+    const css = readFileSync(resolve(process.cwd(), 'src/features/admin/admin.css'), 'utf8')
+    const ui = readFileSync(resolve(process.cwd(), 'src/features/admin/admin-ui.css'), 'utf8')
+    const tablet = getLastMediaBlock(css, 'max-width: 768px')
+    const shell = css.match(/\.admin-shell\s*\{[^}]*\}/g)?.join('\n') ?? ''
+
+    expect(tablet).toMatch(/\.admin-nav\s*\{[^}]*position:\s*fixed/)
+    expect(tablet).toMatch(/\.admin-nav\s*\{[^}]*overflow-y:\s*auto/)
+    expect(tablet).toMatch(/\.admin-nav-backdrop/)
+    // The document scrolls; a fixed-height inner scroller left a dead black area below the content.
+    expect(shell).not.toMatch(/overflow-y:\s*auto/)
+    expect(shell).not.toMatch(/(?<!min-)height:\s*100dvh/)
+    // The GitHub-style heatmap shrinks to the screen instead of scrolling sideways.
+    expect(ui).not.toMatch(/min-width:\s*640px/)
+    expect(ui).toMatch(/\.adm-gh-heat__cell\s*\{[^}]*aspect-ratio:\s*1/)
+  })
 })

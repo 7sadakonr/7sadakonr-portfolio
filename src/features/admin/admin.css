@@ -39,13 +39,6 @@
   font-family: "Outfit", sans-serif;
 }
 
-.admin-shell {
-  height: 100dvh;
-  overflow-y: auto;
-  overscroll-behavior-y: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
 .admin-login-page {
   display: grid;
   place-items: center;
@@ -284,14 +277,13 @@
 /* Mobile responsive adjustments */
 .admin-menu-toggle { display: none; }
 .admin-mobile-logout { display: none; }
+.admin-nav-backdrop, .admin-nav-drawer-head { display: none; }
 
 @media (max-width: 768px) {
   .admin-header {
     padding: 0 16px;
   }
   .admin-menu-toggle {
-    width: 38px;
-    height: 38px;
     display: grid;
     place-items: center;
     padding: 0;
@@ -302,16 +294,74 @@
     cursor: pointer;
   }
   .admin-desktop-logout { display: none; }
-  .admin-nav {
-    display: none;
-    flex-direction: column;
-    padding: 12px;
-    background: var(--admin-surface);
-    border: 1px solid var(--admin-border);
-    border-radius: 14px;
-    margin: 8px 16px 14px;
+  .admin-nav-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    background: rgba(0, 0, 0, 0.6);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0.2s;
   }
-  .admin-nav.is-open { display: flex; }
+  .admin-nav-backdrop.is-open { opacity: 1; visibility: visible; }
+  .admin-nav {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 70;
+    width: min(320px, 86vw);
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+    padding: 12px 12px calc(16px + env(safe-area-inset-bottom));
+    background: var(--admin-surface);
+    border: 0;
+    border-left: 1px solid var(--admin-border);
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    transform: translateX(100%);
+    visibility: hidden;
+    transition: transform 0.25s ease, visibility 0.25s;
+  }
+  .admin-nav.is-open { transform: translateX(0); visibility: visible; }
+  .admin-nav-drawer-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 4px 12px;
+    margin-bottom: 4px;
+    border-bottom: 1px solid var(--admin-border);
+    color: var(--admin-muted);
+    font: 600 12px/1 "Outfit", sans-serif;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .admin-nav-close {
+    width: 44px;
+    height: 44px;
+    display: grid;
+    place-items: center;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    color: var(--admin-text);
+    cursor: pointer;
+  }
+  .admin-nav a {
+    min-height: 48px;
+    padding: 12px 14px;
+    font-size: 15px;
+  }
+  .admin-menu-toggle { width: 44px; height: 44px; }
+  .admin-mobile-logout { display: flex; margin-top: auto; min-height: 48px; }
+  @media (prefers-reduced-motion: reduce) {
+    .admin-nav, .admin-nav-backdrop { transition: none; }
+  }
   .admin-project-row {
     grid-template-columns: 1fr;
   }

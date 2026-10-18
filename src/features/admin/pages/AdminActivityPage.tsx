@@ -2,8 +2,9 @@ import { useEffect, useMemo, useState } from 'react'
 import { Button } from '@heroui/react'
 import { useActivity } from '../hooks/useActivity'
 import { buildHourLog, currentHourStats } from '../hooks/analyticsActivity'
-import { ANALYTICS_TIME_ZONE_LABEL, formatRelativeTime } from '../hooks/analyticsTime'
+import { ANALYTICS_TIME_ZONE_LABEL, formatRelativeTime, RANGE_OPTIONS } from '../hooks/analyticsTime'
 import PageHeader from '../components/ui/PageHeader'
+import RangeSelector from '../components/analytics/RangeSelector'
 import TrafficChart from '../components/analytics/TrafficChart'
 import ThisHourRow from '../components/activity/ThisHourRow'
 import HourLog from '../components/activity/HourLog'
@@ -20,8 +21,8 @@ const useNow = (intervalMs: number) => {
 
 const AdminActivityPage = () => {
   const {
-    window24, window7, isLoading, isRefreshing, lastUpdated, errors,
-    timeseries, previousTimeseries, weekSeries, activity, traffic, trafficStatus, refetch,
+    range, setRange, window24, heatWindow, chartWindow, isLoading, isRefreshing, lastUpdated, errors,
+    timeseries, previousTimeseries, chartSeries, chartPrevious, chartTraffic, heatSeries, activity, traffic, trafficStatus, refetch,
   } = useActivity()
   const now = useNow(15_000)
 
@@ -38,9 +39,12 @@ const AdminActivityPage = () => {
         title="What's happening, hour by hour"
         description={`Live traffic and when people open projects or download your resume. All times are in ${ANALYTICS_TIME_ZONE_LABEL}.`}
         actions={
-          <Button size="sm" variant="outline" isPending={isRefreshing} onClick={() => void refetch()} aria-label="Refresh activity">
-            Refresh
-          </Button>
+          <>
+            <RangeSelector value={range} onChange={setRange} />
+              <Button size="sm" variant="outline" isPending={isRefreshing} onClick={() => void refetch()} aria-label="Refresh activity">
+              Refresh
+            </Button>
+          </>
         }
       />
 
@@ -51,12 +55,12 @@ const AdminActivityPage = () => {
       <ThisHourRow stats={stats} trafficStatus={trafficStatus} isLoading={isLoading} failed={Boolean(errors.timeseries)} />
 
       <TrafficChart
-        title="Last 24 hours"
-        markCurrent
-        window={window24}
-        timeseries={timeseries}
-        previousTimeseries={previousTimeseries}
-        traffic={traffic}
+        title={RANGE_OPTIONS.find((option) => option.key === range)?.long}
+        markCurrent={range === '24h'}
+        window={chartWindow}
+        timeseries={chartSeries}
+        previousTimeseries={chartPrevious}
+        traffic={chartTraffic}
         trafficStatus={trafficStatus}
         isLoading={isLoading}
         error={errors.timeseries}
@@ -64,7 +68,7 @@ const AdminActivityPage = () => {
 
       <HourLog entries={hourLog} isLoading={isLoading} error={errors.activity} />
 
-      <ActivityHeatmap window={window7} timeseries={weekSeries} isLoading={isLoading} error={errors.heatmap} />
+      <ActivityHeatmap window={heatWindow} timeseries={heatSeries} range={range} isLoading={isLoading} error={errors.heatmap} />
     </div>
   )
 }

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { supabase } from '../../../lib/supabase'
-import { getWindow, type AnalyticsWindow } from './analyticsTime'
+import { getWindow, type AnalyticsWindow, type RangeKey } from './analyticsTime'
 import { fetchVercelTraffic, messageOf, parseTraffic, toNumber, toRows, unwrapRpc, type TrafficStatus } from './analyticsFetch'
 import type { ActivityRow } from './analyticsActivity'
 import type { SectionErrors, SectionName, SeriesPoint, Traffic } from './useAnalytics'
@@ -17,23 +17,29 @@ const toSeries = (value: unknown): SeriesPoint[] =>
     demo_clicks: toNumber(row.demo_clicks),
   }))
 
-// Hour-by-hour activity: last 24 hours (+ the 24 before, for comparison) and a 7-day grid for the heatmap.
+// Hour-by-hour activity: last 24 hours (+ the 24 before, for comparison) for the "this hour" row and log,
+// a chart over the chosen range, and an hourly grid (7 days, or 30 days for the 30d range) for the heatmap.
 export function useActivity() {
+  const [range, setRangeState] = useState<RangeKey>('24h')
   const [isLoading, setIsLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
   const [errors, setErrors] = useState<SectionErrors>({})
   const [window24, setWindow24] = useState<AnalyticsWindow>(() => getWindow('24h'))
-  const [window7, setWindow7] = useState<AnalyticsWindow>(() => getWindow('7d'))
+  const [heatWindow, setHeatWindow] = useState<AnalyticsWindow>(() => getWindow('7d'))
+  const [rangeWindow, setRangeWindow] = useState<AnalyticsWindow>(() => getWindow('24h'))
   const [timeseries, setTimeseries] = useState<SeriesPoint[]>([])
   const [previousTimeseries, setPreviousTimeseries] = useState<SeriesPoint[]>([])
-  const [weekSeries, setWeekSeries] = useState<SeriesPoint[]>([])
+  const [rangeSeries, setRangeSeries] = useState<SeriesPoint[]>([])
+  const [rangePreviousSeries, setRangePreviousSeries] = useState<SeriesPoint[]>([])
+  const [heatSeries, setHeatSeries] = useState<SeriesPoint[]>([])
   const [activity, setActivity] = useState<ActivityRow[]>([])
   const [traffic, setTraffic] = useState<Traffic | null>(null)
+  const [rangeTraffic, setRangeTraffic] = useState<Traffic | null>(null)
   const [trafficStatus, setTrafficStatus] = useState<TrafficStatus>('loading')
   const requestId = useRef(0)
 
-  const fetchData = useCallback(async (background = false) => {
+  const fetchData = useCallback(async (background = false, selected: RangeKey = '24h') => {
     const client = supabase
     if (!client) {
       setErrors({ timeseries: 'Supabase is not configured.' })
@@ -43,21 +49,28 @@ export function useActivity() {
 
     const id = ++requestId.current
     const day = getWindow('24h')
-    const week = getWindow('7d')
+    const heat = getWindow(selected === '30d' ? '30d' : '7d')
+    const chart = getWindow(selected)
+    const wide = selected !== '24h'
     const iso = (ms: number) => new Date(ms).toISOString()
     const dayBounds = { p_from: iso(day.start), p_to: iso(day.end) }
     const prevBounds = { p_from: iso(day.prevStart), p_to: iso(day.prevEnd) }
-    const weekBounds = { p_from: iso(week.start), p_to: iso(week.end) }
+    const heatBounds = { p_from: iso(heat.start), p_to: iso(heat.end) }
+    const chartBounds = { p_from: iso(chart.start), p_to: iso(chart.end) }
+    const chartPrevBounds = { p_from: iso(chart.prevStart), p_to: iso(chart.prevEnd) }
 
     if (background) setIsRefreshing(true)
     else setIsLoading(true)
 
-    const [seriesRes, prevRes, weekRes, activityRes, trafficRes] = await Promise.allSettled([
+    const [seriesRes, prevRes, heatRes, activityRes, trafficRes, chartRes, chartPrevRes, rangeTrafficRes] = await Promise.allSettled([
       client.rpc('analytics_timeseries', { ...dayBounds, p_granularity: 'hour' }),
       client.rpc('analytics_timeseries', { ...prevBounds, p_granularity: 'hour' }),
-      client.rpc('analytics_timeseries', { ...weekBounds, p_granularity: 'hour' }),
+      client.rpc('analytics_timeseries', { ...heatBounds, p_granularity: 'hour' }),
       client.rpc('analytics_activity_hourly', dayBounds),
       fetchVercelTraffic(client, '24h'),
+      wide ? client.rpc('analytics_timeseries', { ...chartBounds, p_granularity: 'day' }) : Promise.resolve(null),
+      wide ? client.rpc('analytics_timeseries', { ...chartPrevBounds, p_granularity: 'day' }) : Promise.resolve(null),
+      wide ? fetchVercelTraffic(client, selected) : Promise.resolve(null),
     ])
 
     if (id !== requestId.current) return
@@ -67,14 +80,23 @@ export function useActivity() {
 
     const seriesData = rpc(seriesRes, 'timeseries')
     const prevData = rpc(prevRes, 'timeseries')
-    const weekData = rpc(weekRes, 'heatmap')
+    const heatData = rpc(heatRes, 'heatmap')
     const activityData = rpc(activityRes, 'activity')
 
     setWindow24(day)
-    setWindow7(week)
+    setHeatWindow(heat)
+    setRangeWindow(chart)
     if (seriesData !== null) setTimeseries(toSeries(seriesData))
     if (prevData !== null) setPreviousTimeseries(toSeries(prevData))
-    if (weekData !== null) setWeekSeries(toSeries(weekData))
+    if (heatData !== null) setHeatSeries(toSeries(heatData))
+    if (wide) {
+      const chartData = rpc(chartRes as PromiseSettledResult<{ data: unknown; error: unknown }>, 'timeseries')
+      const chartPrevData = rpc(chartPrevRes as PromiseSettledResult<{ data: unknown; error: unknown }>, 'timeseries')
+      if (chartData !== null) setRangeSeries(toSeries(chartData))
+      if (chartPrevData !== null) setRangePreviousSeries(toSeries(chartPrevData))
+      if (rangeTrafficRes.status === 'fulfilled' && rangeTrafficRes.value) setRangeTraffic(parseTraffic(rangeTrafficRes.value))
+      else setRangeTraffic(null)
+    }
     if (activityData !== null) {
       setActivity(toRows<Record<string, unknown>>(activityData).map((row) => ({
         date: String(row.date),
@@ -101,12 +123,12 @@ export function useActivity() {
   }, [])
 
   useEffect(() => {
-    void fetchData()
-  }, [fetchData])
+    void fetchData(false, range)
+  }, [fetchData, range])
 
   useEffect(() => {
     const refreshIfVisible = () => {
-      if (document.visibilityState === 'visible') void fetchData(true)
+      if (document.visibilityState === 'visible') void fetchData(true, range)
     }
     const timer = setInterval(refreshIfVisible, POLL_MS)
     document.addEventListener('visibilitychange', refreshIfVisible)
@@ -114,12 +136,20 @@ export function useActivity() {
       clearInterval(timer)
       document.removeEventListener('visibilitychange', refreshIfVisible)
     }
-  }, [fetchData])
+  }, [fetchData, range])
 
-  const refetch = useCallback(() => fetchData(true), [fetchData])
+  const refetch = useCallback(() => fetchData(true, range), [fetchData, range])
+  const setRange = useCallback((next: RangeKey) => setRangeState(next), [])
+
+  // For 24h the chart is the hourly series itself; wider ranges use their own daily series.
+  const wide = range !== '24h'
+  const chartWindow = wide ? rangeWindow : window24
+  const chartSeries = wide ? rangeSeries : timeseries
+  const chartPrevious = wide ? rangePreviousSeries : previousTimeseries
+  const chartTraffic = wide ? rangeTraffic : traffic
 
   return useMemo(() => ({
-    window24, window7, isLoading, isRefreshing, lastUpdated, errors,
-    timeseries, previousTimeseries, weekSeries, activity, traffic, trafficStatus, refetch,
-  }), [window24, window7, isLoading, isRefreshing, lastUpdated, errors, timeseries, previousTimeseries, weekSeries, activity, traffic, trafficStatus, refetch])
+    range, setRange, window24, heatWindow, chartWindow, isLoading, isRefreshing, lastUpdated, errors,
+    timeseries, previousTimeseries, chartSeries, chartPrevious, chartTraffic, heatSeries, activity, traffic, trafficStatus, refetch,
+  }), [range, setRange, window24, heatWindow, chartWindow, isLoading, isRefreshing, lastUpdated, errors, timeseries, previousTimeseries, chartSeries, chartPrevious, chartTraffic, heatSeries, activity, traffic, trafficStatus, refetch])
 }

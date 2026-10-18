@@ -307,12 +307,24 @@
 .adm-section-title { margin: 0 0 12px; font-size: 16px; font-weight: 700; color: var(--admin-text); }
 .adm-chip-list { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
 
-.adm-heatmap-scroll { overflow-x: auto; }
-.adm-heatmap { border-collapse: separate; border-spacing: 3px; width: 100%; min-width: 640px; }
-.adm-heatmap__hour { font-size: 10px; font-weight: 500; color: var(--admin-subtle); text-align: left; padding: 0; }
-.adm-heatmap__day { padding-right: 10px; font-size: 12px; font-weight: 500; color: var(--admin-muted); text-align: left; white-space: nowrap; }
-.adm-heatmap__cell { height: 24px; min-width: 18px; border-radius: 4px; }
-.adm-heatmap__cell.is-future { background: transparent; outline: 1px dashed var(--admin-border-subtle); outline-offset: -1px; }
+.adm-gh-heat { display: grid; gap: 3px; }
+.adm-gh-heat__axis, .adm-gh-heat__row { display: grid; grid-template-columns: 34px repeat(24, minmax(0, 1fr)); gap: 3px; align-items: center; }
+.adm-gh-heat__hour { font-size: 10px; line-height: 1; color: var(--admin-subtle); }
+.adm-gh-heat__day { font-size: 11px; font-weight: 500; color: var(--admin-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.adm-gh-heat__cell { aspect-ratio: 1; width: 100%; min-width: 0; padding: 0; border: 0; border-radius: 3px; cursor: pointer; }
+.adm-gh-heat__cell:focus-visible { outline: 2px solid var(--admin-focus); outline-offset: 1px; }
+.adm-gh-heat__cell.is-selected { outline: 2px solid var(--admin-text); outline-offset: 1px; }
+.adm-gh-heat__cell.is-future { background: transparent; outline: 1px dashed var(--admin-border-subtle); outline-offset: -1px; cursor: default; }
+.adm-gh-heat__summary { margin: 0 0 14px; font-size: 14px; color: var(--admin-muted); }
+.adm-gh-heat__summary strong { color: var(--admin-text); font-weight: 600; }
+.adm-gh-heat__footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 12px; }
+.adm-gh-heat__footer .adm-heatmap__legend { margin-top: 0; }
+.adm-gh-heat__detail { margin: 0; min-height: 18px; font-size: 12px; color: var(--admin-muted); }
+@media (max-width: 480px) {
+  .adm-gh-heat__axis, .adm-gh-heat__row { grid-template-columns: 28px repeat(24, minmax(0, 1fr)); gap: 2px; }
+  .adm-gh-heat { gap: 2px; }
+  .adm-gh-heat__cell { border-radius: 2px; }
+}
 .adm-heat-0 { background: rgba(255, 255, 255, 0.05); }
 .adm-heat-1 { background: color-mix(in srgb, var(--admin-chart-1) 28%, transparent); }
 .adm-heat-2 { background: color-mix(in srgb, var(--admin-chart-1) 52%, transparent); }

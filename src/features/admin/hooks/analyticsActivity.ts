@@ -94,6 +94,48 @@ export function buildHeatmap(window: AnalyticsWindow, timeseries: SeriesPoint[],
   return { days, max }
 }
 
+const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const
+
+// Weekday (rows, Mon-first) x hour (columns) totals over an hourly series, in Bangkok time.
+export function buildWeekdayHeatmap(timeseries: SeriesPoint[], metric: HeatmapMetric): Heatmap {
+  const noun = HEATMAP_METRICS.find((item) => item.key === metric)?.noun ?? metric
+  const totals = WEEKDAYS.map(() => Array.from({ length: 24 }, () => 0))
+  for (const point of timeseries) {
+    const date = new Date(`${point.date}:00Z`)
+    if (Number.isNaN(date.getTime())) continue
+    const weekday = (date.getUTCDay() + 6) % 7
+    totals[weekday]![date.getUTCHours()]! += point[metric]
+  }
+  let max = 0
+  const days = WEEKDAYS.map((name, weekday) => ({
+    key: name,
+    label: name,
+    cells: totals[weekday]!.map((value, hour) => {
+      if (value > max) max = value
+      return { hour, value, label: `${name} ${String(hour).padStart(2, '0')}:00 — ${value} ${noun}` }
+    }),
+  }))
+  return { days, max }
+}
+
+export interface BusiestHour {
+  hour: number
+  value: number
+}
+
+// Hours of the day ranked by total across all rows of a heatmap (zero-activity hours are dropped).
+export function busiestHours(heatmap: Heatmap, count = 3): BusiestHour[] {
+  const totals = Array.from({ length: 24 }, () => 0)
+  for (const day of heatmap.days) {
+    for (const cell of day.cells) totals[cell.hour]! += cell.value ?? 0
+  }
+  return totals
+    .map((value, hour) => ({ hour, value }))
+    .filter((item) => item.value > 0)
+    .sort((a, b) => b.value - a.value || a.hour - b.hour)
+    .slice(0, count)
+}
+
 // 0 (empty) .. 4 (busiest) bucket for the colour scale.
 export function heatLevel(value: number | null, max: number): 0 | 1 | 2 | 3 | 4 {
   if (!value || max <= 0) return 0

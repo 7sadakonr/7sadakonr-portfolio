@@ -36,6 +36,27 @@ describe('AdminLayout', () => {
     expect(menuButton.getAttribute('aria-expanded')).toBe('false')
   })
 
+  it('locks page scroll while the drawer is open and closes on backdrop tap', () => {
+    render(
+      <MemoryRouter initialEntries={['/admin/analytics']}>
+        <Routes>
+          <Route element={<AdminLayout />}>
+            <Route path="/admin/analytics" element={<p>Analytics page</p>} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    const menuButton = screen.getByRole('button', { name: /open admin menu/i })
+    expect(document.documentElement.style.overflow).toBe('')
+    fireEvent.click(menuButton)
+    expect(document.documentElement.style.overflow).toBe('hidden')
+
+    fireEvent.click(screen.getByTestId('admin-nav-backdrop'))
+    expect(menuButton.getAttribute('aria-expanded')).toBe('false')
+    expect(document.documentElement.style.overflow).toBe('')
+  })
+
   it('asks before leaving a page with unsaved changes and lets the admin stay or discard', async () => {
     const DirtyPage = () => {
       useUnsavedChanges(true)
