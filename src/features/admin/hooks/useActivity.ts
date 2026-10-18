@@ -18,7 +18,7 @@ const toSeries = (value: unknown): SeriesPoint[] =>
   }))
 
 // Hour-by-hour activity: last 24 hours (+ the 24 before, for comparison) for the "this hour" row and log,
-// a chart over the chosen range, and an hourly grid (7 days, or 30 days for the 30d range) for the heatmap.
+// and a chart (daily for 7d / 30d) over the chosen range. The heatmap reads the same series as the chart.
 export function useActivity() {
   const [range, setRangeState] = useState<RangeKey>('24h')
   const [isLoading, setIsLoading] = useState(true)
@@ -26,13 +26,11 @@ export function useActivity() {
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
   const [errors, setErrors] = useState<SectionErrors>({})
   const [window24, setWindow24] = useState<AnalyticsWindow>(() => getWindow('24h'))
-  const [heatWindow, setHeatWindow] = useState<AnalyticsWindow>(() => getWindow('7d'))
   const [rangeWindow, setRangeWindow] = useState<AnalyticsWindow>(() => getWindow('24h'))
   const [timeseries, setTimeseries] = useState<SeriesPoint[]>([])
   const [previousTimeseries, setPreviousTimeseries] = useState<SeriesPoint[]>([])
   const [rangeSeries, setRangeSeries] = useState<SeriesPoint[]>([])
   const [rangePreviousSeries, setRangePreviousSeries] = useState<SeriesPoint[]>([])
-  const [heatSeries, setHeatSeries] = useState<SeriesPoint[]>([])
   const [activity, setActivity] = useState<ActivityRow[]>([])
   const [traffic, setTraffic] = useState<Traffic | null>(null)
   const [rangeTraffic, setRangeTraffic] = useState<Traffic | null>(null)
@@ -49,23 +47,20 @@ export function useActivity() {
 
     const id = ++requestId.current
     const day = getWindow('24h')
-    const heat = getWindow(selected === '30d' ? '30d' : '7d')
     const chart = getWindow(selected)
     const wide = selected !== '24h'
     const iso = (ms: number) => new Date(ms).toISOString()
     const dayBounds = { p_from: iso(day.start), p_to: iso(day.end) }
     const prevBounds = { p_from: iso(day.prevStart), p_to: iso(day.prevEnd) }
-    const heatBounds = { p_from: iso(heat.start), p_to: iso(heat.end) }
     const chartBounds = { p_from: iso(chart.start), p_to: iso(chart.end) }
     const chartPrevBounds = { p_from: iso(chart.prevStart), p_to: iso(chart.prevEnd) }
 
     if (background) setIsRefreshing(true)
     else setIsLoading(true)
 
-    const [seriesRes, prevRes, heatRes, activityRes, trafficRes, chartRes, chartPrevRes, rangeTrafficRes] = await Promise.allSettled([
+    const [seriesRes, prevRes, activityRes, trafficRes, chartRes, chartPrevRes, rangeTrafficRes] = await Promise.allSettled([
       client.rpc('analytics_timeseries', { ...dayBounds, p_granularity: 'hour' }),
       client.rpc('analytics_timeseries', { ...prevBounds, p_granularity: 'hour' }),
-      client.rpc('analytics_timeseries', { ...heatBounds, p_granularity: 'hour' }),
       client.rpc('analytics_activity_hourly', dayBounds),
       fetchVercelTraffic(client, '24h'),
       wide ? client.rpc('analytics_timeseries', { ...chartBounds, p_granularity: 'day' }) : Promise.resolve(null),
@@ -80,15 +75,12 @@ export function useActivity() {
 
     const seriesData = rpc(seriesRes, 'timeseries')
     const prevData = rpc(prevRes, 'timeseries')
-    const heatData = rpc(heatRes, 'heatmap')
     const activityData = rpc(activityRes, 'activity')
 
     setWindow24(day)
-    setHeatWindow(heat)
     setRangeWindow(chart)
     if (seriesData !== null) setTimeseries(toSeries(seriesData))
     if (prevData !== null) setPreviousTimeseries(toSeries(prevData))
-    if (heatData !== null) setHeatSeries(toSeries(heatData))
     if (wide) {
       const chartData = rpc(chartRes as PromiseSettledResult<{ data: unknown; error: unknown }>, 'timeseries')
       const chartPrevData = rpc(chartPrevRes as PromiseSettledResult<{ data: unknown; error: unknown }>, 'timeseries')
@@ -149,7 +141,7 @@ export function useActivity() {
   const chartTraffic = wide ? rangeTraffic : traffic
 
   return useMemo(() => ({
-    range, setRange, window24, heatWindow, chartWindow, isLoading, isRefreshing, lastUpdated, errors,
-    timeseries, previousTimeseries, chartSeries, chartPrevious, chartTraffic, heatSeries, activity, traffic, trafficStatus, refetch,
-  }), [range, setRange, window24, heatWindow, chartWindow, isLoading, isRefreshing, lastUpdated, errors, timeseries, previousTimeseries, chartSeries, chartPrevious, chartTraffic, heatSeries, activity, traffic, trafficStatus, refetch])
+    range, setRange, window24, chartWindow, isLoading, isRefreshing, lastUpdated, errors,
+    timeseries, previousTimeseries, chartSeries, chartPrevious, chartTraffic, activity, traffic, trafficStatus, refetch,
+  }), [range, setRange, window24, chartWindow, isLoading, isRefreshing, lastUpdated, errors, timeseries, previousTimeseries, chartSeries, chartPrevious, chartTraffic, activity, traffic, trafficStatus, refetch])
 }

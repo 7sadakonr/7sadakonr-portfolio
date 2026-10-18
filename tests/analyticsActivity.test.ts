@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildHeatmap, buildHourLog, buildWeekdayHeatmap, busiestHours, currentHourStats, heatLevel, type ActivityRow } from '../src/features/admin/hooks/analyticsActivity'
+import { buildCalendarWeeks, buildDayCells, buildHourCells, buildHourLog, currentHourStats, heatLevel, peakCell, type ActivityRow } from '../src/features/admin/hooks/analyticsActivity'
 import { getWindow } from '../src/features/admin/hooks/analyticsTime'
 import type { SeriesPoint } from '../src/features/admin/hooks/useAnalytics'
 
@@ -30,27 +30,6 @@ describe('buildHourLog', () => {
   })
 })
 
-describe('buildHeatmap', () => {
-  const week = getWindow('7d', NOW)
-
-  it('builds one row of 24 cells per Bangkok day and marks future hours', () => {
-    const map = buildHeatmap(week, [point('2026-10-17T00:00', { page_views: 5 })], 'page_views')
-    expect(map.days).toHaveLength(7)
-    expect(map.days.every((day) => day.cells.length === 24)).toBe(true)
-    const today = map.days[6]!
-    expect(today.key).toBe('2026-10-17')
-    expect(today.cells[0]).toMatchObject({ value: 5, label: 'Sat 17 Oct, 00:00 — 5 page views' })
-    expect(today.cells[1]?.value).toBe(0)
-    expect(today.cells[2]?.value).toBeNull() // 02:00 has not happened yet at 01:30
-    expect(map.max).toBe(5)
-  })
-
-  it('puts an event from 17:30 UTC into the next Bangkok day', () => {
-    const map = buildHeatmap(week, [point('2026-10-17T00:00', { project_opens: 1 })], 'project_opens')
-    expect(map.days[5]?.cells.every((cell) => cell.value === 0)).toBe(true)
-    expect(map.days[6]?.cells[0]?.value).toBe(1)
-  })
-})
 
 describe('heatLevel', () => {
   it('scales 0..4 against the maximum', () => {
@@ -85,30 +64,47 @@ describe('currentHourStats', () => {
   })
 })
 
-describe('buildWeekdayHeatmap / busiestHours', () => {
-  it('sums the same weekday-hour across weeks, Monday first', () => {
-    // 5 and 12 Oct 2026 are Mondays; 17 Oct is a Saturday.
-    const heatmap = buildWeekdayHeatmap([
-      point('2026-10-05T21:00', { page_views: 3 }),
-      point('2026-10-12T21:00', { page_views: 4 }),
-      point('2026-10-17T01:00', { page_views: 2 }),
-    ], 'page_views')
+describe('heat cells', () => {
+  it('builds 24 hourly cells, oldest first, marking the current hour and the max', () => {
+    const window = getWindow('24h', NOW) // 02:00 Bangkok on 16 Oct .. 01:00 on 17 Oct
+    const { cells, max } = buildHourCells(window, [point('2026-10-16T21:00', { page_views: 5 }), point('2026-10-17T01:00', { page_views: 2 })], 'page_views')
 
-    expect(heatmap.days.map((day) => day.label)).toEqual(['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'])
-    expect(heatmap.days[0]!.cells[21]!.value).toBe(7)
-    expect(heatmap.days[5]!.cells[1]!.value).toBe(2)
-    expect(heatmap.max).toBe(7)
+    expect(cells).toHaveLength(24)
+    expect(cells[0]!.key).toBe('2026-10-16T02:00')
+    expect(cells[0]!.title).toBe('02')
+    expect(cells[19]!.value).toBe(5)
+    expect(cells[23]!.isCurrent).toBe(true)
+    expect(cells.filter((cell) => cell.isCurrent)).toHaveLength(1)
+    expect(max).toBe(5)
   })
 
-  it('ranks hours by total, breaking ties by earlier hour, and drops empty hours', () => {
-    const heatmap = buildWeekdayHeatmap([
-      point('2026-10-05T21:00', { page_views: 3 }),
-      point('2026-10-06T21:00', { page_views: 3 }),
-      point('2026-10-06T09:00', { page_views: 6 }),
-      point('2026-10-07T14:00', { page_views: 1 }),
-    ], 'page_views')
+  it('builds one cell per day with weekday titles and zero-filled gaps', () => {
+    const { cells, max } = buildDayCells(getWindow('7d', NOW), [point('2026-10-15', { page_views: 4 })], 'page_views')
 
-    expect(busiestHours(heatmap, 2)).toEqual([{ hour: 9, value: 6 }, { hour: 21, value: 6 }])
-    expect(busiestHours(buildWeekdayHeatmap([], 'page_views'))).toEqual([])
+    expect(cells.map((cell) => cell.key)).toEqual(['2026-10-11', '2026-10-12', '2026-10-13', '2026-10-14', '2026-10-15', '2026-10-16', '2026-10-17'])
+    expect(cells.map((cell) => cell.title)).toEqual(['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'])
+    expect(cells[4]!.value).toBe(4)
+    expect(cells[0]!.value).toBe(0)
+    expect(max).toBe(4)
+  })
+
+  it('lays 30 days out as Monday-first weeks padded with nulls', () => {
+    const { cells } = buildDayCells(getWindow('30d', NOW), [], 'page_views') // 18 Sep (Fri) .. 17 Oct (Sat)
+    const weeks = buildCalendarWeeks(cells)
+
+    expect(weeks.every((week) => week.length === 7)).toBe(true)
+    expect(weeks[0]!.slice(0, 4)).toEqual([null, null, null, null]) // Mon..Thu empty before Fri 18 Sep
+    expect(weeks[0]![4]!.key).toBe('2026-09-18')
+    expect(weeks[weeks.length - 1]![5]!.key).toBe('2026-10-17') // Saturday is column 5; Sunday is padding
+    expect(weeks[weeks.length - 1]![6]).toBeNull()
+    expect(weeks.flat().filter(Boolean)).toHaveLength(30)
+    expect(buildCalendarWeeks([])).toEqual([])
+  })
+
+  it('finds the busiest cell, earliest on a tie, and none when empty', () => {
+    const { cells } = buildDayCells(getWindow('7d', NOW), [point('2026-10-13', { page_views: 3 }), point('2026-10-15', { page_views: 3 })], 'page_views')
+
+    expect(peakCell(cells)?.key).toBe('2026-10-13')
+    expect(peakCell(buildDayCells(getWindow('7d', NOW), [], 'page_views').cells)).toBeNull()
   })
 })
