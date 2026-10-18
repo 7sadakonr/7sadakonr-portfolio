@@ -21,8 +21,8 @@ const useNow = (intervalMs: number) => {
 
 const AdminActivityPage = () => {
   const {
-    range, setRange, window24, heatWindow, chartWindow, isLoading, isRefreshing, lastUpdated, errors,
-    timeseries, previousTimeseries, chartSeries, chartPrevious, chartTraffic, heatSeries, activity, traffic, trafficStatus, refetch,
+    range, setRange, window24, chartWindow, isLoading, isRefreshing, lastUpdated, errors,
+    timeseries, previousTimeseries, chartSeries, chartPrevious, chartTraffic, activity, traffic, trafficStatus, refetch,
   } = useActivity()
   const now = useNow(15_000)
 
@@ -68,7 +68,7 @@ const AdminActivityPage = () => {
 
       <HourLog entries={hourLog} isLoading={isLoading} error={errors.activity} />
 
-      <ActivityHeatmap window={heatWindow} timeseries={heatSeries} range={range} isLoading={isLoading} error={errors.heatmap} />
+      <ActivityHeatmap window={chartWindow} timeseries={chartSeries} range={range} isLoading={isLoading} error={errors.timeseries} />
     </div>
   )
 }

@@ -20,16 +20,15 @@ describe('useActivity', () => {
   })
   afterEach(() => { cleanup(); vi.useRealTimers(); vi.restoreAllMocks(); rpc.mockReset() })
 
-  it('asks for hourly series for 24h, the 24h before, and 7 days, plus the activity feed', async () => {
+  it('asks for hourly series for 24h and the 24h before, plus the activity feed', async () => {
     const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue({ ok: true, json: async () => ({ configured: false }) } as Response)
     const { result } = renderHook(() => useActivity())
     await waitFor(() => expect(result.current.isLoading).toBe(false))
 
     const series = rpc.mock.calls.filter(([name]) => name === 'analytics_timeseries').map(([, args]) => args)
-    expect(series).toHaveLength(3)
+    expect(series).toHaveLength(2)
     expect(series.every((args) => args.p_granularity === 'hour')).toBe(true)
     expect(series[0].p_from).toBe('2026-10-15T19:00:00.000Z') // 24 hourly buckets: 02:00 Bangkok yesterday .. 01:00 today
-    expect(series[2].p_from).toBe('2026-10-10T17:00:00.000Z') // 11 Oct 00:00 Bangkok
     expect(rpc.mock.calls.some(([name]) => name === 'analytics_activity_hourly')).toBe(true)
     expect(fetchSpy).toHaveBeenCalledWith('/api/vercel-traffic?range=24h', { headers: { Authorization: 'Bearer jwt' } })
     expect(result.current.trafficStatus).toBe('unconfigured')
@@ -46,11 +45,10 @@ describe('useActivity', () => {
 
     expect(result.current.activity).toEqual([{ date: '2026-10-17T00:00', metric: 'project_open', project_slug: 'a', title: 'Alpha', count: 2 }])
     expect(result.current.errors.timeseries).toBe('boom')
-    expect(result.current.errors.heatmap).toBe('boom')
     expect(result.current.trafficStatus).toBe('error')
   })
 
-  it('adds a daily chart series and a 30-day hourly grid for the 30d range', async () => {
+  it('adds daily chart series for the 30d range and no extra hourly query', async () => {
     const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue({ ok: true, json: async () => ({ configured: false }) } as Response)
     const { result } = renderHook(() => useActivity())
     await waitFor(() => expect(result.current.isLoading).toBe(false))
@@ -63,7 +61,8 @@ describe('useActivity', () => {
 
     const series = rpc.mock.calls.filter(([name]) => name === 'analytics_timeseries').map(([, args]) => args)
     expect(series.filter((args) => args.p_granularity === 'day')).toHaveLength(2)
-    expect(series.some((args) => args.p_granularity === 'hour' && args.p_from === '2026-09-17T17:00:00.000Z')).toBe(true)
+    expect(series.some((args) => args.p_granularity === 'day' && args.p_from === '2026-09-17T17:00:00.000Z')).toBe(true)
+    expect(series.filter((args) => args.p_granularity === 'hour')).toHaveLength(2)
     expect(fetchSpy).toHaveBeenCalledWith('/api/vercel-traffic?range=30d', { headers: { Authorization: 'Bearer jwt' } })
   })
 })

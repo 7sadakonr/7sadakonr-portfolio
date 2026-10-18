@@ -55,85 +55,68 @@ export const HEATMAP_METRICS: ReadonlyArray<{ key: HeatmapMetric; label: string;
   { key: 'resume_downloads', label: 'Resume downloads', noun: 'resume downloads' },
 ]
 
-export interface HeatmapCell {
-  hour: number
-  /** null for hours that have not happened yet. */
-  value: number | null
-  label: string
-}
-
-export interface HeatmapDay {
+export interface HeatCell {
   key: string
+  /** Hour 'HH' for hourly cells, short weekday for daily ones. */
+  title: string
+  /** Day of month. */
+  day: number
+  value: number
   label: string
-  cells: HeatmapCell[]
+  isCurrent: boolean
 }
 
-export interface Heatmap {
-  days: HeatmapDay[]
+export interface HeatCells {
+  cells: HeatCell[]
   max: number
 }
 
-// Day (rows) x hour (columns) grid over an hourly window, in Bangkok time.
-export function buildHeatmap(window: AnalyticsWindow, timeseries: SeriesPoint[], metric: HeatmapMetric): Heatmap {
-  const noun = HEATMAP_METRICS.find((item) => item.key === metric)?.noun ?? metric
-  const values = new Map(timeseries.map((point) => [point.date, point[metric]]))
-  const inWindow = new Set(bucketKeys(window.start, window.end, 'hour'))
-  const dayKeys = [...new Set([...inWindow].map((key) => key.slice(0, 10)))]
-  let max = 0
-
-  const days = dayKeys.map((dayKey) => {
-    const cells: HeatmapCell[] = Array.from({ length: 24 }, (_, hour) => {
-      const key = `${dayKey}T${String(hour).padStart(2, '0')}:00`
-      const value = inWindow.has(key) ? values.get(key) ?? 0 : null
-      if (value !== null && value > max) max = value
-      const when = formatBucketLong(key, 'hour')
-      return { hour, value, label: value === null ? `${when} — not yet` : `${when} — ${value} ${noun}` }
-    })
-    return { key: dayKey, label: formatBucketLong(dayKey, 'day'), cells }
-  })
-  return { days, max }
-}
-
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const
+const nounOf = (metric: HeatmapMetric) => HEATMAP_METRICS.find((item) => item.key === metric)?.noun ?? metric
+// Mon-first weekday index (0..6) of a Bangkok-local 'YYYY-MM-DD...' key.
+const weekdayIndex = (key: string) => (new Date(`${key.slice(0, 10)}T00:00:00Z`).getUTCDay() + 6) % 7
 
-// Weekday (rows, Mon-first) x hour (columns) totals over an hourly series, in Bangkok time.
-export function buildWeekdayHeatmap(timeseries: SeriesPoint[], metric: HeatmapMetric): Heatmap {
-  const noun = HEATMAP_METRICS.find((item) => item.key === metric)?.noun ?? metric
-  const totals = WEEKDAYS.map(() => Array.from({ length: 24 }, () => 0))
-  for (const point of timeseries) {
-    const date = new Date(`${point.date}:00Z`)
-    if (Number.isNaN(date.getTime())) continue
-    const weekday = (date.getUTCDay() + 6) % 7
-    totals[weekday]![date.getUTCHours()]! += point[metric]
-  }
+function buildCells(window: AnalyticsWindow, timeseries: SeriesPoint[], metric: HeatmapMetric, granularity: 'hour' | 'day'): HeatCells {
+  const noun = nounOf(metric)
+  const values = new Map(timeseries.map((point) => [point.date, point[metric]]))
+  const keys = bucketKeys(window.start, window.end, granularity)
   let max = 0
-  const days = WEEKDAYS.map((name, weekday) => ({
-    key: name,
-    label: name,
-    cells: totals[weekday]!.map((value, hour) => {
-      if (value > max) max = value
-      return { hour, value, label: `${name} ${String(hour).padStart(2, '0')}:00 — ${value} ${noun}` }
-    }),
-  }))
-  return { days, max }
+  const cells = keys.map((key, index) => {
+    const value = values.get(key) ?? 0
+    if (value > max) max = value
+    return {
+      key,
+      title: granularity === 'hour' ? key.slice(11, 13) : WEEKDAYS[weekdayIndex(key)]!,
+      day: Number(key.slice(8, 10)),
+      value,
+      label: `${formatBucketLong(key, granularity)} — ${value} ${noun}`,
+      isCurrent: index === keys.length - 1,
+    }
+  })
+  return { cells, max }
 }
 
-export interface BusiestHour {
-  hour: number
-  value: number
+// One cell per hour of an hourly window (24h), oldest first.
+export const buildHourCells = (window: AnalyticsWindow, timeseries: SeriesPoint[], metric: HeatmapMetric): HeatCells =>
+  buildCells(window, timeseries, metric, 'hour')
+
+// One cell per day of a daily window (7d / 30d), oldest first.
+export const buildDayCells = (window: AnalyticsWindow, timeseries: SeriesPoint[], metric: HeatmapMetric): HeatCells =>
+  buildCells(window, timeseries, metric, 'day')
+
+// Day cells laid out as Monday-first calendar weeks, padded with null before the first and after the last day.
+export function buildCalendarWeeks(cells: HeatCell[]): Array<Array<HeatCell | null>> {
+  if (cells.length === 0) return []
+  const padded: Array<HeatCell | null> = [...Array.from({ length: weekdayIndex(cells[0]!.key) }, () => null), ...cells]
+  while (padded.length % 7 !== 0) padded.push(null)
+  return Array.from({ length: padded.length / 7 }, (_, week) => padded.slice(week * 7, week * 7 + 7))
 }
 
-// Hours of the day ranked by total across all rows of a heatmap (zero-activity hours are dropped).
-export function busiestHours(heatmap: Heatmap, count = 3): BusiestHour[] {
-  const totals = Array.from({ length: 24 }, () => 0)
-  for (const day of heatmap.days) {
-    for (const cell of day.cells) totals[cell.hour]! += cell.value ?? 0
-  }
-  return totals
-    .map((value, hour) => ({ hour, value }))
-    .filter((item) => item.value > 0)
-    .sort((a, b) => b.value - a.value || a.hour - b.hour)
-    .slice(0, count)
+// The busiest cell (earliest wins a tie), or null when nothing happened.
+export function peakCell(cells: HeatCell[]): HeatCell | null {
+  let peak: HeatCell | null = null
+  for (const cell of cells) if (cell.value > 0 && (!peak || cell.value > peak.value)) peak = cell
+  return peak
 }
 
 // 0 (empty) .. 4 (busiest) bucket for the colour scale.

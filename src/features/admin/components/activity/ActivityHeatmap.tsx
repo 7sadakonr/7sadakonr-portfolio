@@ -1,47 +1,59 @@
 import { useMemo, useState } from 'react'
 import Panel from '../ui/Panel'
 import {
-  buildHeatmap,
-  buildWeekdayHeatmap,
-  busiestHours,
+  buildCalendarWeeks,
+  buildDayCells,
+  buildHourCells,
   heatLevel,
   HEATMAP_METRICS,
+  peakCell,
+  type HeatCell,
   type HeatmapMetric,
 } from '../../hooks/analyticsActivity'
 import type { AnalyticsWindow, RangeKey } from '../../hooks/analyticsTime'
 import type { SeriesPoint } from '../../hooks/useAnalytics'
 
 interface ActivityHeatmapProps {
+  /** Hourly window for 24h, daily window for 7d / 30d. */
   window: AnalyticsWindow
   timeseries: SeriesPoint[]
-  /** 30d sums each weekday-hour across the month; 24h and 7d show the last 7 real days. */
   range: RangeKey
   isLoading: boolean
   error?: string | null
 }
 
-const HOURS = Array.from({ length: 24 }, (_, hour) => hour)
-const pad = (hour: number) => String(hour).padStart(2, '0')
+const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+const PERIOD: Record<RangeKey, string> = { '24h': 'last 24 hours', '7d': 'last 7 days', '30d': 'last 30 days' }
 
 const ActivityHeatmap = ({ window, timeseries, range, isLoading, error }: ActivityHeatmapProps) => {
   const [metric, setMetric] = useState<HeatmapMetric>('page_views')
   const [selected, setSelected] = useState<string | null>(null)
-  const isMonth = range === '30d'
   const metricInfo = HEATMAP_METRICS.find((item) => item.key === metric)
-  const heatmap = useMemo(
-    () => (isMonth ? buildWeekdayHeatmap(timeseries, metric) : buildHeatmap(window, timeseries, metric)),
-    [isMonth, window, timeseries, metric],
+  const isHours = range === '24h'
+  const { cells, max } = useMemo(
+    () => (isHours ? buildHourCells(window, timeseries, metric) : buildDayCells(window, timeseries, metric)),
+    [isHours, window, timeseries, metric],
   )
-  const top = useMemo(() => busiestHours(heatmap, 3), [heatmap])
-  const periodLabel = isMonth ? 'last 30 days' : 'last 7 days'
+  const weeks = useMemo(() => (range === '30d' ? buildCalendarWeeks(cells) : []), [range, cells])
+  const peak = useMemo(() => peakCell(cells), [cells])
+  const detail = cells.find((cell) => cell.key === selected)?.label ?? null
 
-  const detail = useMemo(() => {
-    if (!selected) return null
-    for (const day of heatmap.days) {
-      for (const cell of day.cells) if (`${day.key}-${cell.hour}` === selected) return cell.label
-    }
-    return null
-  }, [heatmap, selected])
+  const caption = (cell: HeatCell) => (isHours ? cell.title : range === '7d' ? `${cell.title} ${cell.day}` : String(cell.day))
+
+  const renderCell = (cell: HeatCell) => (
+    <button
+      key={cell.key}
+      type="button"
+      className={`adm-hm-cell adm-heat-${heatLevel(cell.value, max)}${cell.isCurrent ? ' is-current' : ''}${selected === cell.key ? ' is-selected' : ''}`}
+      title={cell.label}
+      aria-label={cell.label}
+      aria-pressed={selected === cell.key}
+      onClick={() => setSelected(selected === cell.key ? null : cell.key)}
+    >
+      <span className="adm-hm-cell__caption">{caption(cell)}</span>
+      <span className="adm-hm-cell__value">{cell.value}</span>
+    </button>
+  )
 
   const tabs = (
     <div className="adm-segmented adm-segmented--small" role="tablist" aria-label="Heatmap metric">
@@ -62,57 +74,30 @@ const ActivityHeatmap = ({ window, timeseries, range, isLoading, error }: Activi
 
   return (
     <Panel
-      title={`Busiest hours, ${periodLabel}`}
-      description={
-        isMonth
-          ? 'Each row is a weekday, each square an hour, summed over the month. Darker means more (Bangkok time).'
-          : 'Each row is a day, each square an hour. Darker means more (Bangkok time).'
-      }
+      title={`Busiest ${isHours ? 'hours' : 'days'}, ${PERIOD[range]}`}
+      description={`${isHours ? 'Each square is one hour' : 'Each square is one day'}. Darker means more (Bangkok time).`}
       actions={tabs}
       isLoading={isLoading}
       error={error}
-      empty={heatmap.max === 0 ? { title: `No ${metricInfo?.noun} in the ${periodLabel}` } : null}
+      empty={max === 0 ? { title: `No ${metricInfo?.noun} in the ${PERIOD[range]}` } : null}
     >
-      {top.length > 0 && (
-        <p className="adm-gh-heat__summary">
-          <strong>Busiest hour: {pad(top[0]!.hour)}:00–{pad((top[0]!.hour + 1) % 24)}:00</strong>
-          <span> · {top[0]!.value.toLocaleString()} {metricInfo?.noun}</span>
-          {top.length > 1 && (
-            <span className="adm-gh-heat__runners"> · then {top.slice(1).map((item) => `${pad(item.hour)}:00`).join(', ')}</span>
-          )}
+      {peak && (
+        <p className="adm-hm-summary">
+          <strong>Busiest {isHours ? 'hour' : 'day'}:</strong> {peak.label}
         </p>
       )}
 
-      <div className="adm-gh-heat" role="group" aria-label={`${metricInfo?.label} by ${isMonth ? 'weekday' : 'day'} and hour`}>
-        <div className="adm-gh-heat__axis" aria-hidden="true">
-          <span className="adm-gh-heat__corner" />
-          {HOURS.map((hour) => (
-            <span key={hour} className="adm-gh-heat__hour">{hour % 6 === 0 ? pad(hour) : ''}</span>
-          ))}
+      {isHours && <div className="adm-hm-hours" role="group" aria-label={`${metricInfo?.label} by hour`}>{cells.map(renderCell)}</div>}
+      {range === '7d' && <div className="adm-hm-strip" role="group" aria-label={`${metricInfo?.label} by day`}>{cells.map(renderCell)}</div>}
+      {range === '30d' && (
+        <div className="adm-hm-cal" role="group" aria-label={`${metricInfo?.label} by day`}>
+          {WEEKDAYS.map((name) => <span key={name} className="adm-hm-cal__weekday" aria-hidden="true">{name}</span>)}
+          {weeks.flat().map((cell, index) => (cell ? renderCell(cell) : <span key={`pad-${index}`} className="adm-hm-pad" aria-hidden="true" />))}
         </div>
-        {heatmap.days.map((day) => (
-          <div key={day.key} className="adm-gh-heat__row">
-            <span className="adm-gh-heat__day">{day.label}</span>
-            {day.cells.map((cell) => {
-              const id = `${day.key}-${cell.hour}`
-              return (
-                <button
-                  key={cell.hour}
-                  type="button"
-                  className={`adm-gh-heat__cell adm-heat-${heatLevel(cell.value, heatmap.max)}${cell.value === null ? ' is-future' : ''}${selected === id ? ' is-selected' : ''}`}
-                  title={cell.label}
-                  aria-label={cell.label}
-                  aria-pressed={selected === id}
-                  onClick={() => setSelected(selected === id ? null : id)}
-                />
-              )
-            })}
-          </div>
-        ))}
-      </div>
+      )}
 
-      <div className="adm-gh-heat__footer">
-        <p className="adm-gh-heat__detail" role="status">{detail ?? 'Tap a square to see the exact hour.'}</p>
+      <div className="adm-hm-footer">
+        <p className="adm-hm-detail" role="status">{detail ?? 'Tap a square to see the exact figure.'}</p>
         <div className="adm-heatmap__legend" aria-hidden="true">
           <span>Less</span>
           {[0, 1, 2, 3, 4].map((level) => <span key={level} className={`adm-heatmap__swatch adm-heat-${level}`} />)}
