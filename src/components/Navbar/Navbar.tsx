@@ -35,6 +35,7 @@ const COMMAND_MENU_ITEMS: CommandMenuItem[] = [
   { id: 'nav-privacy', path: '/privacy', label: 'Privacy Policy', category: 'Legal', keywords: 'privacy policy legal data' },
 ]
 type IslandView = 'navigation' | 'compact' | 'search' | 'command'
+const getPathLabel = (path: string) => NAV_ITEMS.find(item => item.path === path)?.label || (path === '/privacy' ? 'PRIVACY POLICY' : 'HOME')
 const formatPillLabel = (label: string) => label.charAt(0) + label.slice(1).toLowerCase()
 const SearchIcon = () => <svg aria-hidden="true" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="m20 20-4-4" /></svg>
 const CloseIcon = () => <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m6 6 12 12M18 6 6 18" /></svg>
@@ -51,14 +52,14 @@ function useContentSize(view: IslandView, mobile: boolean) {
 interface NavbarProps { isInteractive?: boolean }
 const Navbar = ({ isInteractive = true }: NavbarProps) => {
   const location = useLocation(); const navigate = useNavigate(); const triggerRef = useRef<HTMLButtonElement>(null); const navigationRequestRef = useRef(0); const skipLocationScrollRef = useRef<string | null>(null); const closeTimerRef = useRef<number | null>(null); const progressRevealRef = useRef(false); const progressNavigationLockRef = useRef(false); const scrollProgressRef = useRef(0); const progressPercentageRef = useRef<HTMLSpanElement>(null); const lastToggleRef = useRef(0); const navRef = useRef<HTMLElement>(null); const flightIdRef = useRef(0); const progressTrackRef = useRef<HTMLSpanElement | null>(null); const reduceMotion = useReducedMotion()
-  const [isMobile, setIsMobile] = useState(false); const [isMac, setIsMac] = useState(true); const [activePath, setActivePath] = useState(location.pathname); const [view, setView] = useState<IslandView>('navigation'); const [shouldMountCommandMenu, setShouldMountCommandMenu] = useState(false); const [isCommandMenuOpen, setIsCommandMenuOpen] = useState(false); const [projects, setProjects] = useState(getProjectCatalog); const [pillLabel, setPillLabel] = useState('Home'); const [pillLabelAnimation, setPillLabelAnimation] = useState<'idle' | 'exit' | 'enter'>('idle'); const [sizerRef, measuredSize] = useContentSize(view, isMobile)
+  const [isMobile, setIsMobile] = useState(false); const [isMac, setIsMac] = useState(true); const [activePath, setActivePath] = useState(location.pathname); const [view, setView] = useState<IslandView>('navigation'); const [shouldMountCommandMenu, setShouldMountCommandMenu] = useState(false); const [isCommandMenuOpen, setIsCommandMenuOpen] = useState(false); const [projects, setProjects] = useState(getProjectCatalog); const [pillLabel, setPillLabel] = useState(() => formatPillLabel(getPathLabel(location.pathname))); const [pillLabelAnimation, setPillLabelAnimation] = useState<'idle' | 'exit' | 'enter'>('idle'); const [sizerRef, measuredSize] = useContentSize(view, isMobile)
   const [flight, setFlight] = useState<Flight | null>(null)
   const [refract, setRefract] = useState(false)
   useEffect(() => { setRefract(supportsLiquidRefraction()) }, [])
   const islandMap = useMemo(() => refract ? createGlassMap(measuredSize.width, measuredSize.height, 30) : null, [refract, measuredSize.width, measuredSize.height])
   const orbMap = useMemo(() => refract ? createGlassMap(50, 50, 25, 12) : null, [refract])
   const glassMap = islandMap && orbMap
-  const currentLabel = NAV_ITEMS.find(item => item.path === activePath)?.label || (activePath === '/privacy' ? 'PRIVACY' : 'HOME'); const currentPillLabel = formatPillLabel(currentLabel)
+  const currentLabel = getPathLabel(activePath); const currentPillLabel = formatPillLabel(currentLabel)
   const commandMenuItems = useMemo<CommandMenuItem[]>(() => [...COMMAND_MENU_ITEMS, ...(projects ?? []).map((project, index) => ({ id: `project-${project.id}`, path: '/project', label: project.title, category: 'Projects', keywords: `${project.title} ${project.tech.join(' ')}`.toLowerCase(), targetId: `project-${index}` }))], [projects])
   useEffect(() => subscribeToProjectCatalog(setProjects), [])
   useEffect(() => { const query = window.matchMedia('(max-width: 1024px)'); const sync = () => { setIsMobile(query.matches); if (query.matches) setView(previous => previous === 'compact' ? 'navigation' : previous) }; sync(); setIsMac(/Mac|iPhone|iPod|iPad/i.test(navigator.userAgent)); query.addEventListener('change', sync); return () => query.removeEventListener('change', sync) }, [])
