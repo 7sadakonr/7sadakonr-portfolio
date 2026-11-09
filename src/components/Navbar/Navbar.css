@@ -1,10 +1,15 @@
-:root { --island-bg: rgba(26, 26, 26, .78); --island-bg-solid: #1a1a1a; --island-blur: 16px; --island-edge-top: rgba(255, 255, 255, .12); --island-edge-bottom: rgba(255, 255, 255, .12); }
-.navbar { position: fixed; z-index: 3001; display: flex; align-items: flex-start; gap: 8px; left: 50%; transform: translateX(-50%); color: #fff; font-family: "Outfit", sans-serif; }
+:root { --island-bg: rgba(26, 26, 26, .55); --island-bg-refract: rgba(26, 26, 26, .55); --island-glass-filter: blur(8px) saturate(1.2) brightness(.75); --island-bg-solid: #1a1a1a; --island-edge-top: rgba(255, 255, 255, .12); --island-edge-bottom: rgba(255, 255, 255, .12); }
+/* Opening the command menu locks page scroll (overflow: hidden). With classic scrollbars that widens the viewport and shifts the fixed, centred navbar sideways; keep the gutter reserved. */
+html { scrollbar-gutter: stable; }
+.navbar { position: fixed; z-index: 3001; display: flex; align-items: flex-start; gap: 8px; left: 0; right: 0; margin-inline: auto; width: fit-content; max-width: 100vw; color: #fff; font-family: "Outfit", sans-serif; contain: layout style; }
 .navbar--desktop { top: 60px; }
 .navbar--mobile { top: calc(env(safe-area-inset-top, 0px) + 8px); }
 .island-material { border: 0; background: var(--island-bg-solid); box-shadow: inset 0 1px 0 var(--island-edge-top), inset 0 -1px 0 var(--island-edge-bottom); }
-@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .island-material { background: var(--island-bg); backdrop-filter: blur(var(--island-blur)) saturate(1.15); -webkit-backdrop-filter: blur(var(--island-blur)) saturate(1.15); } }
-.dynamic-island-shell { overflow: hidden; color: #fff; }
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .island-material { background: var(--island-bg); backdrop-filter: var(--island-glass-filter); -webkit-backdrop-filter: var(--island-glass-filter); } .navbar--refract .island-material { background: var(--island-bg-refract); } .navbar--refract .dynamic-island-shell { backdrop-filter: var(--island-glass-filter) url(#navbar-glass-island); } .navbar--refract .desktop-command-btn { backdrop-filter: var(--island-glass-filter) url(#navbar-glass-orb); } }
+.dynamic-island-shell[data-view="command"] { --island-bg: rgba(18, 18, 18, .86); --island-bg-refract: rgba(18, 18, 18, .8); }
+.dynamic-island-shell { position: relative; z-index: 1; overflow: hidden; contain: paint; color: #fff; }
+/* Safari / Firefox: no blurred children or paint containment inside a backdrop-filter surface (WebKit paints it in patches or flickers); own compositing layer instead. */
+.navbar:not(.navbar--refract) .dynamic-island-shell { contain: none; transform: translateZ(0); -webkit-transform: translateZ(0); }
 .dynamic-island-sizer { width: max-content; }
 .dynamic-island-sizer--navigation { min-width: 480px; min-height: 50px; }
 .dynamic-island-sizer--compact { width: 250px; min-height: 50px; }
@@ -16,13 +21,13 @@
 .nav-item { display: flex; align-items: center; justify-content: center; width: 100%; height: 40px; border-radius: 999px; color: rgba(255, 255, 255, .58); text-decoration: none; letter-spacing: .08em; font-size: 13px; font-weight: 600; transition: color 150ms ease, background-color 150ms ease; }
 .nav-item:hover { color: rgba(255, 255, 255, .88); background: rgba(255, 255, 255, .055); }
 .nav-item.active { color: #fff; background: rgba(255, 255, 255, .09); }
-.desktop-command-btn { width: 50px; height: 50px; display: grid; flex: none; place-items: center; padding: 0; border-radius: 50%; color: rgba(255, 255, 255, .84); cursor: pointer; transition: color 150ms ease; }
+.desktop-command-btn { position: absolute; z-index: 0; top: 0; left: calc(100% + 8px); width: 50px; height: 50px; display: grid; flex: none; place-items: center; padding: 0; border-radius: 50%; color: rgba(255, 255, 255, .84); cursor: pointer; transition: color 150ms ease; }
 .desktop-command-btn:hover { color: #fff; }
 .island-progress { width: 100%; min-height: 50px; display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: 12px 4px; align-content: center; column-gap: 10px; row-gap: 4px; padding: 0 18px; }
 .island-progress-label { color: rgba(255, 255, 255, .56); font-size: 10px; font-weight: 600; letter-spacing: .12em; line-height: 12px; text-align: left; }
 .island-progress-percentage { color: rgba(255, 255, 255, .56); font-size: 10px; font-weight: 600; font-variant-numeric: tabular-nums; line-height: 12px; text-align: right; }
 .island-progress-track { grid-column: 1 / -1; display: block; width: 100%; height: 4px; overflow: hidden; border-radius: 999px; background: rgba(255, 255, 255, .12); }
-.island-progress-track::after { content: ""; display: block; width: 100%; height: 100%; border-radius: inherit; background: rgba(255, 255, 255, .88); transform: scaleX(var(--navbar-scroll-progress, 0)); transform-origin: left; }
+.island-progress-track::after { content: ""; display: block; width: 100%; height: 100%; border-radius: inherit; background: rgba(255, 255, 255, .88); transform: scaleX(var(--navbar-scroll-progress, 0)); transform-origin: left; will-change: transform; }
 .island-search-loading { display: flex; align-items: center; gap: 10px; min-height: 50px; padding: 0 16px; color: rgba(255, 255, 255, .72); font-size: 15px; }
 .island-search-loading svg:last-child { margin-left: auto; }
 .island-search-preview { display: flex; align-items: center; gap: 10px; min-height: 50px; padding: 0 14px 0 16px; color: rgba(255, 255, 255, .72); }
@@ -38,4 +43,6 @@
 .pill-shortcut { margin-left: auto; color: rgba(255, 255, 255, .58); font-size: 12px; font-weight: 600; }
 .nav-item:focus-visible, .desktop-command-btn:focus-visible, .command-pill-button:focus-visible, .island-search-preview-close:focus-visible { outline: 2px solid rgba(255, 255, 255, .8); outline-offset: 3px; }
 @media (max-width: 1024px) { .dynamic-island-sizer--navigation { min-width: 180px; min-height: 45px; } .dynamic-island-sizer--search, .dynamic-island-sizer--command { width: min(430px, calc(100vw - 24px)); } .dynamic-island-sizer--search { min-height: 50px; } .navbar--expanded { align-items: flex-start; } }
-@media (prefers-reduced-motion: reduce) { .nav-item, .desktop-command-btn { transition: none !important; } }
+@media (prefers-reduced-motion: reduce) { .nav-item, .desktop-command-btn, .navbar--desktop { transition: none !important; } }
+
+.search-flight { position: fixed; left: 0; top: 0; z-index: 3002; display: grid; pointer-events: none; color: rgba(255, 255, 255, .8); will-change: transform, opacity, filter; }
