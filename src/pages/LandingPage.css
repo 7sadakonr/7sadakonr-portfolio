@@ -628,12 +628,11 @@
 
 .projects-sidebar {
   position: sticky;
-  top: 0;
-  height: 100vh;
-  height: 100dvh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  top: clamp(16px, 12dvh, 120px);
+  align-self: start;
+  height: auto;
+  display: block;
+  margin-block: clamp(24px, 3.5vw, 40px);
   padding-left: clamp(20px, 4vw, 60px);
 }
 
