@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { motion } from 'motion/react'
+import SearchGlyph from '../Navbar/SearchGlyph'
 import { NavLink } from 'react-router-dom'
 import { acquireScrollLock } from '../SmoothScroll/scrollController'
 import { useSiteSettings } from '../../features/siteSettings/hooks/useSiteSettings'
@@ -10,7 +10,7 @@ import './CommandMenu.css'
 export interface CommandMenuItem { id: string; path: string; label: string; category: string; keywords: string; targetId?: string }
 export interface CommandMenuConnectItem { id: string; label: string; category: 'Connect'; keywords: string; contact: ContactLink }
 type CommandMenuEntry = CommandMenuItem | CommandMenuConnectItem
-interface CommandMenuProps { isOpen: boolean; onClose: () => void; menuItems: readonly CommandMenuItem[] | CommandMenuItem[]; activePath: string; handleNavClick: (event: React.MouseEvent<HTMLAnchorElement>, path: string, targetId?: string) => void }
+interface CommandMenuProps { isOpen: boolean; onClose: () => void; menuItems: readonly CommandMenuItem[] | CommandMenuItem[]; activePath: string; handleNavClick: (event: React.MouseEvent<HTMLAnchorElement>, path: string, targetId?: string) => void; iconDelay?: number }
 
 const SearchIcon = () => <svg aria-hidden="true" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="m20 20-4-4" /></svg>
 const CloseIcon = () => <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m6 6 12 12M18 6 6 18" /></svg>
@@ -31,7 +31,7 @@ export const createConnectMenuItems = (links: ContactLink[]): CommandMenuConnect
 
 
 
-const CommandMenu: React.FC<CommandMenuProps> = ({ isOpen, onClose, menuItems, activePath, handleNavClick }) => {
+const CommandMenu: React.FC<CommandMenuProps> = ({ isOpen, onClose, menuItems, activePath, handleNavClick, iconDelay = .18 }) => {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedIndex, setSelectedIndex] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -100,7 +100,7 @@ const CommandMenu: React.FC<CommandMenuProps> = ({ isOpen, onClose, menuItems, a
 
   if (!isOpen) return null
   return <section className="command-menu-island" role="dialog" aria-modal="true" aria-label="Command menu" data-lenis-prevent="true">
-    <div className="command-search-row"><motion.span layoutId="navbar-search-icon"><SearchIcon /></motion.span><input ref={inputRef} type="text" className="command-search-input" placeholder="Search navigation, projects and links…" value={searchTerm} onChange={event => { setSearchTerm(event.target.value); setSelectedIndex(0) }} /><button className="command-close-btn" type="button" onClick={onClose} aria-label="Close menu"><CloseIcon /></button></div>
+    <div className="command-search-row"><SearchGlyph delay={iconDelay}><SearchIcon /></SearchGlyph><input ref={inputRef} type="text" className="command-search-input" placeholder="Search navigation, projects and links…" value={searchTerm} onChange={event => { setSearchTerm(event.target.value); setSelectedIndex(0) }} /><button className="command-close-btn" type="button" onClick={onClose} aria-label="Close menu"><CloseIcon /></button></div>
     <div className="command-menu-content-inner" data-lenis-prevent="true" onWheel={event => event.stopPropagation()} onTouchMove={event => event.stopPropagation()}>{filteredItems.length ? <>{pageItems.length > 0 && <div className="command-group"><div className="command-group-heading">Pages</div><ul className="command-list command-list--pages">{pageItems.map(renderItem)}</ul></div>}{projectItems.length > 0 && <div className="command-group"><div className="command-group-heading">Projects</div><ul className="command-list command-list--projects">{projectItems.map(renderItem)}</ul></div>}{legalItems.length > 0 && <div className="command-group"><div className="command-group-heading">Legal</div><ul className="command-list command-list--legal">{legalItems.map(renderItem)}</ul></div>}{connectItems.length > 0 && <div className="command-group"><div className="command-group-heading">Connect</div><ul className="command-list command-list--connect">{connectItems.map(renderItem)}</ul></div>}</> : <div className="command-empty">No results found.</div>}</div>
   </section>
 }
