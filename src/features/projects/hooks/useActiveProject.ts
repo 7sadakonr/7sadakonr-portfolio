@@ -4,22 +4,15 @@ import { subscribeToProjectTargets } from '../../navigation/navigationEvents'
 
 export const useActiveProject = (projectCount: number) => {
   const [activeProjectIndex, setActiveProjectIndex] = useState(0)
+  // Stays false until a project card actually enters the viewport, so the sidebar
+  // doesn't open its first item while the cards are still off-screen.
+  const [hasReachedProjects, setHasReachedProjects] = useState(false)
   const projectRefs = useRef<(HTMLDivElement | null)[]>([])
   const isScrollingRef = useRef(false)
   const projectScrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const ratios = useRef<Record<number, number>>({})
-
-  const observerRef = useRef<IntersectionObserver | null>(null)
 
   const setProjectRef = useCallback((index: number) => (element: HTMLDivElement | null) => {
-    const prevElement = projectRefs.current[index]
-    if (prevElement && observerRef.current) {
-      observerRef.current.unobserve(prevElement)
-    }
     projectRefs.current[index] = element
-    if (element && observerRef.current) {
-      observerRef.current.observe(element)
-    }
   }, [])
 
   useEffect(() => {
@@ -30,6 +23,7 @@ export const useActiveProject = (projectCount: number) => {
     const handleProjectScroll = (index: number) => {
       if (typeof index !== 'number') return
       setActiveProjectIndex(index)
+      setHasReachedProjects(true)
       isScrollingRef.current = true
       if (projectScrollTimeoutRef.current) clearTimeout(projectScrollTimeoutRef.current)
       projectScrollTimeoutRef.current = setTimeout(() => {
@@ -45,40 +39,48 @@ export const useActiveProject = (projectCount: number) => {
   }, [])
 
   useEffect(() => {
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        const index = projectRefs.current.findIndex((ref) => ref === entry.target)
-        if (index !== -1) ratios.current[index] = entry.intersectionRatio
-      })
+    // Active project = the last card whose top has crossed a reference line at 40% of
+    // the viewport. Evaluated on scroll (rAF-throttled) rather than via IntersectionObserver
+    // thresholds, which rarely fire for tall cards and never reset when scrolling back up.
+    let frame: number | null = null
+    const update = () => {
+      frame = null
       if (isScrollingRef.current) return
-      let maxRatio = 0
-      let maxIndex = -1
-      Object.entries(ratios.current).forEach(([index, ratio]) => {
-        if (ratio > maxRatio) {
-          maxRatio = ratio
-          maxIndex = Number(index)
-        }
+      const line = window.innerHeight * 0.4
+      let nextIndex = -1
+      projectRefs.current.forEach((ref, index) => {
+        if (ref && ref.getBoundingClientRect().top <= line) nextIndex = index
       })
-      if (maxIndex !== -1 && maxRatio > 0) setActiveProjectIndex(maxIndex)
-    }, {
-      rootMargin: '-20% 0px -20% 0px',
-      threshold: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
-    })
-    
-    observerRef.current = observer
-    projectRefs.current.forEach((ref) => { if (ref) observer.observe(ref) })
-    
+      setHasReachedProjects(nextIndex !== -1)
+      if (nextIndex !== -1) setActiveProjectIndex(nextIndex)
+    }
+    const schedule = () => {
+      if (frame === null) frame = requestAnimationFrame(update)
+    }
+
+    window.addEventListener('scroll', schedule, { passive: true })
+    window.addEventListener('resize', schedule)
+    schedule()
     return () => {
-      observer.disconnect()
-      observerRef.current = null
+      window.removeEventListener('scroll', schedule)
+      window.removeEventListener('resize', schedule)
+      if (frame !== null) cancelAnimationFrame(frame)
     }
   }, [projectCount])
 
   const scrollToProject = useCallback((index: number) => {
     setActiveProjectIndex(index)
+    setHasReachedProjects(true)
+    // Hold the active item while the programmatic scroll passes over other cards.
+    isScrollingRef.current = true
+    if (projectScrollTimeoutRef.current) clearTimeout(projectScrollTimeoutRef.current)
+    projectScrollTimeoutRef.current = setTimeout(() => {
+      isScrollingRef.current = false
+      projectScrollTimeoutRef.current = null
+    }, 1200)
     const element = projectRefs.current[index]
     if (element) scrollToTarget(element, { offset: -window.innerHeight / 4 })
   }, [])
 
-  return { activeProjectIndex, setActiveProjectIndex, setProjectRef, scrollToProject }
+  return { hasReachedProjects, activeProjectIndex, setActiveProjectIndex, setProjectRef, scrollToProject }
 }

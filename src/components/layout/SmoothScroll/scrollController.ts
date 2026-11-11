@@ -75,6 +75,9 @@ export const cancelScrollAnimation = () => {
   window.scrollTo({ top: window.scrollY, behavior: 'auto' })
 }
 
-export const triggerResize = () => { activeLenis?.resize() }
+// Refresh Lenis' measured limits only. Lenis#resize() also snaps targetScroll to the
+// current position, which kills an in-flight wheel glide whenever a lazy section
+// changes height mid-scroll.
+export const triggerResize = () => { activeLenis?.dimensions.resize() }
 
 export { REDUCED_MOTION_QUERY }
