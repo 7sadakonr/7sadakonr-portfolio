@@ -1,0 +1,256 @@
+@property --bg-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 135deg;
+}
+
+.glass-surface {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  transition: opacity 0.26s ease-out;
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+.glass-surface__filter {
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  z-index: -1;
+}
+
+.glass-surface__content {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  border-radius: inherit;
+  position: relative;
+  z-index: 1;
+}
+
+/* SVG Filter Version (for Chrome/Edge on Desktop) */
+.glass-surface--svg {
+  background: hsl(0 0% 0% / var(--glass-frost, 0));
+  /* Note: backdrop-filter is now handled by dedicated DOM layers in GlassSurface.tsx to prevent Chromium clipping bugs */
+
+  border: 1.5px solid rgba(255, 255, 255, 0.18);
+  position: relative;
+
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.02) inset,
+    0 0 20px 2px rgba(255, 255, 255, 0.01) inset,
+    0px 4px 16px rgba(17, 17, 26, 0.2),
+    0px 8px 24px rgba(17, 17, 26, 0.2),
+    0px 16px 56px rgba(17, 17, 26, 0.2);
+}
+
+.glass-surface--svg::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.08),
+    rgba(255, 255, 255, 0.02) 25%,
+    rgba(255, 255, 255, 0.01) 50%,
+    rgba(255, 255, 255, 0.02) 75%,
+    rgba(255, 255, 255, 0.08)
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.glass-surface--svg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 1px solid transparent;
+  background: linear-gradient(
+      var(--bg-angle, 135deg),
+      transparent 0%,
+      rgba(255, 255, 255, 0.1) 50%,
+      transparent 100%
+    )
+    border-box;
+  -webkit-mask:
+    linear-gradient(#fff 0 0) padding-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  opacity: 0.15;
+  z-index: 3;
+}
+
+/* Fallback for other browsers */
+.glass-surface--fallback {
+  background: rgba(44, 44, 44, 0.4);
+  backdrop-filter: blur(12px) saturate(1.8) brightness(1.15);
+  -webkit-backdrop-filter: blur(12px) saturate(1.8) brightness(1.15);
+
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  position: relative;
+
+  box-shadow:
+    0 8px 32px 0 rgba(0, 0, 0, 0.4),
+    0 2px 16px 0 rgba(0, 0, 0, 0.3),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.15),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.25),
+    inset 0 -1px 0 0 rgba(255, 255, 255, 0.1);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  /* Hover effects */
+  .glass-surface:hover {
+    transition: all 0.3s ease;
+  }
+
+}
+
+/* Animation for border shine */
+@keyframes borderShine {
+  0%,
+  100% {
+    --bg-angle: 135deg;
+  }
+
+  50% {
+    --bg-angle: 315deg;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .glass-surface--svg:hover::after {
+    animation: borderShine 3s ease-in-out infinite;
+  }
+}
+
+/* Focus styles */
+.glass-surface:focus-visible {
+  outline: 2px solid #8a38f5;
+  outline-offset: 2px;
+}
+
+/* Accessibility - Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .glass-surface,
+  .glass-surface::before,
+  .glass-surface::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+@supports not (backdrop-filter: blur(10px)) {
+  .glass-surface--fallback {
+    background: rgba(50, 50, 50, 0.6);
+    border: 1.5px solid rgba(255, 255, 255, 0.25);
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.3),
+      inset 0 -1px 0 0 rgba(255, 255, 255, 0.15);
+  }
+
+  .glass-surface--fallback::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(44, 44, 44, 0.3);
+    border-radius: inherit;
+    z-index: -1;
+  }
+}
+
+@supports not (backdrop-filter: blur(10px)) {
+  @media (prefers-color-scheme: dark) {
+    .glass-surface--fallback {
+      background: rgba(32, 32, 32, 0.7);
+    }
+
+    .glass-surface--fallback::after {
+      background: rgba(32, 32, 32, 0.35);
+    }
+  }
+}
+
+/* SVG Filter Version (for Chrome/Edge on Desktop) */
+.glass-surface--svg {
+  background: hsl(0 0% 15% / var(--glass-frost, 0));
+  /* Note: backdrop-filter is handled by dedicated DOM layers in React to prevent clipping bugs */
+
+  border: 1.5px solid rgba(255, 255, 255, 0.18);
+  position: relative;
+
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.02) inset,
+    0 0 20px 2px rgba(255, 255, 255, 0.01) inset,
+    0px 4px 16px rgba(17, 17, 26, 0.2),
+    0px 8px 24px rgba(17, 17, 26, 0.2),
+    0px 16px 56px rgba(17, 17, 26, 0.2);
+}
+
+.glass-surface--svg::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.3),
+    rgba(255, 255, 255, 0.05) 25%,
+    rgba(255, 255, 255, 0.02) 50%,
+    rgba(255, 255, 255, 0.05) 75%,
+    rgba(255, 255, 255, 0.3)
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.glass-surface--svg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 1px solid transparent;
+  background: linear-gradient(
+      var(--bg-angle, 135deg),
+      transparent 0%,
+      rgba(255, 255, 255, 0.1) 50%,
+      transparent 100%
+    )
+    border-box;
+  -webkit-mask:
+    linear-gradient(#fff 0 0) padding-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  opacity: 0.6;
+  z-index: 3;
+}
+
+/* Navbar usage: only the refraction layers are used; the island keeps its own edge, tint and shadow. */
+.glass-surface--bare { border: 0 !important; box-shadow: none !important; background: transparent !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; pointer-events: none; will-change: auto; }
+.glass-surface--bare::before, .glass-surface--bare::after { content: none !important; }

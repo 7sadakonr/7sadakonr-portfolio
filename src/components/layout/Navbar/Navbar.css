@@ -5,7 +5,12 @@ html { scrollbar-gutter: stable; }
 .navbar--desktop { top: 60px; }
 .navbar--mobile { top: calc(env(safe-area-inset-top, 0px) + 8px); }
 .island-material { border: 0; background: var(--island-bg-solid); box-shadow: inset 0 1px 0 var(--island-edge-top), inset 0 -1px 0 var(--island-edge-bottom); }
-@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .island-material { background: var(--island-bg); backdrop-filter: var(--island-glass-filter); -webkit-backdrop-filter: var(--island-glass-filter); } .navbar--refract .island-material { background: var(--island-bg-refract); } .navbar--refract .dynamic-island-shell { backdrop-filter: var(--island-glass-filter) url(#navbar-glass-island); } .navbar--refract .desktop-command-btn { backdrop-filter: var(--island-glass-filter) url(#navbar-glass-orb); } }
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .island-material { background: var(--island-bg); backdrop-filter: var(--island-glass-filter); -webkit-backdrop-filter: var(--island-glass-filter); } .navbar--refract .island-material { background: transparent; } .navbar--refract .dynamic-island-shell, .navbar--refract .desktop-command-btn { backdrop-filter: none; -webkit-backdrop-filter: none; } }
+/* Refraction layer paints over the element's own inset box-shadow, so draw the edge highlight on top of it instead. */
+.navbar--refract .island-material { box-shadow: none; }
+/* Tint is a flat overlay above the glass layer (z -2) and below the content, so refraction never bends or thins it at the rim. */
+.navbar--refract .island-material::before { content: ""; position: absolute; inset: 0; border-radius: inherit; background: var(--island-bg-refract); pointer-events: none; z-index: -1; }
+.navbar--refract .island-material::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 2; box-shadow: inset 0 1px 0 var(--island-edge-top), inset 0 -1px 0 var(--island-edge-bottom); }
 .dynamic-island-shell[data-view="command"] { --island-bg: rgba(18, 18, 18, .94); --island-bg-refract: rgba(18, 18, 18, .9); }
 .dynamic-island-shell { position: relative; z-index: 1; overflow: hidden; contain: paint; color: #fff; }
 /* Safari / Firefox: no blurred children or paint containment inside a backdrop-filter surface (WebKit paints it in patches or flickers); own compositing layer instead. */
