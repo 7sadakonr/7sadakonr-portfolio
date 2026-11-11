@@ -1,6 +1,6 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import Footer from '../src/components/Footer/Footer'
+import Footer from '../src/components/layout/Footer/Footer'
 import AboutPage from '../src/pages/AboutPage'
 
 describe('Resume downloads', () => {

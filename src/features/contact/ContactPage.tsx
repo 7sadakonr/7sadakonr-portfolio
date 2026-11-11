@@ -1,4 +1,4 @@
-import TextReveal from '../../components/Animation/TextReveal'
+import TextReveal from '../../components/shared/Animation/TextReveal'
 import '../../pages/LandingPage.css'
 import ContactForm from './components/ContactForm'
 import ContactInfo from './components/ContactInfo'

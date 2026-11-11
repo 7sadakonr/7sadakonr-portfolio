@@ -1,4 +1,4 @@
-import LineSidebar, { type LineSidebarItem } from '../../../components/LineSidebar/LineSidebar'
+import LineSidebar, { type LineSidebarItem } from '../../../components/sections/projects/LineSidebar/LineSidebar'
 import type { ProjectSidebarItem } from '../data/projectSidebarItems'
 
 interface ProjectSidebarProps {
