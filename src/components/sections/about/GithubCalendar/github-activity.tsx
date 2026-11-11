@@ -632,7 +632,7 @@ const GitHubActivity = ({
           data-slot="github-activity-panel"
           data-state={open ? "open" : "closed"}
           className={cn(
-            "absolute inset-x-3 bottom-3 overflow-hidden bg-card/90 backdrop-blur-xl",
+            "absolute inset-x-3 bottom-3 overflow-hidden bg-card/90",
             open && "top-3",
           )}
           style={{ borderRadius: 18 }}

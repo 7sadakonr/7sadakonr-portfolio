@@ -20,7 +20,7 @@ const ProjectSection = () => {
   const skeletonPhase = useSkeletonPresence(isLoading, { delayMs: 120 })
   const showSkeleton = skeletonPhase !== 'idle'
 
-  const { activeProjectIndex, setActiveProjectIndex, setProjectRef, scrollToProject } = useActiveProject(projects.length)
+  const { hasReachedProjects, activeProjectIndex, setActiveProjectIndex, setProjectRef, scrollToProject } = useActiveProject(projects.length)
   const sidebarItems = useMemo(() => createProjectSidebarItems(projects), [projects])
   const contentIsReady = !isLoading && !error && projects.length > 0
   // Latched on first ready render: cards replacing a visible skeleton fade in place instead of rising 16px.
@@ -105,7 +105,7 @@ const ProjectSection = () => {
                 {contentIsReady && (
                   <ProjectSidebar
                     items={sidebarItems}
-                    activeIndex={activeProjectIndex}
+                    activeIndex={hasReachedProjects ? activeProjectIndex : null}
                     onItemClick={handleSidebarItemClick}
                     onLiveClick={handleSidebarOutboundClick('demo_click')}
                     onGithubClick={handleSidebarOutboundClick('github_click')}

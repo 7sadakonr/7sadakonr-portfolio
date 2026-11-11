@@ -6,7 +6,6 @@ import GitHubActivity, {
 import DotPattern from '../../../shared/DotPattern/DotPattern'
 import { useSkeletonPresence } from '../../../../hooks/useDelayedLoading'
 import { GithubActivitySkeleton } from './GithubCalendarSkeleton'
-import { triggerResize } from '../../../layout/SmoothScroll/scrollController'
 import './GithubCalendar.css'
 
 type ColorSchema = 'green' | 'blue' | 'purple' | 'orange' | 'gray'
@@ -277,32 +276,6 @@ const GithubCalendar = ({ username, className = '', colorSchema = 'green' }: Git
 
         if (containerRef.current) observer.observe(containerRef.current)
         return () => observer.disconnect()
-    }, [])
-
-    useEffect(() => {
-        const element = containerRef.current
-        if (!element || typeof ResizeObserver === 'undefined') return
-
-        let frame: number | null = null
-        let lastWidth = 0
-        let lastHeight = 0
-        const notify = () => {
-            frame = null
-            const { width, height } = element.getBoundingClientRect()
-            if (width === lastWidth && height === lastHeight) return
-            lastWidth = width
-            lastHeight = height
-            triggerResize()
-        }
-        const observer = new ResizeObserver(() => {
-            if (frame === null) frame = requestAnimationFrame(notify)
-        })
-        observer.observe(element)
-        if (frame === null) frame = requestAnimationFrame(notify)
-        return () => {
-            observer.disconnect()
-            if (frame !== null) cancelAnimationFrame(frame)
-        }
     }, [])
 
     useEffect(() => {

@@ -40,8 +40,6 @@
   font-weight: 500;
   color: rgba(255, 255, 255, 0.85);
   background-color: #18181c;
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
   border: 1px solid var(--about-outline-color, rgba(255, 255, 255, 0.1));
   border-radius: 6px;
   box-shadow: none;

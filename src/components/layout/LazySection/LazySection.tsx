@@ -53,7 +53,7 @@ const LazySection = ({ id, children, canLoad = true }: LazySectionProps) => {
       if (!entries.some((entry) => entry.isIntersecting)) return
       void ensureTargetReady(id)
       mountObserver.disconnect()
-    }, { rootMargin: '0px 0px 600px 0px', threshold: 0 })
+    }, { rootMargin: '0px 0px 1600px 0px', threshold: 0 })
 
     prefetchObserver.observe(element)
     mountObserver.observe(element)
