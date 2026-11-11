@@ -1,11 +1,11 @@
 import { render, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { acquireScrollLock, cancelScrollAnimation, scrollToTarget, triggerResize } from '../src/components/SmoothScroll/scrollController'
+import { acquireScrollLock, cancelScrollAnimation, scrollToTarget, triggerResize } from '../src/components/layout/SmoothScroll/scrollController'
 
 const runtime = vi.hoisted(() => ({ loadLenis: vi.fn() }))
 vi.mock('../src/utils/runtimeWarmup', () => runtime)
 
-import SmoothScroll from '../src/components/SmoothScroll/SmoothScroll'
+import SmoothScroll from '../src/components/layout/SmoothScroll/SmoothScroll'
 
 class MockLenis {
   static instances: MockLenis[] = []

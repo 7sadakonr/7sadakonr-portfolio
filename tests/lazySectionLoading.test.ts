@@ -5,8 +5,8 @@ const read = (path: string) => readFile(new URL(path, import.meta.url), 'utf8')
 
 describe('LazySection loading', () => {
   it('supports idle hydration while retaining approach-based loading for direct scroll navigation', async () => {
-    const loader = await read('../src/components/LazySection/sectionLoader.ts')
-    const source = await read('../src/components/LazySection/LazySection.tsx')
+    const loader = await read('../src/components/layout/LazySection/sectionLoader.ts')
+    const source = await read('../src/components/layout/LazySection/LazySection.tsx')
 
     expect(loader).toContain('scheduleBelowFoldHydration')
     expect(loader).toContain('runWhenIdle')

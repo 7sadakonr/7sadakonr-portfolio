@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react'
 import type { SkeletonPhase } from '../../../hooks/useDelayedLoading'
-import '../../../components/LineSidebar/LineSidebar.css'
+import '../../../components/sections/projects/LineSidebar/LineSidebar.css'
 import { getProjectCatalog } from '../data/projectCatalogStore'
 import './ProjectLoadingSkeletons.css'
 

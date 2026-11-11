@@ -1,4 +1,4 @@
-import AsiaMap from '../../../components/AsiaMap/AsiaMap'
+import AsiaMap from '../../../components/sections/contact/AsiaMap/AsiaMap'
 import { useSiteSettings } from '../../siteSettings/hooks/useSiteSettings'
 import { contactDisplayText, visibleContactLinks } from '../../siteSettings/validation/contactLinks'
 

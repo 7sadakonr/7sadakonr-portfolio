@@ -1,6 +1,6 @@
 import { useContactForm } from '../hooks/useContactForm'
-import { Input } from '../../../components/arc/input/input'
-import { Textarea } from '../../../components/arc/textarea/textarea'
+import { Input } from '../../../components/ui/arc/input/input'
+import { Textarea } from '../../../components/ui/arc/textarea/textarea'
 
 const ContactForm = () => {
   const { form, isSubmitting, submitStatus, clearSubmitStatus, handleSubmit } = useContactForm()

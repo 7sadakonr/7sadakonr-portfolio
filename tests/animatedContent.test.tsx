@@ -1,6 +1,6 @@
 import { cleanup, render } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import AnimatedContent from '../src/components/Animation/AnimatedContent'
+import AnimatedContent from '../src/components/shared/Animation/AnimatedContent'
 
 const originalAnimate = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'animate')
 
