@@ -2,11 +2,11 @@ import { act, fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter, useNavigate } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('../src/components/CommandMenu/CommandMenu', () => ({
+vi.mock('../src/components/layout/CommandMenu/CommandMenu', () => ({
   default: ({ isOpen }: { isOpen: boolean }) => isOpen ? <div>Command menu</div> : null,
 }))
 
-import Navbar from '../src/components/Navbar/Navbar'
+import Navbar from '../src/components/layout/Navbar/Navbar'
 
 const NavigateToAbout = () => {
   const navigate = useNavigate()

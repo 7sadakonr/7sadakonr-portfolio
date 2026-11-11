@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { scrollToTarget } from '../../../components/SmoothScroll/scrollController'
+import { scrollToTarget } from '../../../components/layout/SmoothScroll/scrollController'
 import { subscribeToProjectTargets } from '../../navigation/navigationEvents'
 
 export const useActiveProject = (projectCount: number) => {

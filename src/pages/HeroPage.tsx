@@ -1,13 +1,13 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import './HeroPage.css'
-import TextReveal from '../components/Animation/TextReveal';
+import TextReveal from '../components/shared/Animation/TextReveal';
 
 interface HeroPageProps {
   effectsEnabled?: boolean;
   onCriticalReady?: () => void;
 }
 
-const BackgroundBeams = lazy(() => import('../components/BackgroundBeams/BackgroundBeams'))
+const BackgroundBeams = lazy(() => import('../components/sections/hero/BackgroundBeams/BackgroundBeams'))
 
 const HeroPage = ({ effectsEnabled = true, onCriticalReady }: HeroPageProps) => {
   const heroRef = useRef<HTMLElement>(null);

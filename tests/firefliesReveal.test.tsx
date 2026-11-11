@@ -1,6 +1,6 @@
 import { act, render } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import Fireflies from '../src/components/Animation/Fireflies'
+import Fireflies from '../src/components/shared/Animation/Fireflies'
 
 let observe: (() => void) | undefined
 

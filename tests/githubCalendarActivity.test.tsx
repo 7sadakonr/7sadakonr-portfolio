@@ -1,6 +1,6 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import GithubCalendar from '../src/components/GithubCalendar/GithubCalendar'
+import GithubCalendar from '../src/components/sections/about/GithubCalendar/GithubCalendar'
 
 const contributionResponse = {
     total: { lastYear: 3 },

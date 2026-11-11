@@ -4,14 +4,14 @@ const lazyLoader = <T>(loader: () => Promise<T>) => {
 }
 
 export const loadLenis = lazyLoader(() => import('lenis'))
-export const loadFireflies = lazyLoader(() => import('../components/Animation/Fireflies'))
-export const loadNavbar = lazyLoader(() => import('../components/Navbar/Navbar'))
-export const loadCommandMenu = lazyLoader(() => import('../components/CommandMenu/CommandMenu'))
+export const loadFireflies = lazyLoader(() => import('../components/shared/Animation/Fireflies'))
+export const loadNavbar = lazyLoader(() => import('../components/layout/Navbar/Navbar'))
+export const loadCommandMenu = lazyLoader(() => import('../components/layout/CommandMenu/CommandMenu'))
 export const loadAboutPage = lazyLoader(() => import('../pages/AboutPage'))
 export const loadProjectPage = lazyLoader(() => import('../features/projects/ProjectPage'))
 export const loadProjectData = lazyLoader(() => import('../features/projects/api/projectRepository'))
 export const loadContactPage = lazyLoader(() => import('../features/contact/ContactPage'))
-export const loadPageEnd = lazyLoader(() => import('../components/PageEnd/PageEnd'))
+export const loadPageEnd = lazyLoader(() => import('../components/layout/PageEnd/PageEnd'))
 
 export type LenisModule = Awaited<ReturnType<typeof loadLenis>>
 export type LenisInstance = InstanceType<LenisModule['default']>

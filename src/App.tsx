@@ -1,9 +1,9 @@
 import { Suspense, useEffect, useState, lazy } from 'react'
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom'
-import Preloader from './components/Preloader/Preloader'
-import { SpaceBackground } from './components/SpaceBackground/SpaceBackground'
-import SmoothScroll from './components/SmoothScroll/SmoothScroll'
-import LazySection from './components/LazySection/LazySection'
+import Preloader from './components/layout/Preloader/Preloader'
+import { SpaceBackground } from './components/layout/SpaceBackground/SpaceBackground'
+import SmoothScroll from './components/layout/SmoothScroll/SmoothScroll'
+import LazySection from './components/layout/LazySection/LazySection'
 import {
   loadAboutPage,
   loadContactPage,
@@ -14,9 +14,9 @@ import {
 import { getRouteForSection } from './features/navigation/navigation.config'
 import { publishSectionChange } from './features/navigation/navigationEvents'
 import { isNavigationInProgress } from './features/navigation/navigationState'
-import { Seo } from './components/Seo/Seo'
+import { Seo } from './components/layout/Seo/Seo'
 import { getSnapshotSiteSettings } from './features/content/contentSnapshot'
-import { scheduleBelowFoldHydration } from './components/LazySection/sectionLoader'
+import { scheduleBelowFoldHydration } from './components/layout/LazySection/sectionLoader'
 import { initAnalytics } from './lib/analytics/tracker'
 
 import './pages/LandingPageShell.css'
