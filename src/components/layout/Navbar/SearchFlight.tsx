@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useEffect, type ReactNode } from 'react'
 import { motion } from 'motion/react'
 
 export interface FlightPoint { x: number; y: number }
@@ -12,6 +12,9 @@ const DURATION = .4
 // screen coordinates (no shared-layout projection). Opening: leaves the orb, slides left and
 // fades out just before arriving. Closing: mirrors it, fading in and landing on the orb.
 export default function SearchFlight({ flight, onDone, children }: { flight: Flight | null; onDone: () => void; children: ReactNode }) {
+  const id = flight?.id
+  // Safety net: never leave the orb glyph hidden if onAnimationComplete doesn't fire.
+  useEffect(() => { if (id === undefined) return; const t = window.setTimeout(onDone, DURATION * 1000 + 150); return () => window.clearTimeout(t) }, [id, onDone])
   if (!flight) return null
   const open = flight.dir === 'open'
   return (
