@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { createPortal } from "react-dom";
+import { playHover } from '../../../../lib/sound';
 import {
   AnimatePresence,
   motion,
@@ -33,11 +34,18 @@ const DEFAULT_MONTHS = 12;
 const WEEKS_PER_MONTH = 365.25 / 12 / 7;
 const STACK_LIMIT = 3;
 const MIN_CARD_WIDTH = 320;
-const MIN_LABEL_WEEKS = 3;
+const MIN_LABEL_WEEKS = 2;
+// runs shorter than this get the compact "Nov '25" label so it fits
+const FULL_LABEL_WEEKS = 4;
 // the p-4 on the card, both sides; the width math below has to add it back
 const CARD_PADDING = 32;
 
 const gapFor = (cellSize: number) => Math.max(2, Math.round(cellSize / 4));
+// extra breathing room before the first week of each month, so months read as separate blocks
+export const monthGapFor = (gap: number) => gap * 3;
+const weekMonth = (week?: Contribution[]) => week?.[0]?.date.slice(5, 7);
+const startsMonth = (weeks: Contribution[][], index: number) =>
+  index > 0 && weekMonth(weeks[index]) !== weekMonth(weeks[index - 1]);
 // never zero: weeks.slice(-0) would hand back the whole history instead of nothing
 const weeksFor = (months: number) =>
   Math.max(1, Math.ceil(months * WEEKS_PER_MONTH));
@@ -79,7 +87,13 @@ function toMonthLabels(weeks: Contribution[][]) {
     if (i < weeks.length && monthAt(i) === monthAt(start)) continue;
     // a shorter run is narrower than the label itself, so it would sit under the next month
     if (i - start >= MIN_LABEL_WEEKS) {
-      labels[start] = MONTH_NAMES[Number(monthAt(start)) - 1] ?? null;
+      const name = MONTH_NAMES[Number(monthAt(start)) - 1];
+      const year = weeks[start]?.[0]?.date.slice(0, 4) ?? "";
+      labels[start] = name
+        ? i - start >= FULL_LABEL_WEEKS
+          ? `${name} ${year}`
+          : `${name} '${year.slice(2)}`
+        : null;
     }
     start = i;
   }
@@ -222,34 +236,18 @@ function toScale(accent: string | string[]): LevelStyle[] {
   });
 }
 
+/** How many month boundaries the rendered row contains (each adds a `monthGapFor` gap). */
+export function countMonthBreaks(contributions: Contribution[], months = DEFAULT_MONTHS) {
+  const weeks = toWeeks(contributions).slice(-weeksFor(months));
+  return weeks.filter((_, index) => startsMonth(weeks, index)).length;
+}
+
 function toWeeks(contributions: Contribution[]) {
   const weeks: Contribution[][] = [];
   for (let i = 0; i < contributions.length; i += 7) {
     weeks.push(contributions.slice(i, i + 7));
   }
   return weeks;
-}
-
-function useFittedColumns(cellSize: number, gap: number) {
-  const ref = React.useRef<HTMLDivElement>(null);
-  const [columns, setColumns] = React.useState<number>();
-
-  useIsoLayoutEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-
-    const measure = () =>
-      setColumns(
-        Math.max(1, Math.floor((el.clientWidth + gap) / (cellSize + gap))),
-      );
-
-    measure();
-    const observer = new ResizeObserver(measure);
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [cellSize, gap]);
-
-  return [ref, columns] as const;
 }
 
 const Tooltip = ({
@@ -313,38 +311,53 @@ const ContributionGrid = ({
 }) => {
   const weeks = React.useMemo(() => toWeeks(contributions), [contributions]);
   const gap = cellGap ?? gapFor(cellSize);
-  const [ref, columns] = useFittedColumns(cellSize, gap);
+  const monthGap = monthGapFor(gap);
+  const scrollRef = React.useRef<HTMLDivElement>(null);
   const [hovered, setHovered] = React.useState<HoveredDay>();
 
-  const cap = Math.min(weeks.length, weeksFor(months));
-  const visible = weeks.slice(-Math.min(cap, columns ?? cap));
+  // Every week in range is rendered; on narrow screens the row scrolls sideways.
+  const visible = weeks.slice(-Math.min(weeks.length, weeksFor(months)));
+  const visibleOffset = weeks.length - visible.length;
+  const breakMargin = (index: number) =>
+    startsMonth(weeks, visibleOffset + index) && index > 0 ? monthGap : 0;
+
+  // Start scrolled to the latest weeks; older months are a swipe to the left.
+  useIsoLayoutEffect(() => {
+    const el = scrollRef.current;
+    if (el) el.scrollLeft = el.scrollWidth;
+  }, [visible.length, cellSize]);
 
   const hover = (day: Contribution) => (event: React.PointerEvent) => {
+    if (event.pointerType === 'mouse') playHover();
     const cell = event.currentTarget.getBoundingClientRect();
     setHovered({ day, x: cell.left + cell.width / 2, y: cell.top });
   };
 
   return (
     <div
-      ref={ref}
       data-slot="github-activity-grid"
       role="img"
       aria-label={label}
       className="relative"
     >
+      <div
+        ref={scrollRef}
+        className="overflow-x-auto overscroll-x-contain px-1 py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      >
+      <div className="mx-auto w-max">
       {showMonths && (
         <div
-          className="flex justify-center"
-          style={{ gap, marginBottom: gap }}
+          className="flex"
+          style={{ gap, marginBottom: gap + 2 }}
         >
           {toMonthLabels(visible).map((month, index) => (
             <div
               key={index}
-              className="relative h-3 shrink-0"
-              style={{ width: cellSize }}
+              className="relative h-4 shrink-0"
+              style={{ width: cellSize, marginLeft: breakMargin(index) }}
             >
               {month && (
-                <span className="absolute left-0 top-0 text-[10px] leading-none text-foreground/40">
+                <span className="absolute left-0 top-0 whitespace-nowrap text-xs font-medium leading-none text-foreground/60">
                   {month}
                 </span>
               )}
@@ -354,7 +367,7 @@ const ContributionGrid = ({
       )}
 
       <motion.div
-        className="flex justify-center overflow-hidden"
+        className="flex"
         style={{ gap }}
         onPointerLeave={() => setHovered(undefined)}
         initial={reduceMotion ? false : { opacity: 0 }}
@@ -362,23 +375,34 @@ const ContributionGrid = ({
         transition={reduceMotion ? { duration: 0 } : { duration: 0.18, ease: EASE_OUT }}
       >
         {visible.map((week, weekIndex) => (
-          <div key={weekIndex} className="flex flex-col" style={{ gap }}>
-            {week.map((day) => (
-              <div
-                key={day.date}
-                onPointerEnter={hover(day)}
-                className="shrink-0 rounded-[3px] bg-foreground/[0.08]"
-                style={{ width: cellSize, height: cellSize }}
-              >
+          <div key={weekIndex} className="flex flex-col" style={{ gap, marginLeft: breakMargin(weekIndex) }}>
+            {week.map((day) => {
+              const isHovered = hovered?.day.date === day.date;
+              return (
                 <div
-                  className="h-full w-full rounded-[3px]"
-                  style={scale[day.level] ?? scale[0]}
-                />
-              </div>
-            ))}
+                  key={day.date}
+                  onPointerEnter={hover(day)}
+                  className={`shrink-0 rounded-[3px] bg-foreground/[0.08]${isHovered ? " relative z-10" : ""}`}
+                  style={{ width: cellSize, height: cellSize }}
+                >
+                  <div
+                    className="h-full w-full rounded-[3px]"
+                    style={{
+                      ...(scale[day.level] ?? scale[0]),
+                      transform: isHovered && !reduceMotion ? "scale(1.45)" : "scale(1)",
+                      // Hovered dot rounds out into a soft pill/circle instead of a square.
+                      borderRadius: isHovered && !reduceMotion ? "28%" : 3,
+                      transition: reduceMotion ? undefined : "transform 140ms cubic-bezier(.22,1,.36,1), border-radius 140ms cubic-bezier(.22,1,.36,1)",
+                    }}
+                  />
+                </div>
+              );
+            })}
           </div>
         ))}
       </motion.div>
+      </div>
+      </div>
 
       <AnimatePresence>
         {hovered && (
@@ -435,8 +459,11 @@ const RepoRow = ({
       <span className="flex-1 truncate text-sm text-foreground">
         {repo.name}
       </span>
-      <span className="text-sm tabular-nums text-foreground/70">
-        {repo.count}
+      <span
+        className="text-sm tabular-nums text-foreground/70"
+        title={`${repo.count.toLocaleString()} commits in the last year`}
+      >
+        {repo.count.toLocaleString()}
       </span>
     </>
   );
@@ -481,12 +508,6 @@ const Chevron = ({
   </motion.svg>
 );
 
-const GitHubMark = () => (
-  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-    <path d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.7c-2.78.6-3.37-1.18-3.37-1.18-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.61.07-.61 1 .07 1.54 1.04 1.54 1.04.9 1.54 2.35 1.1 2.92.84.09-.65.35-1.1.64-1.35-2.22-.25-4.56-1.11-4.56-4.95 0-1.1.39-2 1.03-2.7-.1-.26-.45-1.28.1-2.67 0 0 .84-.27 2.75 1.03A9.6 9.6 0 0 1 12 6.4c.85 0 1.7.11 2.5.34 1.91-1.3 2.75-1.03 2.75-1.03.55 1.39.2 2.41.1 2.67.64.7 1.03 1.6 1.03 2.7 0 3.85-2.34 4.69-4.57 4.94.36.31.68.9.68 1.81v2.68c0 .26.18.57.69.48A10 10 0 0 0 12 2Z" />
-  </svg>
-);
-
 export type GitHubActivityProps = React.ComponentProps<"div"> & {
   username?: string;
   contributions?: Contribution[];
@@ -509,7 +530,6 @@ const GitHubActivity = ({
   username,
   contributions: contributionsProp = [],
   repos: reposProp = [],
-  year,
   accent = DEFAULT_ACCENT,
   cellSize = DEFAULT_CELL_SIZE,
   cellGap,
@@ -562,10 +582,7 @@ const GitHubActivity = ({
     [contributions],
   );
 
-  const parsedYear = Number(contributions[contributions.length - 1]?.date.slice(0, 4));
-  const displayYear = year ?? (Number.isFinite(parsedYear) ? parsedYear : null);
-  const heading = `${total} contributions${displayYear ? ` in ${displayYear}` : ""}`;
-  const profileHref = username ? `https://github.com/${username}` : undefined;
+  const heading = `${total} contributions in the last ${months === 12 ? "year" : `${months} months`}`;
   const displayTotal = total.toLocaleString();
 
   const gap = cellGap ?? gapFor(cellSize);
@@ -573,9 +590,11 @@ const GitHubActivity = ({
     Math.ceil(contributions.length / 7),
     weeksFor(months),
   );
+  const shownWeeks = toWeeks(contributions).slice(-columns);
+  const monthBreaks = shownWeeks.filter((_, i) => startsMonth(shownWeeks, i)).length;
   const width = Math.max(
     MIN_CARD_WIDTH,
-    columns * (cellSize + gap) - gap + CARD_PADDING,
+    columns * (cellSize + gap) - gap + monthBreaks * monthGapFor(gap) + CARD_PADDING,
   );
 
   return (
@@ -590,25 +609,9 @@ const GitHubActivity = ({
       {...props}
     >
       <div data-slot="github-activity-summary" className="mb-3 flex items-center justify-between gap-3">
-        {profileHref && (
-          <a
-            href={profileHref}
-            target="_blank"
-            rel="noreferrer"
-            aria-label={`GitHub profile for ${username}`}
-            data-slot="github-activity-profile"
-            className="inline-flex min-w-0 items-center transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/70"
-          >
-            <span data-slot="github-activity-profile-mark"><GitHubMark /></span>
-            <span data-slot="github-activity-profile-copy">
-              <strong>@{username}</strong>
-              <span>Contribution Graph</span>
-            </span>
-          </a>
-        )}
         <div data-slot="github-activity-total" aria-label={heading}>
           <strong>{displayTotal}</strong>
-          <span>THIS YEAR TOTAL</span>
+          <span>{months === 12 ? "CONTRIBUTIONS IN THE LAST YEAR" : `CONTRIBUTIONS IN THE LAST ${months} MONTHS`}</span>
         </div>
       </div>
 

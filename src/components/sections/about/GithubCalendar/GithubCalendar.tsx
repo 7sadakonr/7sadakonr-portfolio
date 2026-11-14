@@ -1,9 +1,12 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import GitHubActivity, {
+    countMonthBreaks,
+    monthGapFor,
     type Contribution as ActivityContribution,
     type RepoContribution,
 } from './github-activity'
 import DotPattern from '../../../shared/DotPattern/DotPattern'
+import { playHover } from '../../../../lib/sound'
 import { useSkeletonPresence } from '../../../../hooks/useDelayedLoading'
 import { GithubActivitySkeleton } from './GithubCalendarSkeleton'
 import './GithubCalendar.css'
@@ -52,6 +55,8 @@ type GitHubOwnedRepository = {
   full_name: string
   name: string
   stargazers_count: number
+  fork?: boolean
+  pushed_at?: string | null
     owner?: {
         login: string
         avatar_url?: string
@@ -59,7 +64,11 @@ type GitHubOwnedRepository = {
 }
 
 const CACHE_TTL_MS = 30 * 60 * 1000
-const REPOSITORY_LIMIT = 3
+const REPOSITORY_LIMIT = 5
+const YEAR_MS = 365 * 24 * 60 * 60 * 1000
+const MAX_OWNED_CANDIDATES = 20
+const MAX_EVENT_CANDIDATES = 5
+const COMMIT_COUNT_CONCURRENCY = 4
 
 const COLOR_SCALES: Record<ColorSchema, [string, string, string, string, string]> = {
     green: ['#202024', '#273f32', '#2f6b46', '#3ea060', '#56d477'],
@@ -143,22 +152,22 @@ const ACTIVITY_CELL_STEP = 0.25
 
 const activityCellGap = (cellSize: number) => Math.max(2, Math.round(cellSize / 4))
 
-const activityWidthFor = (cellSize: number) => {
+const activityWidthFor = (cellSize: number, monthBreaks: number) => {
     const gap = activityCellGap(cellSize)
-    return ACTIVITY_WEEKS * (cellSize + gap) - gap
+    return ACTIVITY_WEEKS * (cellSize + gap) - gap + monthBreaks * monthGapFor(gap)
 }
 
-const fitActivityCell = (availableWidth: number) => {
+const fitActivityCell = (availableWidth: number, monthBreaks: number) => {
     let best = MIN_ACTIVITY_CELL_SIZE
 
-    for (let cell = MIN_ACTIVITY_CELL_SIZE; cell <= MAX_ACTIVITY_CELL_SIZE && activityWidthFor(cell) <= availableWidth - 1; cell += ACTIVITY_CELL_STEP) {
+    for (let cell = MIN_ACTIVITY_CELL_SIZE; cell <= MAX_ACTIVITY_CELL_SIZE && activityWidthFor(cell, monthBreaks) <= availableWidth - 1; cell += ACTIVITY_CELL_STEP) {
         best = cell
     }
 
     return best
 }
 
-const useFittedActivityCell = (enabled: boolean) => {
+const useFittedActivityCell = (enabled: boolean, monthBreaks: number) => {
     const ref = useRef<HTMLDivElement>(null)
     const [cellSize, setCellSize] = useState(MIN_ACTIVITY_CELL_SIZE)
 
@@ -174,14 +183,14 @@ const useFittedActivityCell = (enabled: boolean) => {
 
             const styles = window.getComputedStyle(activity)
             const horizontalPadding = Number.parseFloat(styles.paddingLeft) + Number.parseFloat(styles.paddingRight)
-            setCellSize(fitActivityCell(activity.clientWidth - horizontalPadding))
+            setCellSize(fitActivityCell(activity.clientWidth - horizontalPadding, monthBreaks))
         }
         measure()
 
         const observer = new ResizeObserver(measure)
         observer.observe(element)
         return () => observer.disconnect()
-    }, [enabled])
+    }, [enabled, monthBreaks])
 
     return [ref, cellSize] as const
 }
@@ -241,12 +250,88 @@ const toRepositories = (
 
     return [...repositories.values()]
         .sort((left, right) => right.count - left.count || left.name.localeCompare(right.name))
-        .slice(0, REPOSITORY_LIMIT)
+}
+
+const rankRepositories = (repositories: CachedRepository[]) => repositories
+    .sort((left, right) => right.count - left.count || left.name.localeCompare(right.name))
+    .slice(0, REPOSITORY_LIMIT)
+
+const fullNameOf = (repository: CachedRepository) => repository.href.replace('https://github.com/', '')
+
+// Real commits by `username` in the last year. With per_page=1 the "last" page number in the
+// Link header is the total, so this costs one small request per repository.
+const fetchYearCommitCount = async (
+    fullName: string,
+    username: string,
+    since: string,
+    signal: AbortSignal,
+): Promise<number> => {
+    const response = await fetch(
+        `https://api.github.com/repos/${fullName}/commits?author=${encodeURIComponent(username)}&since=${since}&per_page=1`,
+        { headers: { Accept: 'application/vnd.github+json' }, signal },
+    )
+    if (response.status === 409) return 0 // empty repository
+    if (!response.ok) throw new Error(`Commit count failed (${response.status})`)
+    const last = response.headers.get('Link')?.match(/[?&]page=(\d+)>;\s*rel="last"/)
+    if (last?.[1]) return Number(last[1])
+    const body = await response.json() as unknown
+    return Array.isArray(body) ? body.length : 0
+}
+
+// Returns null when any request fails (e.g. unauthenticated rate limit) so the caller can
+// fall back to the event-based counts instead of showing a partial, misleading ranking.
+const loadYearRepositories = async (
+    candidates: CachedRepository[],
+    username: string,
+    signal: AbortSignal,
+): Promise<CachedRepository[] | null> => {
+    if (!candidates.length) return []
+    const since = new Date(Date.now() - YEAR_MS).toISOString()
+    const counts: number[] = new Array(candidates.length).fill(0)
+    let next = 0
+    let failed = false
+    const worker = async () => {
+        while (!failed && next < candidates.length) {
+            const index = next++
+            const candidate = candidates[index]
+            if (!candidate) continue
+            try {
+                counts[index] = await fetchYearCommitCount(fullNameOf(candidate), username, since, signal)
+            } catch {
+                failed = true
+            }
+        }
+    }
+    await Promise.all(Array.from({ length: Math.min(COMMIT_COUNT_CONCURRENCY, candidates.length) }, worker))
+    if (failed || signal.aborted) return null
+    return rankRepositories(
+        candidates
+            .map((candidate, index) => ({ ...candidate, count: counts[index] ?? 0 }))
+            .filter((candidate) => candidate.count > 0),
+    )
+}
+
+const pickCandidates = (
+    all: CachedRepository[],
+    ownedRepositories: GitHubOwnedRepository[],
+): CachedRepository[] => {
+    const since = Date.now() - YEAR_MS
+    const ownedNames = new Set(ownedRepositories.map((repository) => `https://github.com/${repository.full_name}`))
+    const owned = ownedRepositories
+        .filter((repository) => !repository.fork && repository.pushed_at && Date.parse(repository.pushed_at) >= since)
+        .sort((left, right) => Date.parse(right.pushed_at ?? '') - Date.parse(left.pushed_at ?? ''))
+        .slice(0, MAX_OWNED_CANDIDATES)
+        .map((repository) => all.find((item) => item.href === `https://github.com/${repository.full_name}`))
+        .filter((item): item is CachedRepository => Boolean(item))
+    const fromEvents = all
+        .filter((item) => !ownedNames.has(item.href) && item.count > 0)
+        .slice(0, MAX_EVENT_CANDIDATES)
+    return [...owned, ...fromEvents]
 }
 
 const GithubCalendar = ({ username, className = '', colorSchema = 'green' }: GithubCalendarProps) => {
     const contributionCacheKey = `gh_contrib_${username}`
-    const repositoryCacheKey = `gh_activity_repos_v3_${username}`
+    const repositoryCacheKey = `gh_activity_repos_v5_${username}`
     const statsCacheKey = `gh_stats_${username}`
 
     const [data, setData] = useState<GithubContributionData | null>(() => getCachedData<GithubContributionData>(contributionCacheKey))
@@ -259,7 +344,11 @@ const GithubCalendar = ({ username, className = '', colorSchema = 'green' }: Git
     )
     const [isVisible, setIsVisible] = useState(false)
     const containerRef = useRef<HTMLDivElement>(null)
-    const [activityRef, cellSize] = useFittedActivityCell(!loading)
+    const monthBreaks = useMemo(
+        () => countMonthBreaks(normalizeContributions(data?.contributions ?? [])),
+        [data],
+    )
+    const [activityRef, cellSize] = useFittedActivityCell(!loading, monthBreaks)
 
     useEffect(() => {
         if (typeof IntersectionObserver === 'undefined') {
@@ -367,10 +456,22 @@ const GithubCalendar = ({ username, className = '', colorSchema = 'green' }: Git
             if (eventsResponse && ownedRepositories) {
                 try {
                     const events = await eventsResponse.json() as GitHubPushEvent[]
-                    const nextRepositories = toRepositories(events, ownedRepositories, username)
-                    setCachedData(repositoryCacheKey, nextRepositories)
-                    setRepositories(nextRepositories)
+                    // The profile README repo (<username>/<username>) isn't a project, so leave it out.
+                    const everyRepository = toRepositories(events, ownedRepositories, username)
+                        .filter((repository) => repository.name.toLowerCase() !== username.toLowerCase())
+                    // Show the quick event-based ranking first, then replace it with real yearly counts.
+                    const eventRanking = rankRepositories([...everyRepository])
+                    setRepositories(eventRanking)
                     setRepositoryLoadStatus('ready')
+                    const yearRanking = await loadYearRepositories(
+                        pickCandidates(everyRepository, ownedRepositories),
+                        username,
+                        controller.signal,
+                    )
+                    if (controller.signal.aborted) return
+                    const finalRanking = yearRanking && yearRanking.length ? yearRanking : eventRanking
+                    setCachedData(repositoryCacheKey, finalRanking)
+                    setRepositories(finalRanking)
                 } catch {
                     setRepositories([])
                     setRepositoryLoadStatus('failed')
@@ -458,7 +559,7 @@ const GithubCalendar = ({ username, className = '', colorSchema = 'green' }: Git
 
             <aside className="github-calendar-stats" aria-label={`GitHub statistics for ${username}`}>
                 {statItems.map((item) => (
-                    <div className={`github-calendar-stat github-calendar-stat--${item.tone}`} key={item.label}>
+                    <div className={`github-calendar-stat github-calendar-stat--${item.tone}`} key={item.label} onPointerEnter={(event) => { if (event.pointerType === 'mouse') playHover() }}>
                         <DotPattern className="github-calendar-stat-dot-pattern" width={14} height={14} cx={1.25} cy={1.25} cr={1.25} />
                         <div className="github-calendar-stat-content">
                             <span className="github-calendar-stat-label">{item.label}</span>

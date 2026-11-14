@@ -6,7 +6,7 @@ import { playWisp } from '../../../lib/sound'
 export const useActiveProject = (projectCount: number) => {
   const [activeProjectIndex, setActiveProjectIndex] = useState(0)
   // Set when the index changes because the pointer hovered a card, so it stays silent.
-  const silentIndexRef = useRef<number | null>(null)
+  const silentIndexRef = useRef<{ index: number; at: number } | null>(null)
   const currentIndexRef = useRef(0)
   // Stays false until a project card actually enters the viewport, so the sidebar
   // doesn't open its first item while the cards are still off-screen.
@@ -25,7 +25,8 @@ export const useActiveProject = (projectCount: number) => {
   useEffect(() => {
     const key = hasReachedProjects ? activeProjectIndex : null
     currentIndexRef.current = activeProjectIndex
-    const silent = silentIndexRef.current === key
+    const flag = silentIndexRef.current
+    const silent = flag !== null && flag.index === key && performance.now() - flag.at < 250
     silentIndexRef.current = null
     if (key !== null && key !== lastSoundKeyRef.current && !silent) playWisp(key)
     lastSoundKeyRef.current = key
@@ -38,6 +39,7 @@ export const useActiveProject = (projectCount: number) => {
   useEffect(() => {
     const handleProjectScroll = (index: number) => {
       if (typeof index !== 'number') return
+      silentIndexRef.current = null
       setActiveProjectIndex(index)
       setHasReachedProjects(true)
       isScrollingRef.current = true
@@ -68,7 +70,7 @@ export const useActiveProject = (projectCount: number) => {
         if (ref && ref.getBoundingClientRect().top <= line) nextIndex = index
       })
       setHasReachedProjects(nextIndex !== -1)
-      if (nextIndex !== -1) setActiveProjectIndex(nextIndex)
+      if (nextIndex !== -1) { silentIndexRef.current = null; setActiveProjectIndex(nextIndex) }
     }
     const schedule = () => {
       if (frame === null) frame = requestAnimationFrame(update)
@@ -85,6 +87,7 @@ export const useActiveProject = (projectCount: number) => {
   }, [projectCount])
 
   const scrollToProject = useCallback((index: number) => {
+    silentIndexRef.current = null
     setActiveProjectIndex(index)
     setHasReachedProjects(true)
     // Hold the active item while the programmatic scroll passes over other cards.
@@ -100,7 +103,7 @@ export const useActiveProject = (projectCount: number) => {
 
   // Hovering a card also moves the sidebar highlight, without a sound.
   const hoverProject = useCallback((index: number) => {
-    if (index !== currentIndexRef.current) silentIndexRef.current = index
+    if (index !== currentIndexRef.current) silentIndexRef.current = { index, at: performance.now() }
     setActiveProjectIndex(index)
   }, [])
 

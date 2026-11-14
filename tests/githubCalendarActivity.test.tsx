@@ -77,7 +77,7 @@ describe('GitHub activity card', () => {
         const fetchMock = vi.mocked(fetch)
         render(<GithubCalendar username="7sadakonr" colorSchema="purple" />)
 
-        await screen.findByRole('img', { name: '3 contributions in 2026' })
+        await screen.findByRole('img', { name: '3 contributions in the last year' })
 
         const requests = fetchMock.mock.calls.map(([input]) => String(input))
         expect(requests.filter((url) => url.includes('github-contributions-api.jogruber.de'))).toHaveLength(1)
@@ -131,7 +131,7 @@ describe('GitHub activity card', () => {
 
         render(<GithubCalendar username="7sadakonr" colorSchema="purple" />)
 
-        expect(await screen.findByRole('img', { name: '3 contributions in 2026' })).not.toBeNull()
+        expect(await screen.findByRole('img', { name: '3 contributions in the last year' })).not.toBeNull()
         expect(screen.queryByRole('button', { name: 'Show top repositories' })).toBeNull()
     })
 
@@ -160,7 +160,7 @@ describe('GitHub activity card', () => {
 
         render(<GithubCalendar username="7sadakonr" colorSchema="purple" />)
 
-        expect(await screen.findByRole('img', { name: '3 contributions in 2026' })).not.toBeNull()
+        expect(await screen.findByRole('img', { name: '3 contributions in the last year' })).not.toBeNull()
 
         resolveEvents?.({
             ok: true,
@@ -185,7 +185,7 @@ describe('GitHub activity card', () => {
 
         render(<GithubCalendar username="7sadakonr" colorSchema="purple" />)
 
-        await screen.findByRole('img', { name: '3 contributions in 2026' })
+        await screen.findByRole('img', { name: '3 contributions in the last year' })
 
         await waitFor(() => {
             expect(observed.some((element) => element.classList.contains('github-calendar-content-shell'))).toBe(true)
@@ -201,7 +201,14 @@ describe('GitHub activity card', () => {
         expect(screen.getByLabelText('Loading GitHub contributions')).not.toBeNull()
     })
 
-    it('shows only the top three repositories in the expanded activity panel', async () => {
+    it('shows the top five repositories with real commit counts for the last year', async () => {
+        const recent = new Date().toISOString()
+        const yearCounts: Record<string, number> = {
+            portfolio: 412, nyeta: 230, inventory: 87, blog: 40, tools: 12, other: 3,
+        }
+        const owned = Object.keys(yearCounts).map((name) => ({
+            full_name: `7sadakonr/${name}`, name, owner: { login: '7sadakonr' }, stargazers_count: 0, fork: false, pushed_at: recent,
+        }))
         vi.stubGlobal('fetch', vi.fn((input: string | URL | Request) => {
             const url = String(input)
 
@@ -209,40 +216,75 @@ describe('GitHub activity card', () => {
                 return Promise.resolve({ ok: true, json: async () => contributionResponse })
             }
 
-            if (url.endsWith('/events/public?per_page=100')) {
+            const commits = url.match(/\/repos\/7sadakonr\/([^/]+)\/commits\?/)
+            if (commits?.[1]) {
+                const count = yearCounts[commits[1]] ?? 0
                 return Promise.resolve({
                     ok: true,
-                    json: async () => [
-                        { type: 'PushEvent', repo: { name: '7sadakonr/portfolio' }, payload: { commits: [{}, {}, {}] } },
-                        { type: 'PushEvent', repo: { name: '7sadakonr/nyeta' }, payload: { commits: [{}, {}] } },
-                        { type: 'PushEvent', repo: { name: '7sadakonr/inventory' }, payload: { commits: [{}] } },
-                    ],
+                    status: 200,
+                    headers: { get: (name: string) => name === 'Link' ? `<https://api.github.com/x?per_page=1&page=2>; rel="next", <https://api.github.com/x?per_page=1&page=${count}>; rel="last"` : null },
+                    json: async () => [{}],
                 })
+            }
+
+            if (url.endsWith('/events/public?per_page=100')) {
+                return Promise.resolve({ ok: true, json: async () => [] })
             }
 
             if (url.endsWith('/repos?per_page=100&type=owner')) {
-                return Promise.resolve({
-                    ok: true,
-                    json: async () => [
-                        { full_name: '7sadakonr/portfolio', name: 'portfolio', owner: { login: '7sadakonr' }, stargazers_count: 0 },
-                        { full_name: '7sadakonr/nyeta', name: 'nyeta', owner: { login: '7sadakonr' }, stargazers_count: 0 },
-                        { full_name: '7sadakonr/inventory', name: 'inventory', owner: { login: '7sadakonr' }, stargazers_count: 0 },
-                        { full_name: '7sadakonr/other-project', name: 'other-project', owner: { login: '7sadakonr' }, stargazers_count: 0 },
-                    ],
-                })
+                return Promise.resolve({ ok: true, json: async () => owned })
             }
 
-            return Promise.resolve({ ok: true, json: async () => ({ followers: 4, public_repos: 4 }) })
+            return Promise.resolve({ ok: true, json: async () => ({ followers: 4, public_repos: 6 }) })
         }))
 
         render(<GithubCalendar username="7sadakonr" colorSchema="purple" />)
 
         fireEvent.click(await screen.findByRole('button', { name: 'Show top repositories' }))
 
-        expect(await screen.findByRole('link', { name: /portfolio/ })).not.toBeNull()
-        expect(await screen.findByRole('link', { name: /nyeta/ })).not.toBeNull()
-        expect(await screen.findByRole('link', { name: /inventory/ })).not.toBeNull()
-        expect(screen.queryByRole('link', { name: /other-project/ })).toBeNull()
+        expect(await screen.findByRole('link', { name: /portfolio.*412/ })).not.toBeNull()
+        expect(await screen.findByRole('link', { name: /nyeta.*230/ })).not.toBeNull()
+        expect(await screen.findByRole('link', { name: /inventory.*87/ })).not.toBeNull()
+        expect(await screen.findByRole('link', { name: /blog.*40/ })).not.toBeNull()
+        expect(await screen.findByRole('link', { name: /tools.*12/ })).not.toBeNull()
+        expect(screen.queryByRole('link', { name: /other/ })).toBeNull()
+    })
+
+    it('falls back to the recent-event counts when the commit count requests are rate limited', async () => {
+        const recent = new Date().toISOString()
+        vi.stubGlobal('fetch', vi.fn((input: string | URL | Request) => {
+            const url = String(input)
+
+            if (url.includes('github-contributions-api.jogruber.de')) {
+                return Promise.resolve({ ok: true, json: async () => contributionResponse })
+            }
+
+            if (url.includes('/commits?')) {
+                return Promise.resolve({ ok: false, status: 403, headers: { get: () => null }, json: async () => ({}) })
+            }
+
+            if (url.endsWith('/events/public?per_page=100')) {
+                return Promise.resolve({
+                    ok: true,
+                    json: async () => [{ type: 'PushEvent', repo: { name: '7sadakonr/portfolio' }, payload: { commits: [{}, {}, {}] } }],
+                })
+            }
+
+            if (url.endsWith('/repos?per_page=100&type=owner')) {
+                return Promise.resolve({
+                    ok: true,
+                    json: async () => [{ full_name: '7sadakonr/portfolio', name: 'portfolio', owner: { login: '7sadakonr' }, stargazers_count: 0, fork: false, pushed_at: recent }],
+                })
+            }
+
+            return Promise.resolve({ ok: true, json: async () => ({ followers: 4, public_repos: 1 }) })
+        }))
+
+        render(<GithubCalendar username="7sadakonr" colorSchema="purple" />)
+
+        fireEvent.click(await screen.findByRole('button', { name: 'Show top repositories' }))
+
+        expect(await screen.findByRole('link', { name: /portfolio.*3/ })).not.toBeNull()
     })
 
     it('exposes dedicated layout slots for the expanded contributions panel', async () => {
@@ -258,22 +300,20 @@ describe('GitHub activity card', () => {
     it('keeps the heatmap in a centered content region', async () => {
         render(<GithubCalendar username="7sadakonr" colorSchema="purple" />)
 
-        const graph = await screen.findByRole('img', { name: '3 contributions in 2026' })
+        const graph = await screen.findByRole('img', { name: '3 contributions in the last year' })
         const content = graph.closest('[data-slot="github-activity-content"]')
 
         expect(content).not.toBeNull()
         expect(content?.contains(graph)).toBe(true)
     })
 
-    it('links the GitHub profile identity on the left of the activity heading', async () => {
+    it('shows the contribution total without a GitHub profile identity block', async () => {
         render(<GithubCalendar username="7sadakonr" colorSchema="purple" />)
 
-        const profile = await screen.findByRole('link', { name: 'GitHub profile for 7sadakonr' })
-
-        expect(profile.getAttribute('href')).toBe('https://github.com/7sadakonr')
-        expect(screen.getByText('@7sadakonr')).not.toBeNull()
-        expect(screen.getByText('Contribution Graph')).not.toBeNull()
+        expect(await screen.findByText('CONTRIBUTIONS IN THE LAST YEAR')).not.toBeNull()
         expect(screen.getByText('3')).not.toBeNull()
-        expect(screen.getByText('THIS YEAR TOTAL')).not.toBeNull()
+        expect(screen.queryByRole('link', { name: 'GitHub profile for 7sadakonr' })).toBeNull()
+        expect(screen.queryByText('@7sadakonr')).toBeNull()
+        expect(screen.queryByText('Contribution Graph')).toBeNull()
     })
 })
