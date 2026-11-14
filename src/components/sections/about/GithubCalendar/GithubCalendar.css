@@ -163,51 +163,20 @@
   margin-bottom: 14px;
 }
 
-.github-calendar-activity [data-slot="github-activity-profile"] {
-  gap: 10px;
-  color: rgba(255, 255, 255, 0.88);
-}
 
-.github-calendar-activity [data-slot="github-activity-profile-mark"] {
-  display: grid;
-  width: 40px;
-  height: 40px;
-  flex: 0 0 auto;
-  place-items: center;
-  border-radius: 50%;
-  background: #202024;
-  color: #f4f4f5;
-}
 
-.github-calendar-activity [data-slot="github-activity-profile-copy"],
 .github-calendar-activity [data-slot="github-activity-total"] {
   display: flex;
   min-width: 0;
   flex-direction: column;
 }
 
-.github-calendar-activity [data-slot="github-activity-profile-copy"] > strong {
-  font-size: 15px;
-  font-weight: 600;
-  line-height: 1.2;
-}
 
-.github-calendar-activity [data-slot="github-activity-profile-copy"] > span {
-  margin-top: 3px;
-  color: rgba(255, 255, 255, 0.56);
-  font-size: 12px;
-  line-height: 1.2;
-}
 
-.github-calendar-activity [data-slot="github-activity-profile-mark"] > svg {
-  width: 22px;
-  height: 22px;
-  flex: 0 0 auto;
-}
 
 .github-calendar-activity [data-slot="github-activity-total"] {
-  align-items: flex-end;
-  text-align: right;
+  align-items: flex-start;
+  text-align: left;
 }
 
 .github-calendar-activity [data-slot="github-activity-total"] > strong {
@@ -218,10 +187,10 @@
 
 .github-calendar-activity [data-slot="github-activity-total"] > span {
   margin-top: 5px;
-  color: rgba(255, 255, 255, 0.56);
-  font-size: 10px;
-  font-weight: 700;
-  line-height: 1;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.2;
   letter-spacing: 0.04em;
 }
 
@@ -242,6 +211,14 @@
 .github-calendar-activity [data-slot="github-activity-panel-list"] {
   margin: 0;
   padding: 0 2px 4px;
+  max-height: min(240px, 46vh);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+}
+
+.github-calendar-activity [data-slot="github-activity-panel-list"]::-webkit-scrollbar {
+  display: none;
 }
 
 .github-calendar-activity [data-slot="github-activity-repo-row"] {
@@ -922,28 +899,10 @@
     line-height: 1.3;
   }
 
-  .github-calendar-activity [data-slot="github-activity-profile"] {
-    gap: 8px;
-  }
 
-  .github-calendar-activity [data-slot="github-activity-profile-mark"] {
-    width: 34px;
-    height: 34px;
-  }
 
-  .github-calendar-activity [data-slot="github-activity-profile-mark"] > svg {
-    width: 19px;
-    height: 19px;
-  }
 
-  .github-calendar-activity [data-slot="github-activity-profile-copy"] > strong {
-    font-size: 13px;
-  }
 
-  .github-calendar-activity [data-slot="github-activity-profile-copy"] > span {
-    margin-top: 2px;
-    font-size: 10px;
-  }
 
   .github-calendar-activity [data-slot="github-activity-total"] > strong {
     font-size: 17px;
