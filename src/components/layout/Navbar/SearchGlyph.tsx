@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react'
-import { motion, useReducedMotion } from 'motion/react'
+import { useEffect, type ReactNode } from 'react'
+import { motion, useAnimationControls, useIsPresent, useReducedMotion } from 'motion/react'
 
 // The search icon shown in the orb and in the command menu. Instead of travelling between
 // them it blurs and shrinks away where it is, then the one on the other side blurs/grows in.
@@ -8,11 +8,20 @@ const SHOWN = { opacity: 1, scale: 1, filter: 'blur(0px)' }
 
 export default function SearchGlyph({ children, delay = .12, instantExit = false }: { children: ReactNode; delay?: number; instantExit?: boolean }) {
   const reduceMotion = useReducedMotion()
+  const isPresent = useIsPresent()
+  const controls = useAnimationControls()
+  // AnimatePresence reuses this node when the orb re-enters mid-exit (e.g. closing the command
+  // menu quickly, or toggling it twice). `animate` is then unchanged so it never re-runs and the
+  // glyph stays stuck at the exit state (invisible). Re-run the enter animation on every re-entry.
+  useEffect(() => {
+    if (!isPresent || reduceMotion) return
+    void controls.start({ ...SHOWN, transition: { duration: .28, delay, ease: [.22, 1, .36, 1] } })
+  }, [isPresent, reduceMotion, controls, delay])
   if (reduceMotion) return <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: .1 }}>{children}</motion.span>
   return (
     <motion.span
       initial={HIDDEN}
-      animate={{ ...SHOWN, transition: { duration: .28, delay, ease: [.22, 1, .36, 1] } }}
+      animate={controls}
       exit={{ ...HIDDEN, transition: instantExit ? { duration: 0 } : { duration: .15, ease: [.4, 0, 1, 1] } }}
     >
       {children}

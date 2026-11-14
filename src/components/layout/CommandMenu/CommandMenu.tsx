@@ -5,6 +5,7 @@ import { acquireScrollLock } from '../SmoothScroll/scrollController'
 import { useSiteSettings } from '../../../features/siteSettings/hooks/useSiteSettings'
 import { contactDisplayText, visibleContactLinks } from '../../../features/siteSettings/validation/contactLinks'
 import type { ContactLink } from '../../../features/siteSettings/types'
+import { playHover, playTick } from '../../../lib/sound'
 import './CommandMenu.css'
 
 export interface CommandMenuItem { id: string; path: string; label: string; category: string; keywords: string; targetId?: string }
@@ -66,7 +67,7 @@ const CommandMenu: React.FC<CommandMenuProps> = ({ isOpen, onClose, menuItems, a
   const selectItem = useCallback((event: React.MouseEvent<HTMLAnchorElement> | { preventDefault: () => void }, item: CommandMenuEntry) => {
     event.preventDefault()
     if (isConnectItem(item)) {
-      
+      playTick()
       if (item.contact.url.startsWith('http')) window.open(item.contact.url, '_blank', 'noopener,noreferrer')
       else window.location.assign(item.contact.url)
       onClose()
@@ -81,8 +82,8 @@ const CommandMenu: React.FC<CommandMenuProps> = ({ isOpen, onClose, menuItems, a
     if (!isOpen) return
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') { event.preventDefault(); onClose() }
-      if (event.key === 'ArrowDown' && filteredItems.length) { event.preventDefault(); setSelectedIndex(index => (index + 1) % filteredItems.length) }
-      if (event.key === 'ArrowUp' && filteredItems.length) { event.preventDefault(); setSelectedIndex(index => (index - 1 + filteredItems.length) % filteredItems.length) }
+      if (event.key === 'ArrowDown' && filteredItems.length) { event.preventDefault(); playHover(); setSelectedIndex(index => (index + 1) % filteredItems.length) }
+      if (event.key === 'ArrowUp' && filteredItems.length) { event.preventDefault(); playHover(); setSelectedIndex(index => (index - 1 + filteredItems.length) % filteredItems.length) }
       if (event.key === 'Enter' && filteredItems[selectedIndex]) { event.preventDefault(); selectItem({ preventDefault: () => undefined }, filteredItems[selectedIndex]) }
     }
     window.addEventListener('keydown', onKeyDown)
@@ -93,7 +94,7 @@ const CommandMenu: React.FC<CommandMenuProps> = ({ isOpen, onClose, menuItems, a
     const index = filteredItems.findIndex(candidate => candidate.id === item.id)
     const selected = index === selectedIndex
     const className = `command-item${selected ? ' selected' : ''}${!isConnectItem(item) && activePath === item.path && item.category === 'Navigation' ? ' active-path' : ''}${isConnectItem(item) ? ' command-item--external' : ''}`
-    const pointerEnter = (event: React.PointerEvent<HTMLAnchorElement>) => event.pointerType === 'mouse' && setSelectedIndex(index)
+    const pointerEnter = (event: React.PointerEvent<HTMLAnchorElement>) => event.pointerType === 'mouse' && index !== selectedIndex && (playHover(), setSelectedIndex(index))
     if (isConnectItem(item)) return <li key={item.id}><a href={item.contact.url} className={className} onClick={event => selectItem(event, item)} onPointerEnter={pointerEnter}><CommandItemIcon item={item} /><span className="command-item-label">{item.label}</span><span className="command-item-external-icon"><ExternalLinkIcon /></span></a></li>
     return <li key={item.id}><NavLink to={item.path} className={className} onClick={event => selectItem(event, item)} onPointerEnter={pointerEnter}><CommandItemIcon item={item} /><span className="command-item-label">{displayLabel(item.label)}</span></NavLink></li>
   }

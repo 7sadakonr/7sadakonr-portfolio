@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState } from 'react'
 import { Liquid } from 'liquid-gooey'
 import { useSiteSettings } from '../../../features/siteSettings/hooks/useSiteSettings'
 import { trackEvent } from '../../../lib/analytics/trackEvent'
+import { playPopClose, playPopOpen } from '../../../lib/sound'
 import './ResumeDownloadMenu.css'
 
 type ResumeLanguage = 'th' | 'en'
@@ -14,6 +15,13 @@ const ResumeDownloadMenu = ({ variant }: ResumeDownloadMenuProps) => {
   const settings = useSiteSettings()
   const [isOpen, setIsOpen] = useState(false)
   const menuId = useId()
+  const wasOpenRef = useRef(false)
+  useEffect(() => {
+    if (isOpen === wasOpenRef.current) return
+    wasOpenRef.current = isOpen
+    if (isOpen) playPopOpen()
+    else playPopClose()
+  }, [isOpen])
   const rootRef = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
 
