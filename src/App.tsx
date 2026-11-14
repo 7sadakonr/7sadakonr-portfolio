@@ -18,6 +18,7 @@ import { Seo } from './components/layout/Seo/Seo'
 import { getSnapshotSiteSettings } from './features/content/contentSnapshot'
 import { scheduleBelowFoldHydration } from './components/layout/LazySection/sectionLoader'
 import { initAnalytics } from './lib/analytics/tracker'
+import { useClickSound } from './hooks/useClickSound'
 
 import './pages/LandingPageShell.css'
 
@@ -137,6 +138,7 @@ function PortfolioApp() {
 }
 
 function App() {
+  useClickSound()
   return (
     <Router>
       <Routes>

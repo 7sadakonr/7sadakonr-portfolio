@@ -4,6 +4,7 @@ import {
   sendContactEmail as deliverContactEmail,
   type EmailJsConfig,
 } from '../services/emailService'
+import { playError, playSuccess } from '../../../lib/sound'
 
 type ContactFormDependencies = {
   config?: EmailJsConfig | null
@@ -36,12 +37,14 @@ export const useContactForm = ({
     if (!config || !currentForm) {
       console.error('EmailJS environment variables missing')
       setIsSubmitting(false)
+      playError()
       setSubmitStatus('error')
       return
     }
 
     try {
       await sendEmail(currentForm, config)
+      playSuccess()
       setSubmitStatus('success')
       setIsSubmitting(false)
       currentForm.reset()
@@ -51,6 +54,7 @@ export const useContactForm = ({
       }, 5000)
     } catch (error) {
       console.error('FAILED...', error)
+      playError()
       setSubmitStatus('error')
       setIsSubmitting(false)
     }

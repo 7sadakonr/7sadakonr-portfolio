@@ -1,9 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { scrollToTarget } from '../../../components/layout/SmoothScroll/scrollController'
 import { subscribeToProjectTargets } from '../../navigation/navigationEvents'
+import { playWisp } from '../../../lib/sound'
 
 export const useActiveProject = (projectCount: number) => {
   const [activeProjectIndex, setActiveProjectIndex] = useState(0)
+  // Set when the index changes because the pointer hovered a card, so it stays silent.
+  const silentIndexRef = useRef<number | null>(null)
+  const currentIndexRef = useRef(0)
   // Stays false until a project card actually enters the viewport, so the sidebar
   // doesn't open its first item while the cards are still off-screen.
   const [hasReachedProjects, setHasReachedProjects] = useState(false)
@@ -14,6 +18,18 @@ export const useActiveProject = (projectCount: number) => {
   const setProjectRef = useCallback((index: number) => (element: HTMLDivElement | null) => {
     projectRefs.current[index] = element
   }, [])
+
+  // Wisp every time a project item opens: when the sidebar first appears and on each
+  // active-project change while scrolling. Silent when it closes.
+  const lastSoundKeyRef = useRef<number | null>(null)
+  useEffect(() => {
+    const key = hasReachedProjects ? activeProjectIndex : null
+    currentIndexRef.current = activeProjectIndex
+    const silent = silentIndexRef.current === key
+    silentIndexRef.current = null
+    if (key !== null && key !== lastSoundKeyRef.current && !silent) playWisp(key)
+    lastSoundKeyRef.current = key
+  }, [hasReachedProjects, activeProjectIndex])
 
   useEffect(() => {
     setActiveProjectIndex((index) => Math.max(0, Math.min(index, Math.max(projectCount - 1, 0))))
@@ -82,5 +98,11 @@ export const useActiveProject = (projectCount: number) => {
     if (element) scrollToTarget(element, { offset: -window.innerHeight / 4 })
   }, [])
 
-  return { hasReachedProjects, activeProjectIndex, setActiveProjectIndex, setProjectRef, scrollToProject }
+  // Hovering a card also moves the sidebar highlight, without a sound.
+  const hoverProject = useCallback((index: number) => {
+    if (index !== currentIndexRef.current) silentIndexRef.current = index
+    setActiveProjectIndex(index)
+  }, [])
+
+  return { hasReachedProjects, activeProjectIndex, setActiveProjectIndex: hoverProject, setProjectRef, scrollToProject }
 }
