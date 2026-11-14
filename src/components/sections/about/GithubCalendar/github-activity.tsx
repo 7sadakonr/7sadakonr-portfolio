@@ -34,9 +34,6 @@ const DEFAULT_MONTHS = 12;
 const WEEKS_PER_MONTH = 365.25 / 12 / 7;
 const STACK_LIMIT = 3;
 const MIN_CARD_WIDTH = 320;
-const MIN_LABEL_WEEKS = 2;
-// runs shorter than this get the compact "Nov '25" label so it fits
-const FULL_LABEL_WEEKS = 4;
 // the p-4 on the card, both sides; the width math below has to add it back
 const CARD_PADDING = 32;
 
@@ -84,22 +81,30 @@ const MONTH_NAMES = [
   "Dec",
 ];
 
-function toMonthLabels(weeks: Contribution[][]) {
+// ~12px label font: rough width of a glyph, used to keep labels from running into the next one
+const LABEL_CHAR_WIDTH = 6.8;
+const LABEL_SIDE_GAP = 4;
+
+/**
+ * One label per month run. Each label picks the longest form ("Nov 2025", "Nov '25", "Nov")
+ * that fits in the width its run actually has on screen, so labels never overlap, even with
+ * small cells on a phone. `cellSize`/`gap`/`monthGap` are the rendered pixel sizes.
+ */
+function toMonthLabels(weeks: Contribution[][], cellSize: number, gap: number, monthGap: number) {
   const labels: (string | null)[] = weeks.map(() => null);
   const monthAt = (index: number) => weeks[index]?.[0]?.date.slice(5, 7);
 
   let start = 0;
   for (let i = 1; i <= weeks.length; i++) {
     if (i < weeks.length && monthAt(i) === monthAt(start)) continue;
-    // a shorter run is narrower than the label itself, so it would sit under the next month
-    if (i - start >= MIN_LABEL_WEEKS) {
-      const name = MONTH_NAMES[Number(monthAt(start)) - 1];
+    const name = MONTH_NAMES[Number(monthAt(start)) - 1];
+    if (name) {
       const year = weeks[start]?.[0]?.date.slice(0, 4) ?? "";
-      labels[start] = name
-        ? i - start >= FULL_LABEL_WEEKS
-          ? `${name} ${year}`
-          : `${name} '${year.slice(2)}`
-        : null;
+      // the run's own width, plus the extra month gap that follows it (unless it is the last run)
+      const room =
+        (i - start) * (cellSize + gap) - gap + (i < weeks.length ? monthGap : 0) - LABEL_SIDE_GAP;
+      const forms = [`${name} ${year}`, `${name} '${year.slice(2)}`, name];
+      labels[start] = forms.find((form) => form.length * LABEL_CHAR_WIDTH <= room) ?? null;
     }
     start = i;
   }
@@ -373,18 +378,14 @@ const ContributionGrid = ({
           animate={{ opacity: 1, filter: "blur(0px)" }}
           transition={{ ...LABEL_REVEAL, delay: reduceMotion ? 0 : sweepEnd }}
         >
-          {toMonthLabels(visible).map((month, index) => (
+          {toMonthLabels(visible, cellSize, gap, monthGap).map((month, index) => (
             <div
               key={index}
               className="relative h-4 shrink-0"
               style={{ width: cellSize, marginLeft: breakMargin(index) }}
             >
               {month && (
-                <span
-                  className="absolute left-0 top-0 whitespace-nowrap text-xs font-medium leading-none text-foreground/60"
-                  // A label near the right end would spill past the grid; slide it back so the newest month stays fully visible.
-                  style={{ marginLeft: -Math.max(0, month.length * 6.6 + 2 - ((visible.length - index) * (cellSize + gap) - gap)) }}
-                >
+                <span className="absolute left-0 top-0 whitespace-nowrap text-xs font-medium leading-none text-foreground/60">
                   {month}
                 </span>
               )}
