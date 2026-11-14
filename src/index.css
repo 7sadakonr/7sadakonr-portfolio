@@ -190,6 +190,11 @@ body {
   overscroll-behavior-y: none;
 }
 
+/* Keep scrollbar space reserved so locking scroll (overflow: hidden) doesn't shift layout */
+html {
+  scrollbar-gutter: stable;
+}
+
 /* Prevent horizontal scrolling on mobile */
 html,
 body {
