@@ -44,7 +44,7 @@ html { scrollbar-gutter: stable; }
 .island-backdrop { position: fixed; z-index: 3000; inset: 0; border: 0; background: rgba(0, 0, 0, .1); cursor: default; }
 .command-pill-button { display: flex; align-items: center; gap: 10px; width: 180px; min-height: 45px; padding: 0 15px; border: 0; background: transparent; color: rgba(255, 255, 255, .86); font: inherit; cursor: pointer; text-align: left; }
 .pill-text { width: 72px; font-size: 15px; font-weight: 500; letter-spacing: .03em; white-space: nowrap; }
-.pill-shortcut { margin-left: auto; color: rgba(255, 255, 255, .58); font-size: 12px; font-weight: 600; }
+.pill-progress { margin-left: auto; min-width: 34px; color: rgba(255, 255, 255, .58); font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; }
 .nav-item:focus-visible, .desktop-command-btn:focus-visible, .command-pill-button:focus-visible, .island-search-preview-close:focus-visible { outline: 2px solid rgba(255, 255, 255, .8); outline-offset: 3px; }
 @media (max-width: 1024px) { .dynamic-island-sizer--navigation { min-width: 180px; min-height: 45px; } .dynamic-island-sizer--search, .dynamic-island-sizer--command { width: min(430px, calc(100vw - 24px)); } .dynamic-island-sizer--search { min-height: 50px; } .navbar--expanded { align-items: flex-start; } }
 @media (prefers-reduced-motion: reduce) { .nav-item, .nav-links > .nav-pill, .desktop-command-btn, .navbar--desktop { transition: none !important; } }

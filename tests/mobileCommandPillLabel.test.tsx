@@ -33,6 +33,9 @@ describe('mobile command pill', () => {
 
     const trigger = await screen.findByRole('button', { name: 'Open command menu' })
     expect(trigger.textContent).toContain('Home')
+    expect(trigger.textContent).toMatch(/\d+%/)
+    expect(trigger.textContent).not.toMatch(/⌘|Ctrl/)
+    expect(trigger.querySelector('.pill-progress-track')).toBeNull()
 
     fireEvent.click(trigger)
 
