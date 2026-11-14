@@ -422,6 +422,27 @@ const GithubCalendar = ({ username, className = '', colorSchema = 'green' }: Git
 
         const controller = new AbortController()
         const loadRepositoryData = async () => {
+            // Preferred: our own cached, token-backed endpoint (no GitHub rate limit for visitors).
+            if (!cachedRepositories || !cachedStats) {
+                try {
+                    const response = await fetch(`/api/github-activity?username=${encodeURIComponent(username)}`, { signal: controller.signal })
+                    if (response.ok) {
+                        const payload = await response.json() as { repositories?: CachedRepository[]; stats?: GithubStats }
+                        if (Array.isArray(payload.repositories) && payload.stats && typeof payload.stats.followers === 'number') {
+                            if (controller.signal.aborted) return
+                            setCachedData(repositoryCacheKey, payload.repositories)
+                            setCachedData(statsCacheKey, payload.stats)
+                            setRepositories(payload.repositories)
+                            setStats(payload.stats)
+                            setRepositoryLoadStatus('ready')
+                            return
+                        }
+                    }
+                } catch {
+                    if (controller.signal.aborted) return
+                }
+            }
+
             const headers = { Accept: 'application/vnd.github+json' }
             const needsRepositories = !cachedRepositories
             const needsStats = !cachedStats
