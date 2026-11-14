@@ -6,7 +6,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 // Without GITHUB_TOKEN it answers 503 and the client falls back to the public API.
 
 const DEFAULT_USERNAME = '7sadakonr'
-const REPOSITORY_LIMIT = 5
+const REPOSITORY_LIMIT = 3
 
 const QUERY = `
 query($login: String!) {
