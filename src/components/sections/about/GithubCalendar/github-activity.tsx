@@ -40,7 +40,8 @@ const FULL_LABEL_WEEKS = 4;
 // the p-4 on the card, both sides; the width math below has to add it back
 const CARD_PADDING = 32;
 
-const gapFor = (cellSize: number) => Math.max(2, Math.round(cellSize / 4));
+// Not rounded: a stepped gap made the fitted row jump by tens of px and left it off-centre.
+const gapFor = (cellSize: number) => Math.max(2, cellSize / 4);
 // extra breathing room before the first week of each month, so months read as separate blocks
 export const monthGapFor = (gap: number) => gap * 3;
 const weekMonth = (week?: Contribution[]) => week?.[0]?.date.slice(5, 7);
@@ -58,7 +59,12 @@ const SPRING = { type: "spring", bounce: 0.2, duration: 0.62 } as const;
 const HEADER_SPRING = { ...SPRING, bounce: 0.45 } as const;
 const ROW_SPRING = { ...SPRING, bounce: 0.26, delay: 0.08 } as const;
 const ROW_OFFSET = 16;
+const CELL_FADE = { duration: 0.2, ease: EASE_OUT } as const;
 const TOOLTIP_FADE = { duration: 0.14, ease: EASE_OUT } as const;
+// load sweep: each week column pops in a beat after the previous one, then the month labels reveal
+const COLUMN_STAGGER = 0.012;
+const LABEL_BLUR = 6;
+const LABEL_REVEAL = { duration: 0.45, ease: EASE_OUT } as const;
 const TOOLTIP_EDGE = 8;
 
 const LEVELS = [0, 1, 2, 3, 4] as const;
@@ -321,11 +327,23 @@ const ContributionGrid = ({
   const breakMargin = (index: number) =>
     startsMonth(weeks, visibleOffset + index) && index > 0 ? monthGap : 0;
 
-  // Start scrolled to the latest weeks; older months are a swipe to the left.
+  // Start scrolled to the latest weeks (older months are a swipe to the left), and keep
+  // them pinned there while the layout settles, until the reader scrolls it themselves.
+  const touchedRef = React.useRef(false);
   useIsoLayoutEffect(() => {
     const el = scrollRef.current;
-    if (el) el.scrollLeft = el.scrollWidth;
+    if (!el) return;
+    const pin = () => {
+      if (!touchedRef.current) el.scrollLeft = el.scrollWidth;
+    };
+    pin();
+    const observer = new ResizeObserver(pin);
+    observer.observe(el);
+    if (el.firstElementChild) observer.observe(el.firstElementChild);
+    return () => observer.disconnect();
   }, [visible.length, cellSize]);
+
+  const sweepEnd = (visible.length - 1) * COLUMN_STAGGER + CELL_FADE.duration;
 
   const hover = (day: Contribution) => (event: React.PointerEvent) => {
     if (event.pointerType === 'mouse') playHover();
@@ -342,13 +360,18 @@ const ContributionGrid = ({
     >
       <div
         ref={scrollRef}
-        className="overflow-x-auto overscroll-x-contain px-1 py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        onPointerDown={() => { touchedRef.current = true; }}
+        onWheel={() => { touchedRef.current = true; }}
+        className="-mx-1 overflow-x-auto overscroll-x-contain px-1 py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
       <div className="mx-auto w-max">
       {showMonths && (
-        <div
+        <motion.div
           className="flex"
           style={{ gap, marginBottom: gap + 2 }}
+          initial={reduceMotion ? false : { opacity: 0, filter: `blur(${LABEL_BLUR}px)` }}
+          animate={{ opacity: 1, filter: "blur(0px)" }}
+          transition={{ ...LABEL_REVEAL, delay: reduceMotion ? 0 : sweepEnd }}
         >
           {toMonthLabels(visible).map((month, index) => (
             <div
@@ -357,33 +380,37 @@ const ContributionGrid = ({
               style={{ width: cellSize, marginLeft: breakMargin(index) }}
             >
               {month && (
-                <span className="absolute left-0 top-0 whitespace-nowrap text-xs font-medium leading-none text-foreground/60">
+                <span
+                  className="absolute left-0 top-0 whitespace-nowrap text-xs font-medium leading-none text-foreground/60"
+                  // A label near the right end would spill past the grid; slide it back so the newest month stays fully visible.
+                  style={{ marginLeft: -Math.max(0, month.length * 6.6 + 2 - ((visible.length - index) * (cellSize + gap) - gap)) }}
+                >
                   {month}
                 </span>
               )}
             </div>
           ))}
-        </div>
+        </motion.div>
       )}
 
-      <motion.div
+      <div
         className="flex"
         style={{ gap }}
         onPointerLeave={() => setHovered(undefined)}
-        initial={reduceMotion ? false : { opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={reduceMotion ? { duration: 0 } : { duration: 0.18, ease: EASE_OUT }}
       >
         {visible.map((week, weekIndex) => (
           <div key={weekIndex} className="flex flex-col" style={{ gap, marginLeft: breakMargin(weekIndex) }}>
             {week.map((day) => {
               const isHovered = hovered?.day.date === day.date;
               return (
-                <div
+                <motion.div
                   key={day.date}
                   onPointerEnter={hover(day)}
                   className={`shrink-0 rounded-[3px] bg-foreground/[0.08]${isHovered ? " relative z-10" : ""}`}
                   style={{ width: cellSize, height: cellSize }}
+                  initial={reduceMotion ? false : { opacity: 0, scale: 0.4 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ ...CELL_FADE, delay: reduceMotion ? 0 : weekIndex * COLUMN_STAGGER }}
                 >
                   <div
                     className="h-full w-full rounded-[3px]"
@@ -395,12 +422,12 @@ const ContributionGrid = ({
                       transition: reduceMotion ? undefined : "transform 140ms cubic-bezier(.22,1,.36,1), border-radius 140ms cubic-bezier(.22,1,.36,1)",
                     }}
                   />
-                </div>
+                </motion.div>
               );
             })}
           </div>
         ))}
-      </motion.div>
+      </div>
       </div>
       </div>
 
@@ -508,6 +535,12 @@ const Chevron = ({
   </motion.svg>
 );
 
+const GitHubMark = () => (
+  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+    <path d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.7c-2.78.6-3.37-1.18-3.37-1.18-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.61.07-.61 1 .07 1.54 1.04 1.54 1.04.9 1.54 2.35 1.1 2.92.84.09-.65.35-1.1.64-1.35-2.22-.25-4.56-1.11-4.56-4.95 0-1.1.39-2 1.03-2.7-.1-.26-.45-1.28.1-2.67 0 0 .84-.27 2.75 1.03A9.6 9.6 0 0 1 12 6.4c.85 0 1.7.11 2.5.34 1.91-1.3 2.75-1.03 2.75-1.03.55 1.39.2 2.41.1 2.67.64.7 1.03 1.6 1.03 2.7 0 3.85-2.34 4.69-4.57 4.94.36.31.68.9.68 1.81v2.68c0 .26.18.57.69.48A10 10 0 0 0 12 2Z" />
+  </svg>
+);
+
 export type GitHubActivityProps = React.ComponentProps<"div"> & {
   username?: string;
   contributions?: Contribution[];
@@ -582,6 +615,7 @@ const GitHubActivity = ({
     [contributions],
   );
 
+  const profileHref = username ? `https://github.com/${username}` : undefined;
   const heading = `${total} contributions in the last ${months === 12 ? "year" : `${months} months`}`;
   const displayTotal = total.toLocaleString();
 
@@ -609,6 +643,22 @@ const GitHubActivity = ({
       {...props}
     >
       <div data-slot="github-activity-summary" className="mb-3 flex items-center justify-between gap-3">
+        {profileHref && (
+          <a
+            href={profileHref}
+            target="_blank"
+            rel="noreferrer"
+            aria-label={`GitHub profile for ${username}`}
+            data-slot="github-activity-profile"
+            className="inline-flex min-w-0 items-center transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/70"
+          >
+            <span data-slot="github-activity-profile-mark"><GitHubMark /></span>
+            <span data-slot="github-activity-profile-copy">
+              <strong>@{username}</strong>
+              <span>Contribution Graph</span>
+            </span>
+          </a>
+        )}
         <div data-slot="github-activity-total" aria-label={heading}>
           <strong>{displayTotal}</strong>
           <span>{months === 12 ? "CONTRIBUTIONS IN THE LAST YEAR" : `CONTRIBUTIONS IN THE LAST ${months} MONTHS`}</span>

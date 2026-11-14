@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import GitHubActivity, {
     countMonthBreaks,
     monthGapFor,
@@ -64,7 +64,7 @@ type GitHubOwnedRepository = {
 }
 
 const CACHE_TTL_MS = 30 * 60 * 1000
-const REPOSITORY_LIMIT = 5
+const REPOSITORY_LIMIT = 3
 const YEAR_MS = 365 * 24 * 60 * 60 * 1000
 const MAX_OWNED_CANDIDATES = 20
 const MAX_EVENT_CANDIDATES = 5
@@ -148,9 +148,9 @@ const setCachedData = <T,>(key: string, data: T): void => {
 const ACTIVITY_WEEKS = 53
 const MIN_ACTIVITY_CELL_SIZE = 11
 const MAX_ACTIVITY_CELL_SIZE = 64
-const ACTIVITY_CELL_STEP = 0.25
+const ACTIVITY_CELL_STEP = 0.05
 
-const activityCellGap = (cellSize: number) => Math.max(2, Math.round(cellSize / 4))
+const activityCellGap = (cellSize: number) => Math.max(2, cellSize / 4)
 
 const activityWidthFor = (cellSize: number, monthBreaks: number) => {
     const gap = activityCellGap(cellSize)
@@ -191,6 +191,18 @@ const useFittedActivityCell = (enabled: boolean, monthBreaks: number) => {
         observer.observe(element)
         return () => observer.disconnect()
     }, [enabled, monthBreaks])
+
+    // The width maths above is a prediction. If the rendered row still overflows its box
+    // (rounding, fonts, padding tweaks), nudge the cell size down until it truly fits, so the
+    // newest and oldest months are never clipped on desktop. Narrow screens stop at the
+    // minimum size and scroll sideways instead.
+    useLayoutEffect(() => {
+        if (!enabled || cellSize <= MIN_ACTIVITY_CELL_SIZE) return
+        const scroller = ref.current?.querySelector<HTMLElement>('[data-slot="github-activity-grid"] > div')
+        if (scroller && scroller.scrollWidth > scroller.clientWidth + 1) {
+            setCellSize((current) => Math.max(MIN_ACTIVITY_CELL_SIZE, current - 0.1))
+        }
+    }, [enabled, cellSize, monthBreaks])
 
     return [ref, cellSize] as const
 }
@@ -331,7 +343,7 @@ const pickCandidates = (
 
 const GithubCalendar = ({ username, className = '', colorSchema = 'green' }: GithubCalendarProps) => {
     const contributionCacheKey = `gh_contrib_${username}`
-    const repositoryCacheKey = `gh_activity_repos_v5_${username}`
+    const repositoryCacheKey = `gh_activity_repos_v6_${username}`
     const statsCacheKey = `gh_stats_${username}`
 
     const [data, setData] = useState<GithubContributionData | null>(() => getCachedData<GithubContributionData>(contributionCacheKey))
@@ -527,7 +539,8 @@ const GithubCalendar = ({ username, className = '', colorSchema = 'green' }: Git
         [data],
     )
     const activityRepositories = useMemo<RepoContribution[]>(
-        () => repositories.map((repository) => ({
+        // Cached or server-provided lists can be longer than the limit; always cap what is shown.
+        () => repositories.slice(0, REPOSITORY_LIMIT).map((repository) => ({
             name: repository.name,
             count: repository.count,
             href: repository.href,
