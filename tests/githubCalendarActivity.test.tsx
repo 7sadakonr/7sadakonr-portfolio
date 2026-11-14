@@ -250,6 +250,36 @@ describe('GitHub activity card', () => {
         expect(screen.queryByRole('link', { name: /other/ })).toBeNull()
     })
 
+    it('uses the server endpoint for repositories and stats and skips the GitHub API', async () => {
+        const fetchMock = vi.fn((input: string | URL | Request) => {
+            const url = String(input)
+
+            if (url.includes('github-contributions-api.jogruber.de')) {
+                return Promise.resolve({ ok: true, json: async () => contributionResponse })
+            }
+
+            if (url.startsWith('/api/github-activity')) {
+                return Promise.resolve({
+                    ok: true,
+                    json: async () => ({
+                        repositories: [{ name: 'portfolio', count: 308, href: 'https://github.com/7sadakonr/portfolio' }],
+                        stats: { followers: 4, repositories: 9, stars: 2 },
+                    }),
+                })
+            }
+
+            return Promise.reject(new Error(`unexpected request ${url}`))
+        })
+        vi.stubGlobal('fetch', fetchMock)
+
+        render(<GithubCalendar username="7sadakonr" colorSchema="purple" />)
+
+        fireEvent.click(await screen.findByRole('button', { name: 'Show top repositories' }))
+
+        expect(await screen.findByRole('link', { name: /portfolio.*308/ })).not.toBeNull()
+        expect(fetchMock.mock.calls.some(([input]) => String(input).includes('api.github.com'))).toBe(false)
+    })
+
     it('falls back to the recent-event counts when the commit count requests are rate limited', async () => {
         const recent = new Date().toISOString()
         vi.stubGlobal('fetch', vi.fn((input: string | URL | Request) => {
