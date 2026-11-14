@@ -146,14 +146,45 @@
   bottom: var(--github-activity-panel-inset) !important;
   border: 1px solid rgba(255, 255, 255, 0.045);
   border-radius: var(--github-activity-panel-radius) !important;
-  /* Rare UI: bg-card/90 + backdrop-blur-xl, so the heatmap behind the panel shows through blurred. */
-  background: rgba(32, 32, 36, 0.58) !important;
-  -webkit-backdrop-filter: blur(40px) saturate(1.2);
-  backdrop-filter: blur(40px) saturate(1.2);
+  /* The frosted glass lives on ::before (below), not on this node: the panel is moved and
+     resized by motion's layout animation, and backdrop-filter on a node that is being
+     transformed can drop out until the animation settles. */
+  background: transparent !important;
+  isolation: isolate;
+}
+
+.github-calendar-activity [data-slot="github-activity-panel"]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+  /* Matches Rare UI's bg-card/90 + backdrop-blur-xl: mostly solid, with a soft blur behind. */
+  background: rgba(32, 32, 36, 0.9);
+  -webkit-backdrop-filter: blur(24px);
+  backdrop-filter: blur(24px);
 }
 
 .github-calendar-activity [data-slot="github-activity-panel"][data-state="open"] {
   inset: var(--github-activity-panel-inset) !important;
+  /* The panel is as tall as the card but only holds a header and a few rows: centre that
+     group vertically so the space above and below it is even. */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+}
+
+/* While the panel is open the GitHub mark and the total would peek out around its edges,
+   so fade them away and bring them back when it closes. */
+.github-calendar-activity [data-slot="github-activity-summary"] {
+  transition: opacity 0.2s ease;
+}
+
+.github-calendar-activity:has([data-slot="github-activity-panel"][data-state="open"]) [data-slot="github-activity-summary"] {
+  opacity: 0;
+  pointer-events: none;
 }
 
 .github-calendar-activity [data-slot="github-activity-heading"] {
@@ -169,6 +200,7 @@
 
 .github-calendar-activity [data-slot="github-activity-profile"] {
   gap: 10px;
+  padding-left: 3px;
   color: rgba(255, 255, 255, 0.88);
 }
 
@@ -212,7 +244,7 @@
 .github-calendar-activity [data-slot="github-activity-total"] {
   align-items: flex-end;
   text-align: right;
-  padding-right: 2px;
+  padding-right: 4px;
 }
 
 .github-calendar-activity [data-slot="github-activity-total"] > strong {
@@ -245,14 +277,22 @@
 }
 
 /* Label and repo names were text-sm (14px), which looked small next to the avatars and chevron. */
+/* Collapsed the label stays compact; it eases up to the larger size as the panel opens. */
 .github-calendar-activity [data-slot="github-activity-panel-header"] > span {
-  font-size: 16px;
-  font-weight: 500;
+  font-size: 14px;
+  font-weight: 400;
   line-height: 1.25;
+  /* Soft off-white rather than pure white, regular weight. */
+  color: rgba(255, 255, 255, 0.88);
+  transition: font-size 0.38s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.github-calendar-activity [data-slot="github-activity-panel"][data-state="open"] [data-slot="github-activity-panel-header"] > span {
+  font-size: 17px;
 }
 
 .github-calendar-activity [data-slot="github-activity-repo-row"] > span {
-  font-size: 15px;
+  font-size: 16px;
 }
 
 .github-calendar-activity [data-slot="github-activity-panel-list"] {
@@ -271,10 +311,10 @@
 .github-calendar-activity [data-slot="github-activity-repo-row"] {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   min-width: 0;
   margin: 0 8px;
-  padding: 8px;
+  padding: 11px 8px;
   border-radius: 12px;
 }
 
@@ -909,8 +949,20 @@
 }
 
 @media (max-width: 600px) {
-  .github-calendar-activity [data-slot="github-activity-panel-header"] > span {
+  .github-calendar-activity [data-slot="github-activity-repo-row"] {
+    padding: 9px 8px;
+  }
+
+  .github-calendar-activity [data-slot="github-activity-repo-row"] > span {
     font-size: 14px;
+  }
+
+  .github-calendar-activity [data-slot="github-activity-panel-header"] > span {
+    font-size: 13px;
+  }
+
+  .github-calendar-activity [data-slot="github-activity-panel"][data-state="open"] [data-slot="github-activity-panel-header"] > span {
+    font-size: 15px;
   }
 
   .github-calendar {
