@@ -201,7 +201,7 @@ describe('GitHub activity card', () => {
         expect(screen.getByLabelText('Loading GitHub contributions')).not.toBeNull()
     })
 
-    it('shows the top five repositories with real commit counts for the last year', async () => {
+    it('shows the top three repositories with real commit counts for the last year', async () => {
         const recent = new Date().toISOString()
         const yearCounts: Record<string, number> = {
             portfolio: 412, nyeta: 230, inventory: 87, blog: 40, tools: 12, other: 3,
@@ -245,8 +245,8 @@ describe('GitHub activity card', () => {
         expect(await screen.findByRole('link', { name: /portfolio.*412/ })).not.toBeNull()
         expect(await screen.findByRole('link', { name: /nyeta.*230/ })).not.toBeNull()
         expect(await screen.findByRole('link', { name: /inventory.*87/ })).not.toBeNull()
-        expect(await screen.findByRole('link', { name: /blog.*40/ })).not.toBeNull()
-        expect(await screen.findByRole('link', { name: /tools.*12/ })).not.toBeNull()
+        expect(screen.queryByRole('link', { name: /blog/ })).toBeNull()
+        expect(screen.queryByRole('link', { name: /tools/ })).toBeNull()
         expect(screen.queryByRole('link', { name: /other/ })).toBeNull()
     })
 
@@ -278,6 +278,38 @@ describe('GitHub activity card', () => {
 
         expect(await screen.findByRole('link', { name: /portfolio.*308/ })).not.toBeNull()
         expect(fetchMock.mock.calls.some(([input]) => String(input).includes('api.github.com'))).toBe(false)
+    })
+
+    it('caps a longer repository list from the server endpoint at three', async () => {
+        vi.stubGlobal('fetch', vi.fn((input: string | URL | Request) => {
+            const url = String(input)
+
+            if (url.includes('github-contributions-api.jogruber.de')) {
+                return Promise.resolve({ ok: true, json: async () => contributionResponse })
+            }
+
+            if (url.startsWith('/api/github-activity')) {
+                return Promise.resolve({
+                    ok: true,
+                    json: async () => ({
+                        repositories: ['one', 'two', 'three', 'four', 'five'].map((name, index) => ({
+                            name, count: 500 - index * 10, href: `https://github.com/7sadakonr/${name}`,
+                        })),
+                        stats: { followers: 4, repositories: 9, stars: 2 },
+                    }),
+                })
+            }
+
+            return Promise.reject(new Error(`unexpected request ${url}`))
+        }))
+
+        render(<GithubCalendar username="7sadakonr" colorSchema="purple" />)
+
+        fireEvent.click(await screen.findByRole('button', { name: 'Show top repositories' }))
+
+        expect(await screen.findByRole('link', { name: /three/ })).not.toBeNull()
+        expect(screen.queryByRole('link', { name: /four/ })).toBeNull()
+        expect(screen.queryByRole('link', { name: /five/ })).toBeNull()
     })
 
     it('falls back to the recent-event counts when the commit count requests are rate limited', async () => {
@@ -337,13 +369,15 @@ describe('GitHub activity card', () => {
         expect(content?.contains(graph)).toBe(true)
     })
 
-    it('shows the contribution total without a GitHub profile identity block', async () => {
+    it('links the GitHub profile identity on the left of the activity heading', async () => {
         render(<GithubCalendar username="7sadakonr" colorSchema="purple" />)
 
-        expect(await screen.findByText('CONTRIBUTIONS IN THE LAST YEAR')).not.toBeNull()
+        const profile = await screen.findByRole('link', { name: 'GitHub profile for 7sadakonr' })
+
+        expect(profile.getAttribute('href')).toBe('https://github.com/7sadakonr')
+        expect(screen.getByText('@7sadakonr')).not.toBeNull()
+        expect(screen.getByText('Contribution Graph')).not.toBeNull()
         expect(screen.getByText('3')).not.toBeNull()
-        expect(screen.queryByRole('link', { name: 'GitHub profile for 7sadakonr' })).toBeNull()
-        expect(screen.queryByText('@7sadakonr')).toBeNull()
-        expect(screen.queryByText('Contribution Graph')).toBeNull()
+        expect(screen.getByText('CONTRIBUTIONS IN THE LAST YEAR')).not.toBeNull()
     })
 })
