@@ -28,7 +28,7 @@ export const useActiveProject = (projectCount: number) => {
     const flag = silentIndexRef.current
     const silent = flag !== null && flag.index === key && performance.now() - flag.at < 250
     silentIndexRef.current = null
-    if (key !== null && key !== lastSoundKeyRef.current && !silent) playWisp(key)
+    if (key !== null && key !== lastSoundKeyRef.current && !silent) playWisp()
     lastSoundKeyRef.current = key
   }, [hasReachedProjects, activeProjectIndex])
 
