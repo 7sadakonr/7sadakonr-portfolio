@@ -7,7 +7,8 @@ let master: AudioNode | null = null
 let lastPlayedAt = 0
 let lastWhiskAt = 0
 
-const PENTATONIC = [0, 2, 4, 7, 9]
+// Condensed "Jingle Bells" hook, semitones above C: E E E G C D E F E D G.
+const JINGLE = [4, 4, 4, 7, 0, 2, 4, 5, 4, 2, 7]
 const MUTE_KEY = 'sound-muted'
 
 const isMuted = () => {
@@ -166,23 +167,24 @@ export const playTick = () => {
 }
 
 /**
- * One deep, soft "space" note per project item opening. Pitch walks a pentatonic scale with
- * the project index (separate notes); detuned pair + sub + airy fifth give a slow, drifting pad.
+ * One deep, soft bell-like note per project item opening. Pitch follows a condensed "Jingle
+ * Bells" hook (E E E G C D E F E D G, as semitones above C) cycling with the project index.
+ * Rounded sine body + sub with only a faint glassy overtone, to sit with the other UI sounds.
  */
 export const playWisp = (index = 0) => {
   // Navigation / lens hover already played their own sound for this action.
   if (performance.now() - lastWhiskAt < 450) return
   lastPlayedAt = performance.now()
   whenReady((c) => {
-    const step = (PENTATONIC[((index % 5) + 5) % 5] ?? 0) + 12 * (Math.floor(index / 5) % 2)
-    if (playFile(c, 'open', 0.6, 2 ** (step / 12) * 0.85)) return
-    const f = 146.83 * 2 ** (step / 12) // D3 up
-    const out = envelope(c, 0.085, 0.06, 1.05)
-    partial(c, f, f * 1.006, 1, 0.95, out)
-    partial(c, f * 1.004, f * 0.998, 0.8, 1, out)
-    partial(c, f / 2, f / 2, 0.45, 0.9, out)
-    partial(c, f * 2, f * 2.01, 0.22, 0.7, out)
-    partial(c, f * 3, f * 3.02, 0.07, 0.5, out)
+    const step = JINGLE[((index % JINGLE.length) + JINGLE.length) % JINGLE.length] ?? 0
+    if (playFile(c, 'open', 0.6, 2 ** (step / 12))) return
+    const f = 261.63 * 2 ** (step / 12) // C4 up: deep, rounded
+    const out = envelope(c, 0.075, 0.012, 0.95)
+    partial(c, f, f, 1, 0.9, out) // soft sine body
+    partial(c, f / 2, f / 2, 0.4, 0.85, out) // warm sub
+    partial(c, f * 2, f * 2, 0.16, 0.5, out) // octave bloom
+    partial(c, f * 2.76, f * 2.76, 0.07, 0.3, out) // faint glassy bell hint
+    partial(c, f * 5.4, f * 5.4, 0.015, 0.12, out)
   })
 }
 
