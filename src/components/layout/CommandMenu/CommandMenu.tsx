@@ -13,8 +13,8 @@ export interface CommandMenuConnectItem { id: string; label: string; category: '
 type CommandMenuEntry = CommandMenuItem | CommandMenuConnectItem
 interface CommandMenuProps { isOpen: boolean; onClose: () => void; menuItems: readonly CommandMenuItem[] | CommandMenuItem[]; activePath: string; handleNavClick: (event: React.MouseEvent<HTMLAnchorElement>, path: string, targetId?: string) => void; iconDelay?: number }
 
-const SearchIcon = () => <svg aria-hidden="true" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="m20 20-4-4" /></svg>
-const CloseIcon = () => <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m6 6 12 12M18 6 6 18" /></svg>
+const SearchIcon = () => <svg aria-hidden="true" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.75" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="m20 20-4-4" /></svg>
+const CloseIcon = () => <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.75"><path d="m6 6 12 12M18 6 6 18" /></svg>
 const ExternalLinkIcon = () => <svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 3h7v7" /><path d="m10 14 11-11" /><path d="M21 14v6a1 1 0 0 1-1 1H4a1 1 0 0 1 1-1V4a1 1 0 0 1 1-1h6" /></svg>
 const isConnectItem = (item: CommandMenuEntry): item is CommandMenuConnectItem => 'contact' in item
 const displayLabel = (label: string) => label.split(' ').map(word => word.charAt(0) + word.slice(1).toLowerCase()).join(' ')

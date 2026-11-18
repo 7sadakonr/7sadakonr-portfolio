@@ -1,13 +1,14 @@
-:root { --island-bg: rgba(26, 26, 26, .75); --island-bg-refract: rgba(26, 26, 26, .75); --island-glass-filter: blur(7px) saturate(1.5) brightness(.75); --island-bg-solid: #1a1a1a; --island-edge-top: rgba(255, 255, 255, .12); --island-edge-bottom: rgba(255, 255, 255, .12); }
+:root { --island-bg: rgba(18, 18, 18, .62); --island-bg-refract: rgba(18, 18, 18, .62); --island-glass-filter: blur(8px); --island-bg-solid: #121212; --island-highlight: inset 0 4px 1px -4px #fff, inset 0 -4px 1px -4px #fff, inset 0 1px 0 0 rgba(255, 255, 255, .88), inset 0 -1px 0 0 rgba(255, 255, 255, .88), inset 0 40px 10px -40px rgba(255, 255, 255, .96), inset 0 -40px 10px -40px rgba(255, 255, 255, .96); }
 /* Opening the command menu locks page scroll (overflow: hidden). With classic scrollbars that widens the viewport and shifts the fixed, centred navbar sideways; keep the gutter reserved. */
 html { scrollbar-gutter: stable; }
 .navbar { position: fixed; z-index: 3001; display: flex; align-items: flex-start; gap: 8px; left: 0; right: 0; margin-inline: auto; width: fit-content; max-width: 100vw; color: #fff; font-family: "Outfit", sans-serif; contain: layout style; }
 .navbar--desktop { top: 60px; }
 .navbar--mobile { top: calc(env(safe-area-inset-top, 0px) + 8px); }
-.island-material { border: 0; background: var(--island-bg-solid); }
-.island-material::after { content: ""; position: absolute; inset: 0; z-index: 2; padding: 1px; border-radius: inherit; pointer-events: none; filter: blur(.4px); background: linear-gradient(90deg, rgba(0, 0, 0, .9) 0, rgba(0, 0, 0, .55) 7px, rgba(0, 0, 0, 0) 20px, rgba(0, 0, 0, 0) calc(100% - 20px), rgba(0, 0, 0, .55) calc(100% - 7px), rgba(0, 0, 0, .9) 100%), linear-gradient(180deg, rgba(255, 255, 255, .26) 0%, rgba(255, 255, 255, .09) 25%, rgba(255, 255, 255, .04) 50%, rgba(255, 255, 255, .09) 75%, rgba(255, 255, 255, .21) 100%); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); }
+.island-material { border: 0; background: var(--island-bg-solid); box-shadow: 1px 0 0 0 rgba(0, 0, 0, .25), -1px 0 0 0 rgba(0, 0, 0, .25), 0 0 0 1px rgba(0, 0, 0, .25), 0 8px 16px 0 rgba(0, 0, 0, .04); }
+.island-material::after { content: ""; position: absolute; inset: 0; z-index: 2; overflow: clip; border-radius: inherit; pointer-events: none; background: transparent; opacity: .3; box-shadow: var(--island-highlight); }
+.island-material::before { content: ""; position: absolute; inset: 0; z-index: 1; overflow: clip; border-radius: inherit; pointer-events: none; background: rgba(0, 0, 0, .01); box-shadow: inset -20px 0 20px -30px rgba(0, 0, 0, .3), inset 20px 0 20px -30px rgba(0, 0, 0, .3); }
 @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .island-material { background: var(--island-bg); backdrop-filter: var(--island-glass-filter); -webkit-backdrop-filter: var(--island-glass-filter); } .navbar--refract .island-material { background: var(--island-bg-refract); } .navbar--refract .dynamic-island-shell { backdrop-filter: var(--island-glass-filter) url(#navbar-glass-island); } .navbar--refract .desktop-command-btn { backdrop-filter: var(--island-glass-filter) url(#navbar-glass-orb); } }
-.dynamic-island-shell[data-view="command"] { --island-bg: rgba(18, 18, 18, .94); --island-bg-refract: rgba(18, 18, 18, .9); }
+.dynamic-island-shell[data-view="command"] { --island-bg: rgba(18, 18, 18, .9); --island-bg-refract: rgba(18, 18, 18, .88); }
 .dynamic-island-shell { position: relative; z-index: 1; overflow: hidden; contain: paint; color: #fff; }
 /* Safari / Firefox: no blurred children or paint containment inside a backdrop-filter surface (WebKit paints it in patches or flickers); own compositing layer instead. */
 .navbar:not(.navbar--refract) .dynamic-island-shell { contain: none; transform: translateZ(0); -webkit-transform: translateZ(0); }
@@ -32,9 +33,9 @@ html { scrollbar-gutter: stable; }
 .island-progress-percentage { color: rgba(255, 255, 255, .56); font-size: 10px; font-weight: 600; font-variant-numeric: tabular-nums; line-height: 12px; text-align: right; }
 .island-progress-track { grid-column: 1 / -1; display: block; width: 100%; height: 4px; overflow: hidden; border-radius: 999px; background: rgba(255, 255, 255, .12); }
 .island-progress-track::after { content: ""; display: block; width: 100%; height: 100%; border-radius: inherit; background: rgba(255, 255, 255, .88); transform: scaleX(var(--navbar-scroll-progress, 0)); transform-origin: left; will-change: transform; }
-.island-search-loading { display: flex; align-items: center; gap: 10px; min-height: 50px; padding: 0 16px; color: rgba(255, 255, 255, .72); font-size: 15px; }
-.island-search-loading svg:last-child { margin-left: auto; }
-.island-search-preview { display: flex; align-items: center; gap: 10px; min-height: 50px; padding: 0 14px 0 16px; color: rgba(255, 255, 255, .72); }
+.island-search-loading { display: flex; align-items: center; gap: 12px; min-height: 60px; padding: 8px 14px; color: rgba(255, 255, 255, .72); font-size: 15px; }
+.island-search-loading svg:last-child { margin-left: auto; margin-right: 15px; }
+.island-search-preview { display: flex; align-items: center; gap: 12px; min-height: 60px; padding: 8px 8px 8px 14px; color: rgba(255, 255, 255, .72); }
 .island-search-preview > span { display: grid; flex: none; color: rgba(255, 255, 255, .65); }
 .island-search-preview-input { min-width: 0; flex: 1; padding: 0; border: 0; outline: 0; background: transparent; color: #fff; font: 500 15px "Outfit", sans-serif; }
 .island-search-preview-input::placeholder { color: rgba(255, 255, 255, .45); }

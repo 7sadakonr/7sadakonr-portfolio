@@ -1,5 +1,5 @@
 .command-menu-island { width: 100%; color: #fff; background: transparent; }
-.command-search-row { display: flex; align-items: center; gap: 10px; min-height: 54px; padding: 0 14px 0 16px; }
+.command-search-row { display: flex; align-items: center; gap: 12px; min-height: 60px; padding: 8px 8px 8px 14px; }
 .command-search-row > span { display: grid; flex: none; color: rgba(255, 255, 255, .65); }
 .command-search-input { min-width: 0; flex: 1; padding: 0; border: 0; outline: 0; background: transparent; color: #fff; font: 500 15px "Outfit", sans-serif; }
 .command-search-input::placeholder { color: rgba(255, 255, 255, .45); }

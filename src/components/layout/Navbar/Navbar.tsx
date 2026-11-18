@@ -38,8 +38,8 @@ const COMMAND_MENU_ITEMS: CommandMenuItem[] = [
 type IslandView = 'navigation' | 'compact' | 'search' | 'command'
 const getPathLabel = (path: string) => NAV_ITEMS.find(item => item.path === path)?.label || (path === '/privacy' ? 'PRIVACY POLICY' : 'HOME')
 const formatPillLabel = (label: string) => label.charAt(0) + label.slice(1).toLowerCase()
-const SearchIcon = () => <svg aria-hidden="true" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="m20 20-4-4" /></svg>
-const CloseIcon = () => <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m6 6 12 12M18 6 6 18" /></svg>
+const SearchIcon = () => <svg aria-hidden="true" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.75" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="m20 20-4-4" /></svg>
+const CloseIcon = () => <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.75"><path d="m6 6 12 12M18 6 6 18" /></svg>
 
 function useContentSize(view: IslandView, mobile: boolean) {
   const ref = useRef<HTMLDivElement>(null)
@@ -50,7 +50,7 @@ function useContentSize(view: IslandView, mobile: boolean) {
   return [ref, size] as const
 }
 
-const REFRACTION_STRENGTH = 3
+const REFRACTION_STRENGTH = 1.5
 const CHROMA = [1, 1.05, 1.1] as const
 // Three zones: top + rounded ends bend, the middle stays clear, the bottom bends (thin symmetric bands top/bottom).
 const ISLAND_GLASS = { band: 9, end: 14 } as const
