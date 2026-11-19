@@ -108,7 +108,7 @@ const TrafficChart = ({ window, timeseries, previousTimeseries, traffic, traffic
               <Tooltip contentStyle={tooltipStyle} labelFormatter={(_, payload) => payload?.[0]?.payload?.long ?? ''} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
               <Legend iconType="circle" wrapperStyle={{ fontSize: 12 }} />
               {nowMarker}
-              <Bar dataKey="opens" name="Project opens" stackId="a" fill={COLORS.primary} />
+              <Bar dataKey="opens" name="Project views" stackId="a" fill={COLORS.primary} />
               <Bar dataKey="resumes" name="Resume downloads" stackId="a" fill={COLORS.secondary} />
               <Bar dataKey="outbound" name="GitHub / Demo clicks" stackId="a" fill={COLORS.tertiary} radius={[3, 3, 0, 0]} />
             </BarChart>

@@ -51,7 +51,7 @@ export type HeatmapMetric = 'page_views' | 'project_opens' | 'resume_downloads'
 
 export const HEATMAP_METRICS: ReadonlyArray<{ key: HeatmapMetric; label: string; noun: string }> = [
   { key: 'page_views', label: 'Page views', noun: 'page views' },
-  { key: 'project_opens', label: 'Project opens', noun: 'project opens' },
+  { key: 'project_opens', label: 'Project views', noun: 'project views' },
   { key: 'resume_downloads', label: 'Resume downloads', noun: 'resume downloads' },
 ]
 

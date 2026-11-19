@@ -49,11 +49,11 @@ const KpiRow = ({ range, overview, timeseries, traffic, trafficStatus, isLoading
         isLoading={isLoading}
       />
       <StatCard
-        label="Project opens"
+        label="Project views"
         value={db(current.project_opens)}
         delta={computeDelta(current.project_opens, previous.project_opens)}
         comparison={comparison}
-        hint="Times someone opened a project card or picked one in the sidebar."
+        hint="Times someone clicked a project card or picked one in the sidebar to view it."
         sparkline={timeseries.map((point) => point.project_opens)}
         unavailableText="Unavailable"
         isLoading={isLoading}

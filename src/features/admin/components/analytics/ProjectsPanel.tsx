@@ -26,7 +26,7 @@ const ProjectsPanel = ({ rows, isLoading, error }: ProjectsPanelProps) => {
     },
     {
       key: 'opens',
-      header: 'Opens',
+      header: 'Views',
       align: 'right',
       sortValue: (row) => row.opens,
       render: (row) => (
@@ -45,10 +45,10 @@ const ProjectsPanel = ({ rows, isLoading, error }: ProjectsPanelProps) => {
     <>
       <Panel
         title="Projects"
-        description="Which projects get opened, and how often people follow through to GitHub or the live demo."
+        description="Which projects get viewed, and how often people follow through to GitHub or the live demo."
         isLoading={isLoading}
         error={error}
-        empty={rows.length === 0 ? { title: 'No project activity in this period', description: 'Opens and outbound clicks appear here once visitors interact with a project.' } : null}
+        empty={rows.length === 0 ? { title: 'No project activity in this period', description: 'Views and outbound clicks appear here once visitors interact with a project.' } : null}
       >
         <DataTable
           caption="Project performance"

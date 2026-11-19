@@ -31,7 +31,7 @@ const ThisHourRow = ({ stats, trafficStatus, isLoading, failed }: ThisHourRowPro
       <div className="adm-kpi-grid">
         {card('Visitors', 'Unique people so far this hour. Source: Vercel Web Analytics.', stats.visitors, trafficStatus === 'unconfigured' ? 'Not connected' : 'Unavailable')}
         {card('Page views', 'Pages loaded so far this hour.', stats.pageViews)}
-        {card('Project opens', 'Projects opened so far this hour.', stats.projectOpens)}
+        {card('Project views', 'Projects viewed so far this hour.', stats.projectOpens)}
         {card('Resume downloads', 'Resume PDFs downloaded so far this hour.', stats.resumeDownloads)}
       </div>
     </section>

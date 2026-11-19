@@ -33,7 +33,7 @@ const columns: Column<CampaignRow>[] = [
 const CampaignsPanel = ({ rows, isLoading, error }: CampaignsPanelProps) => (
   <Panel
     title="Campaigns (UTM)"
-    description="Visits from tagged links. Actions are project opens, resume downloads and outbound clicks."
+    description="Visits from tagged links. Actions are project views, resume downloads and outbound clicks."
     isLoading={isLoading}
     error={error}
     empty={rows.length === 0 ? {
