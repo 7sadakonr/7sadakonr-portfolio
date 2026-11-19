@@ -253,7 +253,7 @@ export function getEventNarrative(evt: {
       }
     case 'project_open':
       return {
-        headline: project ? `Inspected project "${project}"` : 'Opened project details',
+        headline: project ? `Inspected project "${project}"` : 'Viewed project details',
         subtext: 'Inspected project stack, architecture, and preview gallery',
         badge: 'Project Inspect',
         badgeClass: 'bg-amber-950/50 text-amber-300 border border-amber-800/40 font-semibold',

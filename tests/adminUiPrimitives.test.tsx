@@ -107,8 +107,8 @@ describe('ActivityHeatmap', () => {
       />,
     )
     expect(screen.getByLabelText('Sat 17 Oct, 00:00 — 3 page views')).toBeTruthy()
-    fireEvent.click(screen.getByRole('tab', { name: 'Project opens' }))
-    expect(screen.getByLabelText('Sat 17 Oct, 00:00 — 1 project opens')).toBeTruthy()
+    fireEvent.click(screen.getByRole('tab', { name: 'Project views' }))
+    expect(screen.getByLabelText('Sat 17 Oct, 00:00 — 1 project views')).toBeTruthy()
     fireEvent.click(screen.getByRole('tab', { name: 'Resume downloads' }))
     expect(screen.getByText('No resume downloads in the last 7 days')).toBeTruthy()
   })

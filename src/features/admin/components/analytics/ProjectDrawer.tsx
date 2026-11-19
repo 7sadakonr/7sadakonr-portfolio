@@ -12,7 +12,7 @@ const ProjectDrawer = ({ project, onClose }: ProjectDrawerProps) => {
   const clicks = project.github_clicks + project.demo_clicks
   const rate = project.opens > 0 ? ((clicks / project.opens) * 100).toFixed(1) : '0.0'
   const stats: Array<[string, number]> = [
-    ['Opens', project.opens],
+    ['Views', project.opens],
     ['Outbound clicks', clicks],
     ['GitHub clicks', project.github_clicks],
     ['Demo clicks', project.demo_clicks],
@@ -43,7 +43,7 @@ const ProjectDrawer = ({ project, onClose }: ProjectDrawerProps) => {
               <span>Click-through rate</span>
               <strong>{rate}%</strong>
             </p>
-            <p className="adm-drawer__note">Click-through rate is GitHub plus demo clicks divided by opens in the selected period.</p>
+            <p className="adm-drawer__note">Click-through rate is GitHub plus demo clicks divided by views in the selected period.</p>
           </Drawer.Body>
         </Drawer.Dialog>
       </Drawer.Content>
