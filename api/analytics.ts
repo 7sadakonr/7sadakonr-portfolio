@@ -150,7 +150,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       })
 
       if (error) {
-        console.error('[Analytics API] Error recording aggregate events:', error.message)
+        console.error('[Analytics API] Error recording aggregate events:', error.code, error.message)
+        // Surface the failure (short code only) so a silent write error is visible in DevTools.
+        res.setHeader('X-Analytics-Status', 'rpc-error')
+        res.setHeader('X-Analytics-Error', sanitizeString(error.code ?? 'unknown', 32))
+        res.status(204).end()
+        return
       }
     }
 
